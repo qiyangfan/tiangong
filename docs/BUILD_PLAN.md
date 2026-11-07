@@ -114,33 +114,40 @@ tiangong/
 | 5 M3    | miniapp 登录/我的/SampleRecord                                                                                   | build:mp-weixin 产物生成                   | [ ]  |
 | 6 M4    | e2e/安全回归/compose 全栈/README/交付报告                                                                        | compose 起→health 通→浏览器闭环            | [ ]  |
 
-## 7.1 Stage 0–2 已落地事实（2026-11-07，接手前必读）
+## 7.1 当前状态与接手必读事实
 
-- 依赖版本已锁定（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / **nestjs-zod 5.5（必须 ^5，zod4 兼容；^4 会炸 defaultErrorMap）** / @nestjs/jwt 11 / @node-rs/argon2 2 / vitest 3.2 / unplugin-swc+@swc/core（vitest 下 NestJS DI 元数据必需）
-- dev 运行库 = env 栈 env-mysql 8.4（宿主 3307）；测试库 `tiangong_test` 同实例（root 可再建）；`apps/api/.env` 已配好（含随机 JWT secret 与 ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0）
-- 迁移与种子：`pnpm --filter @tiangong/api prisma:migrate` / `prisma:seed`（幂等；admin 密码读 ADMIN_INITIAL_PASSWORD）
-- 集成测试：`pnpm --filter @tiangong/api test:integration`（自动对 tiangong_test migrate deploy + seed；12 用例含 RBAC 负例/refresh 轮换/审计断言）
-- 已知坑（会话间传递）：
-  1. **禁用 `@typescript-eslint/consistent-type-imports`**（eslint.config.js 已注明）：会把 DI 构造器类改 import type 擦除元数据
-  2. **vitest 必须走 unplugin-swc**（esbuild 不支持 emitDecoratorMetadata），test setup 先加载 reflect-metadata
-  3. **直接 import 'express' 的代码需要 express 为直接依赖**（pnpm 严格解析）
-  4. 宿主 3306 被 OrbStack 幽灵转发占用（指向不存在的 9.7.2），一切连接走 **3307**
-  5. env-mysql 上 tiangong 用户持 ALL ON `*.*`（migrate shadow 库需要）
-- API 已验证端点：/health/live|ready、/auth/login|refresh|logout|menus|profile|change-password、/users CRUD、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs；swagger 在 /docs
-- 响应契约已实现并测试锁定：`{code:0,data}` / 错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
-- openspec 已按官方 CLI 验证（2026-11-07）：CLI = `npx -y @fission-ai/openspec@latest`（不是 `@openspec/cli`，npm 上无此包）；仓库 config.yaml 结构合规；6 个 spec 已适配官方 schema（补 `## Purpose`/`## Requirements` 包裹层，Requirement→H3、Scenario→H4，内容零语义变化），`validate --all --specs` 6 passed；`openspec/changes/archive/` 已补建
+> 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-## 8. 给接手会话（尤其轻量模型）的执行指令
+**完成度速览**：Stage 0/1/2 已过门禁入仓（§7 表）。contracts 契约包与 apps/api 已建成，`apps/web` 尚未创建——**下一个任务是 Stage 3（apps/web）**。
+
+**环境基线**（动手前核对，勿凭记忆）：
+
+- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / **nestjs-zod ^5.5（zod4 兼容；^4 会炸 defaultErrorMap）** / @nestjs/jwt 11 / @node-rs/argon2 2 / vitest 3.2 + unplugin-swc
+- dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0）
+- 可联调端点（web 对接对象）：/health/live|ready、/auth/login|refresh|logout|menus|profile|change-password、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs；swagger /docs
+- 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
+- openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`（npm 无 `@openspec/cli` 包）；当前 6 spec 全绿
+
+**已知坑**（违反必返工）：
+
+1. 禁用 `@typescript-eslint/consistent-type-imports`：会把 DI 构造器注入改写成 import type，擦除 NestJS 元数据
+2. vitest 必须走 unplugin-swc + reflect-metadata setup（esbuild 不支持 emitDecoratorMetadata）
+3. 直接 import 'express' 的代码必须把 express 声明为直接依赖（pnpm 严格解析）
+4. 一切 MySQL 连接走 3307：宿主 3306 是 OrbStack 幽灵转发，指向不存在的实例
+5. markdown 里写通配符（`*.*`、`*:*:*`）必须套反引号，否则 prettier 会当强调语法吞星号
+
+## 8. 下一任务执行指令（每次交接随 §7.1 一并重写）
 
 1. 先读：本文档 → AGENTS.md → docs/architecture/API_CONTRACT.md → 对应 Stage 的既有代码模式（**新代码必须仿照已建成的模块写**，不许另起炉灶）。
-2. Stage 3 接手时：contracts 包与 api 已存在，`apps/web` 从零建；所有请求/响应结构、权限指令、五段式页面模板以本文档 §4-§6 与 `apps/web/src/views/system/user/` （建好后）为准。完成后更新 §7 状态并 git commit。
+2. Stage 3 接手时：contracts 包与 api 已存在，`apps/web` 从零建；请求/响应结构、权限指令、五段式页面模板以本文档 §4-§6 与 `apps/web/src/views/system/user/`（建好后）为准。完成后：勾选 §7 表、**对照 Stage 4 整体重写 §7.1/§8**、git commit。
 3. Stage 4 接手时：api 模块结构仿照 `modules/users`；生成器模板放 `modules/generator/templates`，CLI 在 `scripts/`。
 4. Stage 5 接手时：uni-app 用 CLI 工程（不要 HBuilderX 专属结构），请求封装复用 `@tiangong/contracts`。
 5. 任何门禁失败：修到绿为止或如实标 NOT VERIFIED，禁止跳过门禁宣称完成。
-6. 常用命令（Stage 0 建立后）：
-   - 本机：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（共享栈 env-mysql 8.4，宿主 **3307**，连接串见 §7.1；勿用 3306）
+6. 常用命令：
+   - 本机 MySQL：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（共享栈 env-mysql 8.4，宿主 **3307**；勿用 3306）
    - 回退：`docker compose -f deploy/compose.dev.yaml up -d`（独立 mysql:8.4，端口 3307）
-   - `pnpm prisma:migrate` / `pnpm prisma:seed`（api 包内）
+   - `pnpm --filter @tiangong/api prisma:migrate` / `prisma:seed`（幂等；admin 密码读 ADMIN_INITIAL_PASSWORD）
+   - `pnpm --filter @tiangong/api test:integration`（自动对 tiangong_test migrate deploy + seed；12 用例含 RBAC 负例/refresh 轮换/审计断言）
    - `pnpm dev` / `pnpm test` / `pnpm lint` / `pnpm typecheck` / `pnpm build`（根目录聚合）
 7. Stage 3（flash 会话）开场白，可直接粘贴：
-   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 已落地事实与踩坑清单、§8 执行指令），然后执行 Stage 3（apps/web）。
+   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 当前状态与接手必读事实、§8 执行指令），然后执行 Stage 3（apps/web）。
