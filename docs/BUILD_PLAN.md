@@ -62,7 +62,7 @@ tiangong/
 7. **文件存储**：StorageService 接口 + LocalStorage 实现（随机 key、大小/类型白名单、授权流式下载）；file_object 存元数据。
 8. **代码生成器**：元数据 JSON 存 gen_definition（Web 管理 UI+预览）；CLI `pnpm gen:crud` 落盘生成 NestJS 模块+web 五段式页面；**已存在文件拒绝覆盖**；确定性（两次生成 diff 为空）。
 9. **管理员引导**：seed 读 `ADMIN_INITIAL_PASSWORD`，未设则随机生成只打印一次；禁止内置弱口令。
-10. **开发库**（owner 2026-11-07 指示）：本机开发统一用 `~/workspace/env` 共享栈的 **env-mysql**（**MySQL 8.4**，宿主 **3307**——宿主 3306 被 OrbStack 幽灵转发占用且指向不存在的 9.7.2，2026-11-07 已把 env 栈镜像降为 8.4 并改发布端口 3307；应用账号 `tiangong/tiangong_dev` 持 ALL ON _._（migrate shadow 库需要），库 `tiangong`）；dev 连接串 `mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong`。`deploy/compose.dev.yaml`（mysql:8.4，端口 3307）降级为无共享栈环境的自包含回退。**CI 与生产口径仍为 mysql:8.4（ADR-0001）**，9.7-dev/8.4-CI 的版本偏差记入 ADR 附录，迁移兼容性以 CI 的 8.4 为准。
+10. **开发库**（owner 2026-11-07 指示）：本机开发统一用 `~/workspace/env` 共享栈的 **env-mysql**（**MySQL 8.4**，宿主 **3307**——宿主 3306 被 OrbStack 幽灵转发占用且指向不存在的 9.7.2，2026-11-07 已把 env 栈镜像降为 8.4 并改发布端口 3307；应用账号 `tiangong/tiangong_dev` 持 ALL ON `*.*`（migrate shadow 库需要），库 `tiangong`）；dev 连接串 `mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong`。`deploy/compose.dev.yaml`（mysql:8.4，端口 3307）降级为无共享栈环境的自包含回退。**CI 与生产口径仍为 mysql:8.4（ADR-0001）**，9.7-dev/8.4-CI 的版本偏差记入 ADR 附录，迁移兼容性以 CI 的 8.4 为准。
 
 ## 5. 表结构速查（Prisma 设计基准；类型=MySQL 语义）
 
@@ -106,9 +106,9 @@ tiangong/
 
 | Stage   | 内容                                                                                                             | 门禁                                       | 状态 |
 | ------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ---- |
-| 0 M0    | 规范包入仓、workspace 骨架、eslint9+prettier+TS strict、mise.toml、compose.dev.yaml、CI 骨架、openspec init 尝试 | `pnpm i && pnpm lint && pnpm typecheck` 绿 | [ ]  |
-| 1       | packages/contracts 全部 Zod schema+错误码+分页类型                                                               | typecheck+单测绿                           | [ ]  |
-| 2 M1    | api：bootstrap/全局件/Prisma migration+seed/auth+RBAC/系统模块/health/swagger                                    | vitest 单测+真库 integration 全绿          | [ ]  |
+| 0 M0    | 规范包入仓、workspace 骨架、eslint9+prettier+TS strict、mise.toml、compose.dev.yaml、CI 骨架、openspec init 尝试 | `pnpm i && pnpm lint && pnpm typecheck` 绿 | [x]  |
+| 1       | packages/contracts 全部 Zod schema+错误码+分页类型                                                               | typecheck+单测绿                           | [x]  |
+| 2 M1    | api：bootstrap/全局件/Prisma migration+seed/auth+RBAC/系统模块/health/swagger                                    | vitest 单测+真库 integration 全绿          | [x]  |
 | 3 M1-M2 | web 全部页面与布局                                                                                               | vite build 绿+对 api 真实联调              | [ ]  |
 | 4 M2-M3 | files/SampleRecord 闭环/生成器/@Audit                                                                            | 越权负例+确定性测试绿                      | [ ]  |
 | 5 M3    | miniapp 登录/我的/SampleRecord                                                                                   | build:mp-weixin 产物生成                   | [ ]  |
@@ -125,9 +125,10 @@ tiangong/
   2. **vitest 必须走 unplugin-swc**（esbuild 不支持 emitDecoratorMetadata），test setup 先加载 reflect-metadata
   3. **直接 import 'express' 的代码需要 express 为直接依赖**（pnpm 严格解析）
   4. 宿主 3306 被 OrbStack 幽灵转发占用（指向不存在的 9.7.2），一切连接走 **3307**
-  5. env-mysql 上 tiangong 用户持 ALL ON *.*（migrate shadow 库需要）
+  5. env-mysql 上 tiangong 用户持 ALL ON `*.*`（migrate shadow 库需要）
 - API 已验证端点：/health/live|ready、/auth/login|refresh|logout|menus|profile|change-password、/users CRUD、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs；swagger 在 /docs
 - 响应契约已实现并测试锁定：`{code:0,data}` / 错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
+- openspec 已按官方 CLI 验证（2026-11-07）：CLI = `npx -y @fission-ai/openspec@latest`（不是 `@openspec/cli`，npm 上无此包）；仓库 config.yaml 结构合规；6 个 spec 已适配官方 schema（补 `## Purpose`/`## Requirements` 包裹层，Requirement→H3、Scenario→H4，内容零语义变化），`validate --all --specs` 6 passed；`openspec/changes/archive/` 已补建
 
 ## 8. 给接手会话（尤其轻量模型）的执行指令
 

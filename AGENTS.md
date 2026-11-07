@@ -64,7 +64,7 @@
 ### 工程习惯
 
 - 本地基础环境（MySQL 等）统一用 `~/workspace/env` 共享栈（env-mysql 8.4，宿主 **3307**（3306 被宿主幽灵转发占用），
-  应用账号 `tiangong/tiangong_dev`，库 `tiangong`，dev 账号持有 ALL ON _._ 供 migrate shadow 库）；`deploy/compose.dev.yaml` 仅作无共享栈环境的回退；
+  应用账号 `tiangong/tiangong_dev`，库 `tiangong`，dev 账号持有 ALL ON `*.*` 供 migrate shadow 库）；`deploy/compose.dev.yaml` 仅作无共享栈环境的回退；
   CI/生产口径恒为 mysql:8.4。
 - 最小可验证改动；复用既有模式与组件；不为「未来可能需要」新增抽象。
 - 输入边界必校验；错误信息不得泄露内部异常、密钥、令牌。
