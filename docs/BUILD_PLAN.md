@@ -111,14 +111,14 @@ tiangong/
 | 2 M1    | api：bootstrap/全局件/Prisma migration+seed/auth+RBAC/系统模块/health/swagger                                    | vitest 单测+真库 integration 全绿          | [x]  |
 | 3 M1-M2 | web 全部页面与布局                                                                                               | vite build 绿+对 api 真实联调              | [x]  |
 | 4 M2-M3 | files/SampleRecord 闭环/生成器/@Audit                                                                            | 越权负例+确定性测试绿                      | [x]  |
-| 5 M3    | miniapp 登录/我的/SampleRecord                                                                                   | build:mp-weixin 产物生成                   | [ ]  |
+| 5 M3    | miniapp 登录/我的/SampleRecord                                                                                   | build:mp-weixin 产物生成                   | [x]  |
 | 6 M4    | e2e/安全回归/compose 全栈/README/交付报告                                                                        | compose 起→health 通→浏览器闭环            | [ ]  |
 
 ## 7.1 当前状态与接手必读事实
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0/1/2/3/4 已过门禁入仓（§7 表）。Stage 4 已交付：files 模块（StorageService 接口 + LocalStorage 实现 + multipart 上传/授权下载/删除，8 例集成负例）、SampleRecord 纵向闭环（api + web 五段式页 + web→miniapp 跨端读写集成测试）、代码生成器（gen_definition CRUD + 服务端预览 + CLI `pnpm gen:crud` 拒绝覆盖 + 确定性单测 5 例 + CLI 端到端实测）、文件管理 web 页（seed 菜单已补）。集成测试 25 例、生成器单测 5 例全绿；lint/typecheck/build 绿；浏览器走查三页通过（sample CRUD / file 上传列表 / gen 定义+预览）。**下一个任务是 Stage 5：miniapp（uni-app CLI 工程，登录/我的/SampleRecord 三页）**。
+**完成度速览**：Stage 0/1/2/3/4/5 已过门禁入仓（§7 表）。Stage 5 已交付：`apps/miniapp`（uni-app CLI 工程，dcloudio 3.0.0-503 + Vue3 + TS strict）——登录 / 我的（profile+退出） / 示例数据（列表+新增编辑删除）三页；请求封装复用 `@tiangong/contracts`（envelope/错误码单源），401 单飞刷新重放对齐 web 语义，token 落 `uni.setStorageSync`，refresh 走 body `client='miniapp'`。门禁：`build:mp-weixin` 产物生成（3 页 app.json + env 注入，248K）；`vue-tsc` 绿；集成 26 例全绿（新增 PATCH 兼容用例）。真机/微信开发者工具运行 NOT VERIFIED（本机无工具）。**下一个任务是 Stage 6（收官）**。
 
 **环境基线**（动手前核对，勿凭记忆）：
 
@@ -131,12 +131,12 @@ tiangong/
 - 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
 - openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`；file-management spec 已标 Implemented，其余 5 spec 头部仍是「TARGET」模板文案（历史遗留，Stage 6 交付报告前统一处理）
 
-**Stage 4 新增事实**：
+**Stage 4/5 关键事实**：
 
-- **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径 = contracts schema + prisma model 片段（`apps/api/prisma/gen/`，人工合并）+ api 三件 + web api + web 五段式页；生成页文案走 locale 驱动的本地映射（生成器不注入 locales 源文件），公共键走全局 t()
-- **CLI**：`pnpm gen:crud <module-name>`（根 script 转发到 `apps/api/scripts/gen-crud.ts`；CLI 必须留在 api 包内——pnpm 严格解析下根 scripts 目录 import 不到包依赖）；仓库根用 pnpm-workspace.yaml 向上探测（**不可用 import.meta.url**：tsx 按包内 CJS 转译时其 shim 指向不可靠，曾致产物落盘到 apps/apps/）；任一目标文件已存在即整体拒绝（先全量检查再写盘）
-- **files 模块**：`src/common/storage/`（STORAGE_SERVICE token + LocalStorage 越界拒绝）+ `src/modules/files/`；生效上限 = min(系统参数 sys.file.maxSizeMb, env MAX_UPLOAD_MB)；multer 硬顶同源 env；扩展名白名单为准 + MIME 冲突拒绝（octet-stream 视为未声明放行）；busboy 对 quoted filename 按 latin1 解码，服务端已做 UTF-8 mojibake 修复（浏览器 filename* 不受影响）；下载走 `/files/:id/download` 二进制流（非 envelope），权限 files:list
-- **菜单 seed**：系统管理下新增「文件管理」（component `system/file/index`，perms `files:list`）——老库需重跑 `pnpm --filter @tiangong/api prisma:seed`
+- **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径；CLI `pnpm gen:crud <name>` 留在 `apps/api/scripts/`（pnpm 严格解析），仓库根用 pnpm-workspace.yaml 探测（**不可用 import.meta.url**，tsx CJS 转译下 shim 不可靠）；任一目标文件已存在整体拒绝
+- **files 模块**：`src/common/storage/` + `src/modules/files/`；上限 = min(sys.file.maxSizeMb, MAX_UPLOAD_MB)；busboy latin1 文件名 mojibake 已修复；下载非 envelope 二进制流
+- **PATCH 兼容层（跨端契约）**：微信 request 不支持 PATCH——miniapp 以 POST + `X-HTTP-Method-Override: PATCH` 头承载；api `src/common/method-override.middleware.ts` 白名单改写（main.ts 与 test/setup/app.ts 两处挂载，测试与真实行为一致）；集成测试锁「无头 POST 404、带头 200」
+- **miniapp**：`apps/miniapp`（uni preset vite-ts；vite 5.2.8 为 uni 插件约束勿升；typescript 已升 5.9 + 自写 tsconfig——模板 extends 的 @vue/tsconfig@0.1.3 含 TS5.9 移除项）；API 基地址 `VITE_API_BASE_URL`（.env，真机需 https+域名白名单）；模板 eslint 由根 flat config 覆盖
 
 **已知坑**（违反必返工）：
 
@@ -149,24 +149,24 @@ tiangong/
 7. Element Plus 未全局注册图标：el-button 必须用 `:icon="组件"`（显式 import）
 8. 契约细节：字典类型/项 update 的 remark 只能省略不能置 null；列表 enabled 过滤传 `'true'/'false'` 字符串（contracts 已修 coerce 缺陷，勿改回）
 9. **IAB 浏览器自动化**：Playwright locator click 对按钮持续超时（actionability 卡死），用 `tab.cua.click({x,y})` 坐标点击；`node_repl` 每次 js 调用必须重跑完整 bootstrap；IAB 不支持 file chooser（上传类走查用 curl 打真实进程）
+10. **miniapp typecheck**：`pnpm --filter @tiangong/miniapp type-check`（vue-tsc 3）；uni 的 SFC 需要 `@dcloudio/types`；微信 request method 无 PATCH（见上兼容层）
 
 ## 8. 下一任务执行指令（每次交接随 §7.1 一并重写）
 
-1. 先读：本文档 → AGENTS.md → docs/architecture/API_CONTRACT.md → 对应 Stage 的既有代码模式（**新代码必须仿照已建成的模块写**，不许另起炉灶）。
-2. Stage 5 接手时（miniapp）：
-   - uni-app 用 CLI 工程（`npx degit dcloudio/uni-preset-vue#vite-ts` 或等价 npm 脚手架；**不要 HBuilderX 专属结构**），落在 `apps/miniapp`
-   - 请求封装复用 `@tiangong/contracts`（envelope/错误码/类型同源）；token 用 `uni.setStorageSync`；refresh 走 body、`client='miniapp'`；401 单飞刷新重放语义对齐 web 的 request 层
-   - 页面：登录、我的（profile + 退出）、SampleRecord 列表+编辑（读写与 Web 同一条 API，完成跨端闭环验收）
-   - 门禁：`build:mp-weixin` 产物生成（dist/build/mp-weixin）即达标；真机/微信开发者工具运行 NOT VERIFIED 可如实标注
-3. Stage 6（收官）：e2e（compose 全栈起 → health 通 → 浏览器登录→SampleRecord 闭环）、安全回归（越权负例清单复跑）、`deploy/compose.yaml` 全栈、README、交付报告；5 个 spec 头部「TARGET」文案统一转已实现；FUNCTION_MATRIX P0 逐项对照表。
-4. 任何门禁失败：修到绿为止或如实标 NOT VERIFIED，禁止跳过门禁宣称完成。权威门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（CI 已配 ubuntu-26.04 + node 24 全量跑，本地必须先过）。
-5. 常用命令：
-   - 本机 MySQL：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（共享栈 env-mysql 8.4，宿主 **3307**；勿用 3306）
-   - 回退：`docker compose -f deploy/compose.dev.yaml up -d`（独立 mysql:8.4，端口 3307）
+1. 先读：本文档 → AGENTS.md → docs/architecture/API_CONTRACT.md → 既有代码模式（新代码仿照已建成模块写）。
+2. Stage 6（收官）清单：
+   - **e2e/安全回归**：compose 全栈起 → health 通 → 浏览器登录→SampleRecord CRUD 闭环；越权负例清单复跑（集成 26 例已覆盖 RBAC/文件/生成器越权，报告引用即可）
+   - **compose 全栈**：`deploy/compose.yaml`（MySQL 8.4 + api + web nginx 静态）——api 镜像内 prisma migrate deploy + seed 后起；web 构建产物走 nginx；`/api` 反代 api
+   - **README**：根 README（项目定位/快速开始/环境要求/命令速查/目录结构/契约要点）
+   - **交付报告**：`docs/quality/` 下交付报告（现状快照形态：能力清单/验证证据/NOT VERIFIED 清单/已知限制）；FUNCTION_MATRIX P0 逐项对照
+   - **spec 头部**：其余 5 个 spec 的「TARGET」模板文案统一转已实现（对照 file-management spec 的改法）
+3. 门禁失败：修到绿为止或如实标 NOT VERIFIED。权威门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（miniapp 另有 `pnpm --filter @tiangong/miniapp build:mp-weixin` 与 `type-check`）。
+4. 常用命令：
+   - 本机 MySQL：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（宿主 **3307**）
    - `pnpm --filter @tiangong/api prisma:migrate` / `prisma:seed`（幂等）
-   - `pnpm --filter @tiangong/api test:integration`（自动对 tiangong_test migrate deploy + seed；25 用例含 RBAC 负例/refresh 轮换/审计/files 负例/跨端闭环/生成器预览）
-   - `pnpm gen:crud <module-name>`（生成器 CLI；落盘前必须先在 Web 代码生成页建定义）
-   - `pnpm dev:api` + `pnpm dev:web`（联调；web 端口 5173）
-   - `pnpm dev` / `pnpm test` / `pnpm lint` / `pnpm typecheck` / `pnpm build`（根目录聚合）
-6. Stage 5（flash 会话）开场白，可直接粘贴：
-   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 当前状态与接手必读事实、§8 执行指令），然后执行 Stage 5（miniapp：uni-app CLI 工程，登录/我的/SampleRecord）。
+   - `pnpm --filter @tiangong/api test:integration`（26 用例）
+   - `pnpm dev:api` + `pnpm dev:web`（联调）
+   - `pnpm gen:crud <module-name>`（生成器 CLI）
+   - 根目录聚合：`pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build`
+5. Stage 6（flash 会话）开场白，可直接粘贴：
+   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 当前状态与接手必读事实、§8 执行指令），然后执行 Stage 6（e2e/安全回归/compose 全栈/README/交付报告收官）。

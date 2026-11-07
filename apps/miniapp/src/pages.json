@@ -1,0 +1,44 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/sample/index",
+      "style": {
+        "navigationBarTitleText": "示例数据"
+      }
+    },
+    {
+      "path": "pages/mine/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "天工",
+    "navigationBarBackgroundColor": "#2f5d9e",
+    "backgroundColor": "#F6F7F9"
+  },
+  "tabBar": {
+    "color": "#8a8f99",
+    "selectedColor": "#2f5d9e",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/sample/index",
+        "text": "示例数据"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的"
+      }
+    ]
+  }
+}

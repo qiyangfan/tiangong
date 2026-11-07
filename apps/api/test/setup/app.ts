@@ -20,7 +20,9 @@ export async function createTestApp(): Promise<TestApp> {
   app.use(helmet());
   app.use(cookieParser());
   const { requestIdMiddleware } = await import('../../src/common/request-id.middleware');
+  const { methodOverrideMiddleware } = await import('../../src/common/method-override.middleware');
   app.use(requestIdMiddleware);
+  app.use(methodOverrideMiddleware);
   app.setGlobalPrefix('api/v1');
   await app.init();
   return { app, http: request(app.getHttpServer()) };

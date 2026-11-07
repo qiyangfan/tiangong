@@ -432,6 +432,29 @@ describe('SampleRecord 跨端闭环', () => {
     expect(del.status).toBe(200);
   });
 
+  it('小程序 PATCH 兼容：POST + X-HTTP-Method-Override 头等价 PATCH', async () => {
+    const create = await app.http
+      .post('/api/v1/samples')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'override样例' });
+    expect(create.status).toBe(201);
+    const id = create.body.data.id;
+    const overridden = await app.http
+      .post(`/api/v1/samples/${id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('X-HTTP-Method-Override', 'PATCH')
+      .send({ name: 'override样例-已改' });
+    expect(overridden.status).toBe(200);
+    expect(overridden.body.data.name).toBe('override样例-已改');
+    // 无头 POST 落到未定义路由 → 404（override 头不是无条件放行）
+    const plainPost = await app.http
+      .post(`/api/v1/samples/${id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'plain' });
+    expect(plainPost.status).toBe(404);
+    await app.http.delete(`/api/v1/samples/${id}`).set('Authorization', `Bearer ${adminToken}`);
+  });
+
   it('金额非法字符串与超长名称被 400 拒绝', async () => {
     const bad = await app.http
       .post('/api/v1/samples')

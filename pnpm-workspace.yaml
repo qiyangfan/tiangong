@@ -4,6 +4,8 @@ packages:
 
 # pnpm ≥10 默认拦截依赖构建脚本；以下依赖需要 postinstall（Prisma 引擎生成等）
 allowBuilds:
+  core-js: true
+  core-js-pure: true
   '@prisma/client': true
   '@prisma/engines': true
   '@scarf/scarf': true
