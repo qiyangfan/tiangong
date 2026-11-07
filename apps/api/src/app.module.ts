@@ -21,6 +21,9 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { MenusModule } from './modules/menus/menus.module';
 import { DictionariesModule } from './modules/dictionaries/dictionaries.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { FilesModule } from './modules/files/files.module';
+import { ExamplesModule } from './modules/examples/examples.module';
+import { GeneratorModule } from './modules/generator/generator.module';
 import { AuditQueryModule } from './modules/audit-query/audit-query.module';
 import { getRequestId } from './common/request-context';
 
@@ -64,6 +67,9 @@ import { getRequestId } from './common/request-context';
     DictionariesModule,
     SettingsModule,
     AuditQueryModule,
+    FilesModule,
+    ExamplesModule,
+    GeneratorModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

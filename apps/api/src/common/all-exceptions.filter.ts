@@ -91,6 +91,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const text = Array.isArray(message) ? message.join('; ') : String(message);
       return { status, code, message: text };
     }
+    // multer 的 fileSize 截断错误（FileInterceptor limits）→ 契约 413
+    if ((exception as { code?: string })?.code === 'LIMIT_FILE_SIZE') {
+      const meta = errorMeta('FILE_TOO_LARGE');
+      return { status: meta.status, code: 'FILE_TOO_LARGE', message: meta.message };
+    }
     const prisma = exception as PrismaLikeError;
     if (prisma?.code === 'P2002') {
       const meta = errorMeta('CONFLICT');

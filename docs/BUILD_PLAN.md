@@ -42,7 +42,7 @@ tiangong/
 ├── packages/
 │   ├── contracts/    Zod schema + DTO 类型 + 错误码 + 分页类型（三端共享，API 契约唯一来源）
 │   └── config/       共享 eslint9 flat / tsconfig 基座
-├── scripts/          gen:crud CLI
+├── scripts/          （工具脚本；gen:crud CLI 在 apps/api/scripts/——pnpm 严格解析须在依赖链内）
 ├── deploy/           compose.yaml（全栈）+ compose.dev.yaml（仅 dev MySQL）+ nginx/
 └── docs/ adr/ openspec/ agent-prompts/ …（规范包 35 文件）
 ```
@@ -110,7 +110,7 @@ tiangong/
 | 1       | packages/contracts 全部 Zod schema+错误码+分页类型                                                               | typecheck+单测绿                           | [x]  |
 | 2 M1    | api：bootstrap/全局件/Prisma migration+seed/auth+RBAC/系统模块/health/swagger                                    | vitest 单测+真库 integration 全绿          | [x]  |
 | 3 M1-M2 | web 全部页面与布局                                                                                               | vite build 绿+对 api 真实联调              | [x]  |
-| 4 M2-M3 | files/SampleRecord 闭环/生成器/@Audit                                                                            | 越权负例+确定性测试绿                      | [ ]  |
+| 4 M2-M3 | files/SampleRecord 闭环/生成器/@Audit                                                                            | 越权负例+确定性测试绿                      | [x]  |
 | 5 M3    | miniapp 登录/我的/SampleRecord                                                                                   | build:mp-weixin 产物生成                   | [ ]  |
 | 6 M4    | e2e/安全回归/compose 全栈/README/交付报告                                                                        | compose 起→health 通→浏览器闭环            | [ ]  |
 
@@ -118,18 +118,25 @@ tiangong/
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0/1/2/3 已过门禁入仓（§7 表）。contracts / apps/api / apps/web 已建成并真实联调（登录→CRUD→审计→会话恢复→暗色/语言切换全走通）；@Audit 审计切面已随 Stage 2 落地。**下一个任务是 Stage 4：files 模块、SampleRecord 纵向闭环、代码生成器**（dev/sample、dev/gen 两个前端页面目前是占位）。
+**完成度速览**：Stage 0/1/2/3/4 已过门禁入仓（§7 表）。Stage 4 已交付：files 模块（StorageService 接口 + LocalStorage 实现 + multipart 上传/授权下载/删除，8 例集成负例）、SampleRecord 纵向闭环（api + web 五段式页 + web→miniapp 跨端读写集成测试）、代码生成器（gen_definition CRUD + 服务端预览 + CLI `pnpm gen:crud` 拒绝覆盖 + 确定性单测 5 例 + CLI 端到端实测）、文件管理 web 页（seed 菜单已补）。集成测试 25 例、生成器单测 5 例全绿；lint/typecheck/build 绿；浏览器走查三页通过（sample CRUD / file 上传列表 / gen 定义+预览）。**下一个任务是 Stage 5：miniapp（uni-app CLI 工程，登录/我的/SampleRecord 三页）**。
 
 **环境基线**（动手前核对，勿凭记忆）：
 
-- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / **Tailwind 4.3（@tailwindcss/vite，CSS-first）** / **echarts 6.1（echarts/core 按需引入，BaseChart 单源）**
-- dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0）
+- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4（@types/multer 已入 api devDeps，tsconfig types 含 multer）
+- dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）
-- API 端点全集：/health/live|ready、/auth/login|refresh|logout|menus|**permissions**|profile|change-password、/users(+reset-password|enabled)、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs；swagger /docs
-- 前端结构锚点：动态路由按后端菜单 component 字符串映射 `apps/web/src/views/<component>.vue`（`import.meta.glob`）；五段式页面模板看 `apps/web/src/views/system/user/index.vue`；request 层 `src/utils/request.ts`（401 单飞刷新重放、envelope 解包）；公共件 FormDialog/SearchForm/Pagination/RightToolbar/DictTag/MenuIcon + useDict/usePermission + `utils/confirm` 的 confirmDelete/confirmBox（选用表见 UI_STYLEGUIDE「标准件清单」；页面模板禁手写弹窗 footer 与重复确认框参数块）
-- **样式分工（ADR-0006 + `docs/architecture/UI_STYLEGUIDE.md`）**：交互控件及其内部样式一律 Element Plus（主题靠覆盖 EP css-vars，见 `src/styles/index.css` 亮暗两套 token）；布局/间距/响应式/门面视觉用 Tailwind utility（`dark:` 变体已绑 html.dark）；**Tailwind preflight 禁用**（只引 theme+utilities 两层，防重置 EP）。**设计 token 标准**：品牌色绀青（亮 #2f5d9e / 暗 #5b87bd）、语义色竹青/赭金/赭红（与 longzhong 生态同值）、圆角控件 8/卡片 12、字号标题 20/正文 14/注释 12、间距 4px 基数；新页面必须按 UI_STYLEGUIDE 执行（禁魔法值、禁 emoji/符号图标、禁紫渐变/玻璃拟态套路）
+- API 端点全集：/health/live|ready、/auth/*、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs、**/files(+/:id/download)、/samples、/gen-definitions(+/preview|:id/preview)**；swagger /docs
+- 前端锚点：五段式页模板看 `views/system/user/index.vue`（带字典的看 `views/dev/sample/index.vue`）；request 层 `src/utils/request.ts`；公共件 FormDialog/SearchForm/Pagination/RightToolbar/DictTag/MenuIcon + useDict/usePermission + confirmDelete/confirmBox（选用表见 UI_STYLEGUIDE）
+- 样式与 UI 规矩：见 ADR-0006 + `docs/architecture/UI_STYLEGUIDE.md`（token 单源 `apps/web/src/styles/index.css`；EP 管控件、Tailwind 管布局；preflight 禁用；禁魔法值/emoji 图标/AI 味套路）
 - 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
-- openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`（npm 无 `@openspec/cli` 包）；当前 6 spec 全绿
+- openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`；file-management spec 已标 Implemented，其余 5 spec 头部仍是「TARGET」模板文案（历史遗留，Stage 6 交付报告前统一处理）
+
+**Stage 4 新增事实**：
+
+- **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径 = contracts schema + prisma model 片段（`apps/api/prisma/gen/`，人工合并）+ api 三件 + web api + web 五段式页；生成页文案走 locale 驱动的本地映射（生成器不注入 locales 源文件），公共键走全局 t()
+- **CLI**：`pnpm gen:crud <module-name>`（根 script 转发到 `apps/api/scripts/gen-crud.ts`；CLI 必须留在 api 包内——pnpm 严格解析下根 scripts 目录 import 不到包依赖）；仓库根用 pnpm-workspace.yaml 向上探测（**不可用 import.meta.url**：tsx 按包内 CJS 转译时其 shim 指向不可靠，曾致产物落盘到 apps/apps/）；任一目标文件已存在即整体拒绝（先全量检查再写盘）
+- **files 模块**：`src/common/storage/`（STORAGE_SERVICE token + LocalStorage 越界拒绝）+ `src/modules/files/`；生效上限 = min(系统参数 sys.file.maxSizeMb, env MAX_UPLOAD_MB)；multer 硬顶同源 env；扩展名白名单为准 + MIME 冲突拒绝（octet-stream 视为未声明放行）；busboy 对 quoted filename 按 latin1 解码，服务端已做 UTF-8 mojibake 修复（浏览器 filename* 不受影响）；下载走 `/files/:id/download` 二进制流（非 envelope），权限 files:list
+- **菜单 seed**：系统管理下新增「文件管理」（component `system/file/index`，perms `files:list`）——老库需重跑 `pnpm --filter @tiangong/api prisma:seed`
 
 **已知坑**（违反必返工）：
 
@@ -138,26 +145,28 @@ tiangong/
 3. 直接 import 'express' 的代码必须把 express 声明为直接依赖（pnpm 严格解析）
 4. 一切 MySQL 连接走 3307：宿主 3306 是 OrbStack 幽灵转发，指向不存在的实例
 5. markdown 里写通配符（`*.*`、`*:*:*`）必须套反引号，否则 prettier 会当强调语法吞星号
-6. **vite 8 dev 的文件 watcher 在本机不生效**：改完前端源码必须先 `curl -s localhost:5173/src/<file> | grep <新内容>` 验证模块已更新，否则重启 `pnpm dev:web`（否则浏览器跑的是旧代码，症状诡异）
-7. Element Plus 未全局注册图标：el-button 必须用 `:icon="组件"`（显式 import），字符串 `icon="Plus"` 不渲染
-8. 契约细节：字典类型/项的 update 请求 remark 只能省略不能置 null（partial 语义，非 nullable）；列表 enabled 过滤传 `'true'/'false'` 字符串（contracts 已修 coerce 缺陷，勿改回）
+6. **vite 8 dev 的文件 watcher 在本机不生效**：改完前端源码必须重启 `pnpm dev:web`（否则浏览器跑旧代码）
+7. Element Plus 未全局注册图标：el-button 必须用 `:icon="组件"`（显式 import）
+8. 契约细节：字典类型/项 update 的 remark 只能省略不能置 null；列表 enabled 过滤传 `'true'/'false'` 字符串（contracts 已修 coerce 缺陷，勿改回）
+9. **IAB 浏览器自动化**：Playwright locator click 对按钮持续超时（actionability 卡死），用 `tab.cua.click({x,y})` 坐标点击；`node_repl` 每次 js 调用必须重跑完整 bootstrap；IAB 不支持 file chooser（上传类走查用 curl 打真实进程）
 
 ## 8. 下一任务执行指令（每次交接随 §7.1 一并重写）
 
 1. 先读：本文档 → AGENTS.md → docs/architecture/API_CONTRACT.md → 对应 Stage 的既有代码模式（**新代码必须仿照已建成的模块写**，不许另起炉灶）。
-2. Stage 4 接手时：
-   - **files 模块**：api 仿照 `modules/users`（contracts/files.ts schema 已备好）；上传走 multipart，StorageService 接口 + LocalStorage 实现（随机 key、大小/扩展名白名单、授权后流式下载）；file_object 只存元数据；负例（越权下载 403、路径遍历）进集成测试。若需要新权限点（system:file:*），同时补 seed 幂等数据。
-   - **SampleRecord 纵向闭环**：contracts/examples.ts 已有 schema；api 模块 + 替换 web 占位页 `views/dev/sample/index.vue`（五段式仿 system/user）；Web 与小程序读写同一条记录。
-   - **代码生成器**：gen_definition CRUD + 服务端模板渲染预览 + CLI `scripts/gen:crud`（**已存在文件一律拒绝覆盖**）；确定性测试 = 同一输入两次生成 diff 为空；模板放 `modules/generator/templates`。
-   - 完成后：勾选 §7 表、**对照 Stage 5 整体重写 §7.1/§8**、git commit。
-3. Stage 5 接手时：uni-app 用 CLI 工程（不要 HBuilderX 专属结构），请求封装复用 `@tiangong/contracts`；token 用 uni.setStorageSync（refresh 走 body，client='miniapp'）。
-4. 任何门禁失败：修到绿为止或如实标 NOT VERIFIED，禁止跳过门禁宣称完成。权威门禁含真库集成：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（CI 已跑全量，本地必须先过）。
+2. Stage 5 接手时（miniapp）：
+   - uni-app 用 CLI 工程（`npx degit dcloudio/uni-preset-vue#vite-ts` 或等价 npm 脚手架；**不要 HBuilderX 专属结构**），落在 `apps/miniapp`
+   - 请求封装复用 `@tiangong/contracts`（envelope/错误码/类型同源）；token 用 `uni.setStorageSync`；refresh 走 body、`client='miniapp'`；401 单飞刷新重放语义对齐 web 的 request 层
+   - 页面：登录、我的（profile + 退出）、SampleRecord 列表+编辑（读写与 Web 同一条 API，完成跨端闭环验收）
+   - 门禁：`build:mp-weixin` 产物生成（dist/build/mp-weixin）即达标；真机/微信开发者工具运行 NOT VERIFIED 可如实标注
+3. Stage 6（收官）：e2e（compose 全栈起 → health 通 → 浏览器登录→SampleRecord 闭环）、安全回归（越权负例清单复跑）、`deploy/compose.yaml` 全栈、README、交付报告；5 个 spec 头部「TARGET」文案统一转已实现；FUNCTION_MATRIX P0 逐项对照表。
+4. 任何门禁失败：修到绿为止或如实标 NOT VERIFIED，禁止跳过门禁宣称完成。权威门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（CI 已配 ubuntu-26.04 + node 24 全量跑，本地必须先过）。
 5. 常用命令：
    - 本机 MySQL：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（共享栈 env-mysql 8.4，宿主 **3307**；勿用 3306）
    - 回退：`docker compose -f deploy/compose.dev.yaml up -d`（独立 mysql:8.4，端口 3307）
-   - `pnpm --filter @tiangong/api prisma:migrate` / `prisma:seed`（幂等；admin 密码读 ADMIN_INITIAL_PASSWORD）
-   - `pnpm --filter @tiangong/api test:integration`（自动对 tiangong_test migrate deploy + seed；13 用例含 RBAC 负例/refresh 轮换/审计断言）
+   - `pnpm --filter @tiangong/api prisma:migrate` / `prisma:seed`（幂等）
+   - `pnpm --filter @tiangong/api test:integration`（自动对 tiangong_test migrate deploy + seed；25 用例含 RBAC 负例/refresh 轮换/审计/files 负例/跨端闭环/生成器预览）
+   - `pnpm gen:crud <module-name>`（生成器 CLI；落盘前必须先在 Web 代码生成页建定义）
    - `pnpm dev:api` + `pnpm dev:web`（联调；web 端口 5173）
    - `pnpm dev` / `pnpm test` / `pnpm lint` / `pnpm typecheck` / `pnpm build`（根目录聚合）
-6. Stage 4（flash 会话）开场白，可直接粘贴：
-   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 当前状态与接手必读事实、§8 执行指令），然后执行 Stage 4（files 模块 + SampleRecord 闭环 + 代码生成器）。
+6. Stage 5（flash 会话）开场白，可直接粘贴：
+   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 当前状态与接手必读事实、§8 执行指令），然后执行 Stage 5（miniapp：uni-app CLI 工程，登录/我的/SampleRecord）。

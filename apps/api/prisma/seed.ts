@@ -159,6 +159,16 @@ const MENUS: MenuSeed[] = [
     perms: 'system:setting:list',
     sort: 6,
   },
+  {
+    key: 'system:file',
+    parent: 'system',
+    name: '文件管理',
+    menuType: 'C',
+    path: 'file',
+    component: 'system/file/index',
+    perms: 'files:list',
+    sort: 7,
+  },
   { key: 'audit', name: '审计中心', menuType: 'M', path: '/audit', icon: 'log', sort: 20 },
   {
     key: 'audit:oper',

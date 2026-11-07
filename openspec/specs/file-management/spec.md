@@ -1,6 +1,8 @@
-# 文件与附件 — Target baseline specification
+# 文件与附件 — Implemented baseline specification
 
-> TARGET / 尚待实现；验收后归档为已实现规范。
+> 已实现（Stage 4，2026-11-07 验收）：StorageService 接口 + LocalStorage 实现（`apps/api/src/common/storage/`），
+> files 模块（`apps/api/src/modules/files/`）。验收证据：集成测试 8 例（遍历名剥离/白名单 415/MIME 冲突 415/
+> 上限 413/越权 403/删除后 404/随机键与元数据/字节一致下载）+ 浏览器走查。
 
 ## Purpose
 
