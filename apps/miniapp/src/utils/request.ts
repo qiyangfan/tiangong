@@ -1,5 +1,11 @@
 import { SUCCESS_CODE, type ApiError } from '@tiangong/contracts';
-import { clearSession, getAccessToken, getRefreshToken, storeAccessToken } from './auth';
+import {
+  clearSession,
+  getAccessToken,
+  getRefreshToken,
+  storeAccessToken,
+  storeRefreshToken,
+} from './auth';
 
 /** API 基地址：编译期由 VITE_API_BASE_URL 注入（真机需 https 且配域名白名单）。 */
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1';
@@ -77,7 +83,7 @@ async function refreshSession(): Promise<boolean> {
     );
     storeAccessToken(data.accessToken);
     // refresh 轮换：新 refresh 一并落存储（rawRequest 不带旧 access 也无妨，refresh 端点只认 body）
-    uni.setStorageSync('tg_refresh_token', data.refreshToken);
+    storeRefreshToken(data.refreshToken);
     return true;
   } catch {
     return false;
@@ -103,6 +109,9 @@ async function request<T>(
       if (await refreshing) {
         return request<T>(method, url, data, options, true);
       }
+      // 刷新失败 = 会话不可恢复：清会话回登录（与 web request 层同语义）
+      clearSession();
+      gotoLogin();
     }
     if (authDead || (e.code === 'AUTH_TOKEN_EXPIRED' && retried)) {
       clearSession();

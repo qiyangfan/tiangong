@@ -72,7 +72,9 @@ export class GeneratorService {
   /** 已保存定义的预览（与 CLI 落盘字节一致）。 */
   async previewById(id: number): Promise<GenPreviewFile[]> {
     const row = await this.assertExists(id);
-    return renderGenFiles({ name: row.name, displayName: row.displayName, fields: row.fields as never });
+    // 与 detail 同一防御：fields JSON 先过契约校验再渲染（防手工写库脏数据）
+    const fields = genFieldDefSchema.array().parse(row.fields);
+    return renderGenFiles({ name: row.name, displayName: row.displayName, fields });
   }
 
   /** 未保存定义的预览（表单实时预览；与落库同一条字段一致性校验）。 */

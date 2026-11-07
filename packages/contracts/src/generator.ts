@@ -13,16 +13,23 @@ export const genFieldTypeSchema = z.enum([
 ]);
 export type GenFieldType = z.infer<typeof genFieldTypeSchema>;
 
+/** 元数据文案以字符串字面量进生成产物：禁单引号、反斜杠与换行（防产物语法坏）。 */
+function isMetadataText(v: string): boolean {
+  return !/['\\\r\n]/.test(v);
+}
+const METADATA_TEXT_MESSAGE = 'must not contain quote, backslash or line break';
+const metadataTextSchema = z.string().min(1).max(50).refine(isMetadataText, METADATA_TEXT_MESSAGE);
+
 export const genFieldDefSchema = z.object({
   name: z
     .string()
     .min(2)
     .max(50)
     .regex(/^[a-z][a-zA-Z0-9]*$/, 'field name must be lower camelCase'),
-  label: z.string().min(1).max(50),
+  label: metadataTextSchema,
   type: genFieldTypeSchema,
   required: z.boolean().default(false),
-  enumOptions: z.array(z.string().min(1).max(50)).default([]),
+  enumOptions: z.array(metadataTextSchema).default([]),
   inList: z.boolean().default(true),
   inForm: z.boolean().default(true),
   searchable: z.boolean().default(false),
@@ -53,7 +60,13 @@ export const genDefinitionRequestSchema = z.object({
     .min(2)
     .max(50)
     .regex(/^[a-z][a-z0-9-]*$/, 'module name must be kebab-case'),
-  displayName: z.string().min(1).max(50),
+  // displayName 进块注释，另禁星号加斜杠的注释终止序列（防注释提前终止）
+  displayName: z
+    .string()
+    .min(1)
+    .max(50)
+    .refine(isMetadataText, METADATA_TEXT_MESSAGE)
+    .refine((v) => !v.includes('*/'), 'must not contain comment terminator'),
   fields: z.array(genFieldDefSchema).min(1),
   remark: z.string().max(500).optional(),
 });

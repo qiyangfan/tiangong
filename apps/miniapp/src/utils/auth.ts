@@ -31,6 +31,10 @@ export function storeAccessToken(accessToken: string): void {
   uni.setStorageSync(ACCESS_KEY, accessToken);
 }
 
+export function storeRefreshToken(refreshToken: string): void {
+  uni.setStorageSync(REFRESH_KEY, refreshToken);
+}
+
 export function clearSession(): void {
   uni.removeStorageSync(ACCESS_KEY);
   uni.removeStorageSync(REFRESH_KEY);

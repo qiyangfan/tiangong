@@ -67,8 +67,21 @@ ${orLines}
     };`;
 }
 
-function contractImports(def: GenRenderInput): string {
-  const imports = new Set<string>([
+/** service 产物 import（只含 service 用到的类型，防产物 lint 未用告警）。 */
+function serviceImports(def: GenRenderInput): string {
+  const imports = [
+    `type Create${pascalCase(def.name)}Request`,
+    'type PageResult',
+    `type ${pascalCase(def.name)}Item`,
+    `type ${pascalCase(def.name)}Query`,
+    `type Update${pascalCase(def.name)}Request`,
+  ];
+  return imports.sort().join(',\n  ');
+}
+
+/** controller 产物 import（schema 与 idParamSchema 只在 controller 使用）。 */
+function controllerImports(def: GenRenderInput): string {
+  const imports = [
     `type Create${pascalCase(def.name)}Request`,
     `create${pascalCase(def.name)}RequestSchema`,
     'idParamSchema',
@@ -77,9 +90,8 @@ function contractImports(def: GenRenderInput): string {
     `${camelCase(def.name)}QuerySchema`,
     `type Update${pascalCase(def.name)}Request`,
     `update${pascalCase(def.name)}RequestSchema`,
-    'type PageResult',
-  ]);
-  return [...imports].sort().join(',\n  ');
+  ];
+  return imports.sort().join(',\n  ');
 }
 
 /** NestJS service / controller / module 三件产物。 */
@@ -87,7 +99,7 @@ export function renderApiFiles(def: GenRenderInput): Array<{ path: string; conte
   const pascal = pascalCase(def.name);
   const underscore = def.name.replace(/-/g, '_');
   const service = `import {
-  ${contractImports(def)},
+  ${serviceImports(def)},
 } from '@tiangong/contracts';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -144,7 +156,7 @@ ${updateConvertLines(def)}
     return toItem(row);
   }
 
-  async remove(id: number, userId: number): Promise<void> {
+  async remove(id: number): Promise<void> {
     await this.assertExists(id);
     await this.prisma.${underscore}.delete({ where: { id } });
   }
@@ -169,7 +181,7 @@ ${outputConvertLines(def)}
 `;
 
   const controller = `import {
-  ${contractImports(def)},
+  ${controllerImports(def)},
 } from '@tiangong/contracts';
 import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -226,11 +238,8 @@ export class ${pascal}Controller {
   @RequirePermissions('${def.name}:delete')
   @Audit('${def.displayName}', 'delete')
   @ApiOperation({ summary: '删除${def.displayName}' })
-  async remove(
-    @Param(new ZodValidationPipe(idParamSchema)) params: { id: number },
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
-    await this.${def.name.replace(/-/g, '')}.remove(params.id, user.id);
+  async remove(@Param(new ZodValidationPipe(idParamSchema)) params: { id: number }): Promise<void> {
+    await this.${def.name.replace(/-/g, '')}.remove(params.id);
   }
 }
 `;

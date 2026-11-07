@@ -112,6 +112,20 @@ function formValueInit(field: GenFieldDef): string {
   }
 }
 
+/** 编辑回填表达式：数值可空字段回 undefined（与提交端 undefined 判断配套），文本/时间回空串。 */
+function editInitExpr(field: GenFieldDef): string {
+  switch (field.type) {
+    case 'boolean':
+      return `row.${field.name}`;
+    case 'integer':
+      return `(row.${field.name} === null ? undefined : row.${field.name})`;
+    case 'decimal':
+      return `(row.${field.name} === null ? undefined : Number(row.${field.name}))`;
+    default:
+      return `(row.${field.name} ?? '')`;
+  }
+}
+
 /** 提交时的字段转换（decimal→定长小数串；datetime→ISO）。 */
 function submitConvert(field: GenFieldDef): string {
   switch (field.type) {
@@ -131,8 +145,9 @@ function submitConvert(field: GenFieldDef): string {
 }
 
 function requiredRule(field: GenFieldDef): string {
+  const trigger = field.type === 'datetime' ? 'change' : 'blur';
   return `  ${field.name}: [
-    { required: true, message: () => t('common.pleaseInput', { field: L.${field.name} }), trigger: 'blur' },
+    { required: true, message: () => t('common.pleaseInput', { field: L.${field.name} }), trigger: '${trigger}' },
   ],`;
 }
 
@@ -205,9 +220,8 @@ export function renderWebPage(def: GenRenderInput): string {
   const formItems = formFields.map(formItem).join('\n');
   const formInit = formFields.map(formValueInit).join('\n');
   const submitLines = formFields.map(submitConvert).join('\n');
-  const requiredFields = formFields.filter(
-    (f) => f.required && !['boolean', 'datetime'].includes(f.type),
-  );
+  // boolean 恒有值（switch），不设必填规则；其余必填字段（含 datetime，change 触发）均有字段级校验
+  const requiredFields = formFields.filter((f) => f.required && f.type !== 'boolean');
   const rules = requiredFields.map(requiredRule).join('\n');
   const enumConsts = def.fields.filter((f) => f.type === 'enum').map(enumOptionConst).join('\n');
   const hasEnum = def.fields.some((f) => f.type === 'enum');
@@ -325,12 +339,7 @@ ${formInit}
 function openEdit(row: ${pascal}Item): void {
   dialog.editingId = row.id;
   Object.assign(form, {
-${formFields
-  .map(
-    (f) =>
-      `    ${f.name}: (row.${f.name} ?? ${f.type === 'boolean' ? 'true' : "''"}) as never,`,
-  )
-  .join('\n')}
+${formFields.map((f) => `    ${f.name}: ${editInitExpr(f)} as never,`).join('\n')}
   });
   dialog.visible = true;
 }
