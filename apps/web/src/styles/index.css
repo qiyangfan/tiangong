@@ -1,16 +1,38 @@
-/* 全局样式与设计 token（亮暗两套值，暗色由 html.dark 承接 Element Plus dark css-vars） */
+/* 样式入口：Tailwind v4（CSS-first）+ Element Plus 主题桥接。
+   只引 theme 与 utilities 两层——preflight 会重置 Element Plus 组件样式，禁用；
+   dark: 变体跟随 html.dark（与 EP dark css-vars 同一开关，stores/app.ts 切换）。 */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Element Plus 设计 token 打磨（亮暗两套）----
+   主色：黛青 indigo；EP 派生色阶用 color-mix 现算，hover/disabled 变体全局生效。
+   暗色下 EP 的 light-* 语义为「混入黑色」，此处同样反向。 */
 :root {
   --tg-sidebar-width: 220px;
   --tg-sidebar-collapsed-width: 64px;
   --tg-navbar-height: 56px;
   --tg-page-padding: 16px;
   --tg-card-gap: 12px;
-  --tg-logo-bg: var(--el-color-primary);
-  --tg-logo-text: #fff;
+
+  --el-color-primary: #4f46e5;
+  --el-color-primary-dark-2: #3730a3;
+  --el-color-primary-light-3: #6d64e9;
+  --el-color-primary-light-5: #a7a2f1;
+  --el-color-primary-light-7: #c6c3f6;
+  --el-color-primary-light-8: #dad8f9;
+  --el-color-primary-light-9: #eeedfc;
+  --el-border-radius-base: 6px;
 }
 
-* {
-  box-sizing: border-box;
+html.dark {
+  --el-color-primary: #818cf8;
+  --el-color-primary-dark-2: #6a71f5;
+  --el-color-primary-light-3: #5b60d6;
+  --el-color-primary-light-5: #3f4396;
+  --el-color-primary-light-7: #25275c;
+  --el-color-primary-light-8: #191a3e;
+  --el-color-primary-light-9: #101125;
 }
 
 /* 主题切换帧过渡压制（stores/app.ts 挂 theme-switching 类保持 100ms）：

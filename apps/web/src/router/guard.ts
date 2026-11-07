@@ -9,6 +9,10 @@ import { useAuthStore } from '@/stores/auth';
 export function setupGuard(router: Router): void {
   router.beforeEach(async (to) => {
     const auth = useAuthStore();
+    // 会话恢复先行：已登录用户整页落到 /login（内存 token 空、refresh Cookie 有效）
+    // 也必须先恢复再分流，否则会被留在登录页。tryRestore 内部防重入，无 Cookie 只探测一次。
+    const restored = await auth.tryRestore();
+
     if (to.meta.public) {
       if (to.path === '/login' && auth.isLoggedIn) {
         return { path: '/' };
@@ -16,7 +20,6 @@ export function setupGuard(router: Router): void {
       return true;
     }
 
-    const restored = await auth.tryRestore();
     if (!restored) {
       return {
         path: '/login',

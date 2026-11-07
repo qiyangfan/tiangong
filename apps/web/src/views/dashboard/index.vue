@@ -32,88 +32,52 @@ function go(path: string): void {
 
 <template>
   <div class="tg-page">
-    <el-card shadow="never">
-      <div class="tg-dashboard__welcome">
-        <el-icon :size="36" color="var(--el-color-primary)"><Odometer /></el-icon>
+    <!-- 问候横幅：品牌渐变，暗色降低饱和 -->
+    <div
+      class="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-7 text-white shadow-md dark:from-indigo-500/90 dark:to-violet-500/90"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur"
+        >
+          <el-icon :size="26"><Odometer /></el-icon>
+        </div>
         <div>
-          <h2 class="tg-dashboard__greeting">
+          <h2 class="m-0 text-xl font-semibold">
             {{ t('dashboard.greeting', { name: auth.displayName }) }}
           </h2>
-          <p class="tg-dashboard__subtitle">{{ t('dashboard.subtitle') }}</p>
+          <p class="mt-1 mb-0 text-[13px] text-white/80">
+            {{ t('dashboard.subtitle') }}
+          </p>
         </div>
       </div>
-    </el-card>
+    </div>
 
-    <el-card shadow="never" class="tg-dashboard__card">
-      <template #header>{{ t('dashboard.quickLinks') }}</template>
-      <div class="tg-dashboard__links">
+    <el-card shadow="never" class="mt-3">
+      <template #header>
+        <span class="font-semibold">{{ t('dashboard.quickLinks') }}</span>
+      </template>
+      <div class="flex flex-wrap gap-3">
         <div
           v-for="link in links"
           :key="link.path"
-          class="tg-dashboard__link"
+          class="flex cursor-pointer items-center gap-2.5 rounded-md border border-[var(--el-border-color-light)] px-5 py-3 text-[var(--el-text-color-regular)] transition-colors hover:border-[var(--el-color-primary)] hover:text-[var(--el-color-primary)]"
           @click="go(link.path)"
         >
-          <el-icon :size="20"><component :is="link.icon" /></el-icon>
+          <el-icon :size="18"><component :is="link.icon" /></el-icon>
           <span>{{ link.label }}</span>
         </div>
         <el-empty v-if="links.length === 0" :description="t('common.noData')" :image-size="60" />
       </div>
     </el-card>
 
-    <el-card shadow="never" class="tg-dashboard__card">
-      <template #header>{{ t('dashboard.stackTitle') }}</template>
-      <span class="tg-dashboard__stack">{{ t('dashboard.stack') }}</span>
+    <el-card shadow="never" class="mt-3">
+      <template #header>
+        <span class="font-semibold">{{ t('dashboard.stackTitle') }}</span>
+      </template>
+      <span class="text-[13px] text-[var(--el-text-color-secondary)]">
+        {{ t('dashboard.stack') }}
+      </span>
     </el-card>
   </div>
 </template>
-
-<style scoped>
-.tg-dashboard__welcome {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.tg-dashboard__greeting {
-  margin: 0;
-  color: var(--el-text-color-primary);
-}
-
-.tg-dashboard__subtitle {
-  margin: 4px 0 0;
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
-}
-
-.tg-dashboard__card {
-  margin-top: var(--tg-card-gap);
-}
-
-.tg-dashboard__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.tg-dashboard__link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--el-text-color-regular);
-  transition: all 0.15s;
-}
-
-.tg-dashboard__link:hover {
-  border-color: var(--el-color-primary);
-  color: var(--el-color-primary);
-}
-
-.tg-dashboard__stack {
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
-}
-</style>

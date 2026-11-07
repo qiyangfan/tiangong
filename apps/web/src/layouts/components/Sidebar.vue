@@ -61,8 +61,19 @@ function leafIndex(parentPath: string | null | undefined, node: MenuNode): strin
   flex: 1;
 }
 
+/* 菜单激活项品牌化：EP 默认的纯文字高亮改为品牌色块 + 左侧指示条 */
 .tg-sidebar__menu {
   border-right: none;
+}
+
+.tg-sidebar__menu .el-menu-item.is-active {
+  background-color: var(--el-color-primary-light-9);
+  border-right: 2px solid var(--el-color-primary);
+  font-weight: 600;
+}
+
+html.dark .tg-sidebar__menu .el-menu-item.is-active {
+  background-color: var(--el-color-primary-light-8);
 }
 
 .tg-sidebar__menu:not(.el-menu--collapse) {

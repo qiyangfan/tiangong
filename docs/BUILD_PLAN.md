@@ -122,11 +122,12 @@ tiangong/
 
 **环境基线**（动手前核对，勿凭记忆）：
 
-- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3
+- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / **Tailwind 4.3（@tailwindcss/vite，CSS-first）**
 - dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0）
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）
 - API 端点全集：/health/live|ready、/auth/login|refresh|logout|menus|**permissions**|profile|change-password、/users(+reset-password|enabled)、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs；swagger /docs
 - 前端结构锚点：动态路由按后端菜单 component 字符串映射 `apps/web/src/views/<component>.vue`（`import.meta.glob`）；五段式页面模板看 `apps/web/src/views/system/user/index.vue`；request 层 `src/utils/request.ts`（401 单飞刷新重放、envelope 解包）；公共件 Pagination/RightToolbar/DictTag/MenuIcon + useDict/usePermission
+- **样式分工（ADR-0006）**：交互控件及其内部样式一律 Element Plus（主题靠覆盖 EP css-vars，见 `src/styles/index.css` 亮暗两套品牌 token）；布局/间距/响应式/门面视觉用 Tailwind utility（`dark:` 变体已绑 html.dark）；**Tailwind preflight 禁用**（只引 theme+utilities 两层，防重置 EP），新样式勿引 `tailwindcss/index.css`
 - 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
 - openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`（npm 无 `@openspec/cli` 包）；当前 6 spec 全绿
 

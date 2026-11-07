@@ -36,8 +36,10 @@ function onToggleLocale(): void {
 </script>
 
 <template>
-  <header class="tg-navbar">
-    <div class="tg-navbar__left">
+  <header
+    class="flex h-[var(--tg-navbar-height)] shrink-0 items-center justify-between border-b border-[var(--el-border-color-light)] bg-[var(--el-bg-color)] px-4"
+  >
+    <div class="flex min-w-0 items-center gap-2">
       <el-button text @click="appStore.toggleSidebar()">
         <el-icon :size="18">
           <Fold v-if="!appStore.sidebarCollapsed" />
@@ -46,7 +48,7 @@ function onToggleLocale(): void {
       </el-button>
       <Breadcrumb />
     </div>
-    <div class="tg-navbar__right">
+    <div class="flex items-center gap-3">
       <el-tooltip
         :content="appStore.theme === 'dark' ? t('layout.light') : t('layout.dark')"
         placement="bottom"
@@ -58,13 +60,15 @@ function onToggleLocale(): void {
           </el-icon>
         </el-button>
       </el-tooltip>
-      <el-button text class="tg-navbar__lang" @click="onToggleLocale">
+      <el-button text class="px-2" @click="onToggleLocale">
         {{ appStore.locale === 'zh-CN' ? 'EN' : '中文' }}
       </el-button>
       <el-dropdown trigger="click">
-        <span class="tg-navbar__user">
+        <span
+          class="flex cursor-pointer items-center gap-1.5 text-[var(--el-text-color-regular)] outline-none"
+        >
           <el-icon :size="16"><User /></el-icon>
-          <span class="tg-navbar__username">{{ auth.displayName }}</span>
+          <span class="max-w-[140px] truncate">{{ auth.displayName }}</span>
           <el-icon :size="12"><ArrowDown /></el-icon>
         </span>
         <template #dropdown>
@@ -78,47 +82,4 @@ function onToggleLocale(): void {
   </header>
 </template>
 
-<style scoped>
-.tg-navbar {
-  height: var(--tg-navbar-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  background: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color-light);
-  flex-shrink: 0;
-}
-
-.tg-navbar__left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.tg-navbar__right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.tg-navbar__lang {
-  padding: 0 8px;
-}
-
-.tg-navbar__user {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  color: var(--el-text-color-regular);
-  outline: none;
-}
-
-.tg-navbar__username {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>
+<!-- 布局样式已迁至模板 utility（ADR-0006：布局归 Tailwind，控件归 Element Plus） -->

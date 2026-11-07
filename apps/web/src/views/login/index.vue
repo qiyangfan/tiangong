@@ -40,11 +40,22 @@ async function onLogin(): Promise<void> {
 </script>
 
 <template>
-  <div class="tg-login">
-    <el-card class="tg-login__card" shadow="always">
-      <div class="tg-login__head">
-        <h1 class="tg-login__title">{{ t('login.title') }}</h1>
-        <p class="tg-login__subtitle">{{ t('login.subtitle') }}</p>
+  <div
+    class="flex h-screen items-center justify-center bg-[var(--el-bg-color-page)] [background-image:radial-gradient(ellipse_60%_50%_at_20%_10%,rgba(79,70,229,0.12),transparent),radial-gradient(ellipse_50%_60%_at_85%_85%,rgba(139,92,246,0.10),transparent)] dark:[background-image:radial-gradient(ellipse_60%_50%_at_20%_10%,rgba(129,140,248,0.14),transparent),radial-gradient(ellipse_50%_60%_at_85%_85%,rgba(167,139,250,0.10),transparent)]"
+  >
+    <el-card class="w-[400px] shadow-xl" shadow="always">
+      <div class="mb-6 text-center">
+        <div
+          class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-xl font-bold text-white"
+        >
+          天
+        </div>
+        <h1 class="m-0 text-[22px] font-semibold text-[var(--el-text-color-primary)]">
+          {{ t('login.title') }}
+        </h1>
+        <p class="mt-1.5 mb-0 text-[13px] text-[var(--el-text-color-secondary)]">
+          {{ t('login.subtitle') }}
+        </p>
       </div>
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="onLogin">
         <el-form-item prop="username">
@@ -65,9 +76,9 @@ async function onLogin(): Promise<void> {
             autocomplete="current-password"
           />
         </el-form-item>
-        <el-form-item>
+        <el-form-item class="mb-0">
           <el-button
-            class="tg-login__btn"
+            class="w-full tracking-[6px]"
             type="primary"
             size="large"
             :loading="submitting"
@@ -80,38 +91,3 @@ async function onLogin(): Promise<void> {
     </el-card>
   </div>
 </template>
-
-<style scoped>
-.tg-login {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--el-bg-color-page);
-}
-
-.tg-login__card {
-  width: 380px;
-}
-
-.tg-login__head {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.tg-login__title {
-  margin: 0;
-  font-size: 22px;
-  color: var(--el-text-color-primary);
-}
-
-.tg-login__subtitle {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-}
-
-.tg-login__btn {
-  width: 100%;
-}
-</style>
