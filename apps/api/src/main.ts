@@ -8,7 +8,6 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { requestIdMiddleware } from './common/request-id.middleware';
-import { methodOverrideMiddleware } from './common/method-override.middleware';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
@@ -24,7 +23,6 @@ async function bootstrap(): Promise<void> {
   app.use(helmet());
   app.use(cookieParser());
   app.use(requestIdMiddleware);
-  app.use(methodOverrideMiddleware);
   app.enableCors({ origin: origins.length > 0 ? origins : true, credentials: true });
   app.setGlobalPrefix('api/v1');
   app.enableShutdownHooks();

@@ -10,7 +10,7 @@ import {
   type UserListQuery,
   userListQuerySchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -51,7 +51,7 @@ export class UsersController {
     return this.users.create(body, user.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('system:user:update')
   @Audit('用户管理', 'update')
   @ApiOperation({ summary: '修改用户（含角色分配）' })
@@ -86,7 +86,7 @@ export class UsersController {
     await this.users.resetPassword(params.id, body, user.id);
   }
 
-  @Patch(':id/enabled')
+  @Put(':id/enabled')
   @RequirePermissions('system:user:enable')
   @Audit('用户管理', 'update')
   @ApiOperation({ summary: '启停用户' })

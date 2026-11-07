@@ -30,20 +30,15 @@ function gotoLogin(): void {
   uni.reLaunch({ url: '/pages/login/index' });
 }
 
-function rawRequest<T>(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, data?: unknown): Promise<T> {
-  // 微信 request 不支持 PATCH：以 POST + override 头承载，api 侧白名单改写
-  const wireMethod = method === 'PATCH' ? 'POST' : method;
-  const overrideHeader =
-    method === 'PATCH' ? { 'X-HTTP-Method-Override': 'PATCH' } : {};
+function rawRequest<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', url: string, data?: unknown): Promise<T> {
   return new Promise((resolve, reject) => {
     uni.request({
       url: `${API_BASE}${url}`,
-      method: wireMethod,
+      method,
       data: data as Record<string, unknown> | undefined,
       timeout: 15000,
       header: {
         'Content-Type': 'application/json',
-        ...overrideHeader,
         ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
       },
       success: (res) => {
@@ -90,7 +85,7 @@ async function refreshSession(): Promise<boolean> {
 }
 
 async function request<T>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   url: string,
   data?: unknown,
   options?: RequestOptions,
@@ -127,8 +122,8 @@ export const http = {
   post<T>(url: string, data?: unknown, options?: RequestOptions): Promise<T> {
     return request<T>('POST', url, data, options);
   },
-  patch<T>(url: string, data?: unknown, options?: RequestOptions): Promise<T> {
-    return request<T>('PATCH', url, data, options);
+  put<T>(url: string, data?: unknown, options?: RequestOptions): Promise<T> {
+    return request<T>('PUT', url, data, options);
   },
   delete<T = void>(url: string, options?: RequestOptions): Promise<T> {
     return request<T>('DELETE', url, undefined, options);

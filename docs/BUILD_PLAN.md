@@ -118,7 +118,7 @@ tiangong/
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0-6 全部收官（§7 表全勾）。Stage 6 已交付：deploy/compose.yaml 全栈（mysql 8.4 + api migrate/seed/serve + web nginx 反代）+ 双 Dockerfile + .dockerignore；全栈 e2e = compose 起→api healthy→8080 health 通→浏览器登录→SampleRecord 新增/编辑/删除闭环（已 down 清理）；README 整体重写为现状形态；交付报告 docs/quality/DELIVERY_REPORT.md（含 FUNCTION_MATRIX P0 逐项对照 + NOT VERIFIED 清单）；6 个 openspec spec 头部全部转 Implemented。Stage 5 已交付：`apps/miniapp`（uni-app CLI 工程，dcloudio 3.0.0-503 + Vue3 + TS strict）——登录 / 我的（profile+退出） / 示例数据（列表+新增编辑删除）三页；请求封装复用 `@tiangong/contracts`（envelope/错误码单源），401 单飞刷新重放对齐 web 语义，token 落 `uni.setStorageSync`，refresh 走 body `client='miniapp'`。门禁：`build:mp-weixin` 产物生成（3 页 app.json + env 注入，248K）；`vue-tsc` 绿；集成 26 例全绿（新增 PATCH 兼容用例）。真机/微信开发者工具运行 NOT VERIFIED（本机无工具）。**下一个任务是 Stage 6（收官）**。
+**完成度速览**：Stage 0-6 全部收官（§7 表全勾）。Stage 6 已交付：deploy/compose.yaml 全栈（mysql 8.4 + api migrate/seed/serve + web nginx 反代）+ 双 Dockerfile + .dockerignore；全栈 e2e = compose 起→api healthy→8080 health 通→浏览器登录→SampleRecord 新增/编辑/删除闭环（已 down 清理）；README 整体重写为现状形态；交付报告 docs/quality/DELIVERY_REPORT.md（含 FUNCTION_MATRIX P0 逐项对照 + NOT VERIFIED 清单）；6 个 openspec spec 头部全部转 Implemented。Stage 5 已交付：`apps/miniapp`（uni-app CLI 工程，dcloudio 3.0.0-503 + Vue3 + TS strict）——登录 / 我的（profile+退出） / 示例数据（列表+新增编辑删除）三页；请求封装复用 `@tiangong/contracts`（envelope/错误码单源），401 单飞刷新重放对齐 web 语义，token 落 `uni.setStorageSync`，refresh 走 body `client='miniapp'`。门禁：`build:mp-weixin` 产物生成（3 页 app.json + env 注入，248K）；`vue-tsc` 绿；集成 26 例全绿（更新动词全线 PUT）。真机/微信开发者工具运行 NOT VERIFIED（本机无工具）。**下一个任务是 Stage 6（收官）**。
 
 **环境基线**（动手前核对，勿凭记忆）：
 
@@ -135,7 +135,7 @@ tiangong/
 
 - **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径；CLI `pnpm gen:crud <name>` 留在 `apps/api/scripts/`（pnpm 严格解析），仓库根用 pnpm-workspace.yaml 探测（**不可用 import.meta.url**，tsx CJS 转译下 shim 不可靠）；任一目标文件已存在整体拒绝
 - **files 模块**：`src/common/storage/` + `src/modules/files/`；上限 = min(sys.file.maxSizeMb, MAX_UPLOAD_MB)；busboy latin1 文件名 mojibake 已修复；下载非 envelope 二进制流
-- **PATCH 兼容层（跨端契约）**：微信 request 不支持 PATCH——miniapp 以 POST + `X-HTTP-Method-Override: PATCH` 头承载；api `src/common/method-override.middleware.ts` 白名单改写（main.ts 与 test/setup/app.ts 两处挂载，测试与真实行为一致）；集成测试锁「无头 POST 404、带头 200」
+- **更新动词 = PUT（跨端统一，部分合并语义）**：曾用 PATCH + `X-HTTP-Method-Override` 适配层（微信 request 不支持 PATCH），2026-11-07 owner 决策改为全线 PUT（对齐 RuoYi 约定，微信原生支持），适配层已删除；约定写明在 docs/architecture/API_CONTRACT.md；集成测试含 miniapp 原生 PUT 更新用例
 - **miniapp**：`apps/miniapp`（uni preset vite-ts；vite 5.2.8 为 uni 插件约束勿升；typescript 已升 5.9 + 自写 tsconfig——模板 extends 的 @vue/tsconfig@0.1.3 含 TS5.9 移除项）；API 基地址 `VITE_API_BASE_URL`（.env，真机需 https+域名白名单）；模板 eslint 由根 flat config 覆盖
 
 **已知坑**（违反必返工）：
@@ -149,7 +149,7 @@ tiangong/
 7. Element Plus 未全局注册图标：el-button 必须用 `:icon="组件"`（显式 import）
 8. 契约细节：字典类型/项 update 的 remark 只能省略不能置 null；列表 enabled 过滤传 `'true'/'false'` 字符串（contracts 已修 coerce 缺陷，勿改回）
 9. **IAB 浏览器自动化**：Playwright locator click 对按钮持续超时（actionability 卡死），用 `tab.cua.click({x,y})` 坐标点击；`node_repl` 每次 js 调用必须重跑完整 bootstrap；IAB 不支持 file chooser（上传类走查用 curl 打真实进程）
-10. **miniapp typecheck**：`pnpm --filter @tiangong/miniapp type-check`（vue-tsc 3）；uni 的 SFC 需要 `@dcloudio/types`；微信 request method 无 PATCH（见上兼容层）
+10. **miniapp typecheck**：`pnpm --filter @tiangong/miniapp type-check`（vue-tsc 3）；uni 的 SFC 需要 `@dcloudio/types`；微信 request method 无 PATCH——更新动词已全线统一为 PUT（见「Stage 4/5 关键事实」）
 
 ## 8. 后续工作指引（项目收官态）
 

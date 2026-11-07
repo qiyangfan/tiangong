@@ -16,7 +16,7 @@ export function apiCreateSample(data: CreateSampleRequest): Promise<SampleRecord
 }
 
 export function apiUpdateSample(id: number, data: UpdateSampleRequest): Promise<SampleRecordItem> {
-  return http.patch(`/samples/${id}`, data);
+  return http.put(`/samples/${id}`, data);
 }
 
 export function apiDeleteSample(id: number): Promise<void> {

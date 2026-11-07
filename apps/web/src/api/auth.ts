@@ -38,7 +38,7 @@ export function apiGetProfile(): Promise<Profile> {
 }
 
 export function apiUpdateProfile(data: UpdateProfileRequest): Promise<Profile> {
-  return http.patch('/auth/profile', data);
+  return http.put('/auth/profile', data);
 }
 
 export function apiChangePassword(data: ChangePasswordRequest): Promise<void> {

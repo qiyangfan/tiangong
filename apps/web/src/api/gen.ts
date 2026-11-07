@@ -20,7 +20,7 @@ export function apiUpdateGenDefinition(
   id: number,
   data: GenDefinitionUpdate,
 ): Promise<GenDefinitionItem> {
-  return http.patch(`/gen-definitions/${id}`, data);
+  return http.put(`/gen-definitions/${id}`, data);
 }
 
 export function apiDeleteGenDefinition(id: number): Promise<void> {

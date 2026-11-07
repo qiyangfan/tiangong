@@ -16,7 +16,7 @@ export function apiCreateSetting(data: CreateSettingRequest): Promise<SettingIte
 }
 
 export function apiUpdateSetting(id: number, data: UpdateSettingRequest): Promise<SettingItem> {
-  return http.patch(`/settings/${id}`, data);
+  return http.put(`/settings/${id}`, data);
 }
 
 export function apiDeleteSetting(id: number): Promise<void> {

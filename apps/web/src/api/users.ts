@@ -31,7 +31,7 @@ export function apiCreateUser(data: CreateUserRequest): Promise<UserItem> {
 }
 
 export function apiUpdateUser(id: number, data: UpdateUserRequest): Promise<UserItem> {
-  return http.patch(`/users/${id}`, data);
+  return http.put(`/users/${id}`, data);
 }
 
 export function apiDeleteUser(id: number): Promise<void> {
@@ -43,5 +43,5 @@ export function apiResetUserPassword(id: number, data: ResetPasswordRequest): Pr
 }
 
 export function apiSetUserEnabled(id: number, enabled: boolean): Promise<UserItem> {
-  return http.patch(`/users/${id}/enabled`, { enabled });
+  return http.put(`/users/${id}/enabled`, { enabled });
 }

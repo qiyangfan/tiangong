@@ -9,7 +9,7 @@ import {
   type UpdateRoleRequest,
   updateRoleRequestSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -50,7 +50,7 @@ export class RolesController {
     return this.roles.create(body, user.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('system:role:update')
   @Audit('角色管理', 'grant')
   @ApiOperation({ summary: '修改角色（含权限绑定）' })

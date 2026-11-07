@@ -35,7 +35,7 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）均已过门禁：contracts 契�
 ## 验证记录（2026-11-07）
 
 - `pnpm lint`、`pnpm typecheck`（contracts/api/web/miniapp vue-tsc）、`pnpm test`（17）、`pnpm build`：全绿
-- `pnpm --filter @tiangong/api test:integration`：26/26（认证契约、RBAC 默认拒绝、分页与唯一性、审计脱敏、files 8 负例、SampleRecord 跨端闭环、PATCH 兼容头双向语义、生成器预览与越权）
+- `pnpm --filter @tiangong/api test:integration`：26/26（认证契约、RBAC 默认拒绝、分页与唯一性、审计脱敏、files 8 负例、SampleRecord 跨端闭环、miniapp 原生 PUT 更新闭环、生成器预览与越权）
 - 生成器确定性：同一输入两次渲染/两次独立落盘逐字节一致；CLI 端到端（落盘 7 件 → 二跑整体拒绝并列全部冲突）
 - **全栈 e2e**：`deploy/compose.yaml` 起 mysql:8.4 + api（migrate→seed→serve，healthcheck healthy）+ web nginx → `http://localhost:8080` health/live 通 → 浏览器登录（暗色主题）→ SampleRecord 新增 66.60（两位小数）→ 编辑 99.99 → 删除 → 空态。已 down 清理。
 - openspec：6 spec validate 全绿，头部均转 Implemented 基线
@@ -51,10 +51,10 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）均已过门禁：contracts 契�
 
 - 进程内缓存（字典/参数/权限）——模块化单体默认形态，多实例部署需换共享缓存（CacheService 注释已说明）
 - 无 Redis、无软删、数据范围权限/导入导出/在线会话管理为 P1（FUNCTION_MATRIX 明确按需启用）
-- 小程序 PATCH 走 `X-HTTP-Method-Override` 头（微信 request 无 PATCH method），api 白名单改写，集成测试锁定双向语义
+- 更新动词统一 PUT（部分合并语义，对齐 RuoYi 约定）：微信 request 不支持 PATCH，PUT 为三端原生可用动词，无需任何传输适配层
 - 生成器产物不含菜单/权限 seed 注入（人工在 UI 配置，避免覆盖人工改动）；prisma model 片段需人工合并后 migrate
 - files 上传走内存存储（≤MAX_UPLOAD_MB 硬顶），大文件分片/直传为未排期能力
 
 ## 已知坑速查
 
-见 `docs/BUILD_PLAN.md` §7.1「已知坑」10 条（DI 元数据、swc、3307、vite watcher、EP 图标、IAB 自动化、miniapp PATCH 等）。
+见 `docs/BUILD_PLAN.md` §7.1「已知坑」10 条（DI 元数据、swc、3307、vite watcher、EP 图标、IAB 自动化等）。

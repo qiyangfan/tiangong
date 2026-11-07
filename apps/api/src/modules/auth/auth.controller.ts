@@ -13,7 +13,7 @@ import {
   refreshRequestSchema,
   updateProfileRequestSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Put, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -126,7 +126,7 @@ export class AuthController {
     return this.auth.profile(user.id);
   }
 
-  @Patch('profile')
+  @Put('profile')
   @ApiBearerAuth()
   @ApiOperation({ summary: '更新个人资料' })
   async updateProfile(

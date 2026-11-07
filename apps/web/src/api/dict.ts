@@ -30,7 +30,7 @@ export function apiCreateDictType(data: CreateDictTypeRequest): Promise<DictType
 }
 
 export function apiUpdateDictType(id: number, data: UpdateDictTypeRequest): Promise<DictTypeItem> {
-  return http.patch(`/dict-types/${id}`, data);
+  return http.put(`/dict-types/${id}`, data);
 }
 
 export function apiDeleteDictType(id: number): Promise<void> {
@@ -50,7 +50,7 @@ export function apiCreateDictItem(data: CreateDictItemRequest): Promise<DictItem
 }
 
 export function apiUpdateDictItem(id: number, data: UpdateDictItemRequest): Promise<DictItem> {
-  return http.patch(`/dict-items/${id}`, data);
+  return http.put(`/dict-items/${id}`, data);
 }
 
 export function apiDeleteDictItem(id: number): Promise<void> {

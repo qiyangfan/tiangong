@@ -8,7 +8,7 @@ import {
   type UpdateSettingRequest,
   updateSettingRequestSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -40,7 +40,7 @@ export class SettingsController {
     return this.settings.create(body, user.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('system:setting:update')
   @Audit('系统参数', 'update')
   @ApiOperation({ summary: '修改参数值' })

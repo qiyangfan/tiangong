@@ -9,7 +9,7 @@ import {
   type UpdatePermissionRequest,
   updatePermissionRequestSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -41,7 +41,7 @@ export class PermissionsController {
     return this.permissions.create(body);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('system:permission:update')
   @Audit('权限管理', 'update')
   @ApiOperation({ summary: '修改权限点' })

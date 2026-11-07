@@ -139,8 +139,8 @@ export const http = {
   post<T>(url: string, data?: unknown, config?: TgRequestConfig): Promise<T> {
     return unwrap<T>(service.post(url, data, config));
   },
-  patch<T>(url: string, data?: unknown, config?: TgRequestConfig): Promise<T> {
-    return unwrap<T>(service.patch(url, data, config));
+  put<T>(url: string, data?: unknown, config?: TgRequestConfig): Promise<T> {
+    return unwrap<T>(service.put(url, data, config));
   },
   delete<T = void>(url: string, config?: TgRequestConfig): Promise<T> {
     return unwrap<T>(service.delete(url, config));

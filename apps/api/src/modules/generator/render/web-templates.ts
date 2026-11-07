@@ -183,7 +183,7 @@ export function apiCreate${pascal}(data: Create${pascal}Request): Promise<${pasc
 }
 
 export function apiUpdate${pascal}(id: number, data: Update${pascal}Request): Promise<${pascal}Item> {
-  return http.patch(\`/${def.name}/\${id}\`, data);
+  return http.put(\`/${def.name}/\${id}\`, data);
 }
 
 export function apiDelete${pascal}(id: number): Promise<void> {

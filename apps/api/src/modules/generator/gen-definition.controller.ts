@@ -8,7 +8,7 @@ import {
   genDefinitionUpdateSchema,
   idParamSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -56,7 +56,7 @@ export class GenDefinitionController {
     return this.gen.create(body, user.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('gen:update')
   @Audit('代码生成', 'update')
   @ApiOperation({ summary: '修改生成定义（模块名不可变）' })

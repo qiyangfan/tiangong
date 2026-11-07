@@ -30,7 +30,7 @@ export function apiCreateRole(data: CreateRoleRequest): Promise<RoleDetail> {
 }
 
 export function apiUpdateRole(id: number, data: UpdateRoleRequest): Promise<RoleDetail> {
-  return http.patch(`/roles/${id}`, data);
+  return http.put(`/roles/${id}`, data);
 }
 
 export function apiDeleteRole(id: number): Promise<void> {

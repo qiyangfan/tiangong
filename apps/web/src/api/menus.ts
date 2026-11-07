@@ -15,7 +15,7 @@ export function apiCreateMenu(data: CreateMenuRequest): Promise<MenuNodeWithMeta
 }
 
 export function apiUpdateMenu(id: number, data: UpdateMenuRequest): Promise<MenuNodeWithMeta> {
-  return http.patch(`/menus/${id}`, data);
+  return http.put(`/menus/${id}`, data);
 }
 
 export function apiDeleteMenu(id: number): Promise<void> {

@@ -171,7 +171,7 @@ ${outputConvertLines(def)}
   const controller = `import {
   ${contractImports(def)},
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -210,7 +210,7 @@ export class ${pascal}Controller {
     return this.${def.name.replace(/-/g, '')}.create(body, user.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('${def.name}:update')
   @Audit('${def.displayName}', 'update')
   @ApiOperation({ summary: '修改${def.displayName}' })

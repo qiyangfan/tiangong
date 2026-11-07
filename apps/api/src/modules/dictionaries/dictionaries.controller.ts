@@ -14,7 +14,7 @@ import {
   type UpdateDictTypeRequest,
   updateDictTypeRequestSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppError } from '../../common/app-error';
@@ -49,7 +49,7 @@ export class DictionariesController {
     return this.dicts.createType(body, user.id);
   }
 
-  @Patch('dict-types/:id')
+  @Put('dict-types/:id')
   @RequirePermissions('system:dict:update')
   @Audit('字典管理', 'update')
   @ApiOperation({ summary: '修改字典类型' })
@@ -105,7 +105,7 @@ export class DictionariesController {
     return this.dicts.createItem(body, user.id);
   }
 
-  @Patch('dict-items/:id')
+  @Put('dict-items/:id')
   @RequirePermissions('system:dict:update')
   @Audit('字典管理', 'update')
   @ApiOperation({ summary: '修改字典项' })

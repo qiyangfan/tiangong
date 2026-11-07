@@ -335,7 +335,7 @@ describe('文件模块（受控上传与授权下载）', () => {
     const setting = list.body.data.find((s: { settingKey: string }) => s.settingKey === 'sys.file.maxSizeMb');
     settingsId = setting.id;
     const shrink = await app.http
-      .patch(`/api/v1/settings/${settingsId}`)
+      .put(`/api/v1/settings/${settingsId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ value: '1' });
     expect(shrink.status).toBe(200);
@@ -349,7 +349,7 @@ describe('文件模块（受控上传与授权下载）', () => {
     expect(up.body.code).toBe('FILE_TOO_LARGE');
 
     await app.http
-      .patch(`/api/v1/settings/${settingsId}`)
+      .put(`/api/v1/settings/${settingsId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ value: '20' });
   });
@@ -406,7 +406,7 @@ describe('SampleRecord 跨端闭环', () => {
     expect(miniRead.body.data.name).toBe('跨端样例');
 
     const miniUpdate = await app.http
-      .patch(`/api/v1/samples/${id}`)
+      .put(`/api/v1/samples/${id}`)
       .set('Authorization', `Bearer ${miniToken}`)
       .send({ name: '跨端样例-小程序改', amount: '99.99' });
     expect(miniUpdate.status).toBe(200);
@@ -432,26 +432,20 @@ describe('SampleRecord 跨端闭环', () => {
     expect(del.status).toBe(200);
   });
 
-  it('小程序 PATCH 兼容：POST + X-HTTP-Method-Override 头等价 PATCH', async () => {
+  it('miniapp 原生 PUT 更新同一条记录（微信 request 合法 method）', async () => {
     const create = await app.http
       .post('/api/v1/samples')
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ name: 'override样例' });
+      .send({ name: 'put样例' });
     expect(create.status).toBe(201);
     const id = create.body.data.id;
-    const overridden = await app.http
-      .post(`/api/v1/samples/${id}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .set('X-HTTP-Method-Override', 'PATCH')
-      .send({ name: 'override样例-已改' });
-    expect(overridden.status).toBe(200);
-    expect(overridden.body.data.name).toBe('override样例-已改');
-    // 无头 POST 落到未定义路由 → 404（override 头不是无条件放行）
-    const plainPost = await app.http
-      .post(`/api/v1/samples/${id}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ name: 'plain' });
-    expect(plainPost.status).toBe(404);
+    const miniToken = await loginOnce(app.http);
+    const updated = await app.http
+      .put(`/api/v1/samples/${id}`)
+      .set('Authorization', `Bearer ${miniToken}`)
+      .send({ name: 'put样例-已改' });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.name).toBe('put样例-已改');
     await app.http.delete(`/api/v1/samples/${id}`).set('Authorization', `Bearer ${adminToken}`);
   });
 
@@ -539,7 +533,7 @@ describe('代码生成器', () => {
     expect(badEnum.body.code).toBe('GEN_FIELD_INVALID');
 
     const rename = await app.http
-      .patch(`/api/v1/gen-definitions/${defId}`)
+      .put(`/api/v1/gen-definitions/${defId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ name: 'it-gen-renamed' });
     expect(rename.status).toBe(409);

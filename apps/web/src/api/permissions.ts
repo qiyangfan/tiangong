@@ -17,7 +17,7 @@ export function apiCreatePermission(data: CreatePermissionRequest): Promise<void
 }
 
 export function apiUpdatePermission(id: number, data: UpdatePermissionRequest): Promise<void> {
-  return http.patch(`/permissions/${id}`, data);
+  return http.put(`/permissions/${id}`, data);
 }
 
 export function apiDeletePermission(id: number): Promise<void> {

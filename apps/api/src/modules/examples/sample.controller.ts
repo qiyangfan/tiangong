@@ -8,7 +8,7 @@ import {
   type UpdateSampleRequest,
   updateSampleRequestSchema,
 } from '@tiangong/contracts';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Put, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Audit } from '../../common/audit/audit.decorator';
@@ -47,7 +47,7 @@ export class SampleController {
     return this.sample.create(body, user.id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @RequirePermissions('sample:update')
   @Audit('示例数据', 'update')
   @ApiOperation({ summary: '修改示例数据' })
