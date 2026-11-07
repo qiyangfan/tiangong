@@ -1,0 +1,5 @@
+# actionlint 1.7.12 内置标签表未收录 2026-09 GA 的 ubuntu-26.04（上游 rhysd/actionlint#682），
+# 在此补录；上游收录后可移除
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
