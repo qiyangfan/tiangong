@@ -138,7 +138,9 @@ tiangong/
 4. Stage 5 接手时：uni-app 用 CLI 工程（不要 HBuilderX 专属结构），请求封装复用 `@tiangong/contracts`。
 5. 任何门禁失败：修到绿为止或如实标 NOT VERIFIED，禁止跳过门禁宣称完成。
 6. 常用命令（Stage 0 建立后）：
-   - 本机：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（共享栈 env-mysql，3306）
+   - 本机：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（共享栈 env-mysql 8.4，宿主 **3307**，连接串见 §7.1；勿用 3306）
    - 回退：`docker compose -f deploy/compose.dev.yaml up -d`（独立 mysql:8.4，端口 3307）
    - `pnpm prisma:migrate` / `pnpm prisma:seed`（api 包内）
    - `pnpm dev` / `pnpm test` / `pnpm lint` / `pnpm typecheck` / `pnpm build`（根目录聚合）
+7. Stage 3（flash 会话）开场白，可直接粘贴：
+   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 已落地事实与踩坑清单、§8 执行指令），然后执行 Stage 3（apps/web）。
