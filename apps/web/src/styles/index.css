@@ -13,6 +13,14 @@
   box-sizing: border-box;
 }
 
+/* 主题切换帧过渡压制（stores/app.ts 挂 theme-switching 类保持 100ms）：
+   期间所有表面同帧翻转，窗口结束后 hover 等微交互过渡照常恢复。 */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
 html,
 body {
   margin: 0;
