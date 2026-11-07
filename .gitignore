@@ -12,3 +12,10 @@ storage/
 *.tsbuildinfo
 apps/miniapp/unpackage/
 .turbo/
+
+# playwright e2e artifacts（调试产物不入库）
+test-results/
+playwright-report/
+
+# ZCode 会话产物（AI 工具状态不入库）
+.zcode/

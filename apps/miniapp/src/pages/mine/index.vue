@@ -1,108 +1,65 @@
 <template>
-  <view class="mine-page">
-    <view class="mine-card">
-      <text class="mine-name">{{ profile?.nickname ?? user?.nickname ?? '-' }}</text>
-      <text class="mine-username">{{ profile?.username ?? user?.username ?? '' }}</text>
+  <view class="min-h-screen bg-page p-3 flex flex-col gap-3">
+    <view class="rounded-card bg-surface py-5 px-4 flex flex-col gap-2">
+      <text class="text-title font-bold text-ink">{{ authStore.profile?.nickname ?? authStore.user?.nickname ?? '-' }}</text>
+      <text class="text-caption text-ink-3">{{ authStore.profile?.username ?? authStore.user?.username ?? '' }}</text>
     </view>
-    <view class="mine-card mine-rows">
-      <view class="mine-row">
-        <text class="mine-label">邮箱</text>
-        <text class="mine-value">{{ profile?.email ?? '-' }}</text>
+    <view class="rounded-card bg-surface py-5 px-4 flex flex-col gap-3">
+      <view class="flex justify-between items-center" @click="onToggleLocale">
+        <text class="text-body text-ink-3">{{ t('mine.language') }}</text>
+        <text class="text-body text-primary">{{ localeLabel }}</text>
       </view>
-      <view class="mine-row">
-        <text class="mine-label">注册时间</text>
-        <text class="mine-value">{{ profile ? formatDate(profile.createdAt) : '-' }}</text>
+      <view class="flex justify-between items-center">
+        <text class="text-body text-ink-3">{{ t('mine.email') }}</text>
+        <text class="text-body text-ink">{{ authStore.profile?.email ?? '-' }}</text>
       </view>
-      <view class="mine-row">
-        <text class="mine-label">最近登录</text>
-        <text class="mine-value">{{ profile?.lastLoginAt ? formatDate(profile.lastLoginAt) : '-' }}</text>
+      <view class="flex justify-between items-center">
+        <text class="text-body text-ink-3">{{ t('mine.createdAt') }}</text>
+        <text class="text-body text-ink">{{ authStore.profile ? formatDateTime(authStore.profile.createdAt) : '-' }}</text>
+      </view>
+      <view class="flex justify-between items-center">
+        <text class="text-body text-ink-3">{{ t('mine.lastLoginAt') }}</text>
+        <text class="text-body text-ink">{{ authStore.profile?.lastLoginAt ? formatDateTime(authStore.profile.lastLoginAt) : '-' }}</text>
       </view>
     </view>
-    <button class="mine-logout" :loading="loggingOut" @click="onLogout">退出登录</button>
+    <button class="mt-6 rounded-control bg-surface text-danger text-body" :loading="loggingOut" @click="onLogout">
+      {{ t('mine.logout') }}
+    </button>
   </view>
 </template>
 
 <script setup lang="ts">
 import { onShow } from '@dcloudio/uni-app';
-import { ref } from 'vue';
-import type { Profile } from '@tiangong/contracts';
-import { apiLogout, apiProfile } from '@/api/auth';
-import { clearSession, getStoredUser, type StoredUser } from '@/utils/auth';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { LOCALE_LABELS, useAppStore } from '@/stores/app';
+import { useAuthStore } from '@/stores/auth';
+import { formatDateTime } from '@/utils/datetime';
 
-const user = ref<StoredUser | null>(null);
-const profile = ref<Profile | null>(null);
+const { t } = useI18n();
+const appStore = useAppStore();
+const authStore = useAuthStore();
 const loggingOut = ref(false);
+const localeLabel = computed(() => LOCALE_LABELS[appStore.locale]);
 
 onShow(() => {
-  user.value = getStoredUser();
-  void apiProfile().then((p) => {
-    profile.value = p;
-  });
+  appStore.syncChrome('mine');
+  // 存储是启动期事实源，store 惰性恢复；profile 拉取失败由 request 层提示，不重复弹全局异常
+  authStore.restoreUser();
+  authStore.refreshProfile().catch(() => undefined);
 });
 
-function formatDate(iso: string): string {
-  return iso.replace('T', ' ').slice(0, 16);
+function onToggleLocale(): void {
+  appStore.toggleLocale();
+  appStore.syncChrome('mine');
 }
 
-function onLogout(): void {
+async function onLogout(): Promise<void> {
   loggingOut.value = true;
-  apiLogout()
-    .catch(() => undefined)
-    .finally(() => {
-      clearSession();
-      loggingOut.value = false;
-      uni.reLaunch({ url: '/pages/login/index' });
-    });
+  try {
+    await authStore.logout();
+  } finally {
+    loggingOut.value = false;
+  }
 }
 </script>
-
-<style scoped>
-.mine-page {
-  min-height: 100vh;
-  padding: 24rpx;
-  background-color: #f6f7f9;
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-.mine-card {
-  border-radius: 20rpx;
-  background-color: #ffffff;
-  padding: 40rpx 32rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-.mine-name {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #26292f;
-}
-.mine-username {
-  font-size: 26rpx;
-  color: #8a8f99;
-}
-.mine-rows {
-  gap: 24rpx;
-}
-.mine-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.mine-label {
-  font-size: 28rpx;
-  color: #8a8f99;
-}
-.mine-value {
-  font-size: 28rpx;
-  color: #26292f;
-}
-.mine-logout {
-  margin-top: 48rpx;
-  border-radius: 16rpx;
-  background-color: #ffffff;
-  color: #c2455c;
-  font-size: 32rpx;
-}
-</style>

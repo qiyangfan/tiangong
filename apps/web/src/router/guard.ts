@@ -1,5 +1,6 @@
 import type { Router } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { reportError } from '@/utils/global-error';
 
 /**
  * 全局守卫（动态路由三步曲的调度方）：
@@ -29,7 +30,14 @@ export function setupGuard(router: Router): void {
     }
 
     if (!auth.routesAdded) {
-      await auth.ensureRoutes();
+      try {
+        await auth.ensureRoutes();
+      } catch (err) {
+        // 菜单加载失败多为瞬时故障：中止导航留在原地（URL 不变可重试）；
+        // 会话失效的跳转由 request 层终局 401 语义负责，此处不重复处理
+        reportError(err, 'router:ensureRoutes');
+        return false;
+      }
       // addRoute 不影响本次导航匹配，replace 重放以命中新路由
       return { ...to, replace: true };
     }

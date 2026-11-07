@@ -16,6 +16,7 @@
     "typecheck": "pnpm -r run typecheck",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
+    "test:e2e": "pnpm --filter @tiangong/e2e test:e2e",
     "dev:api": "pnpm --filter @tiangong/api dev",
     "dev:web": "pnpm --filter @tiangong/web dev",
     "db:up": "docker compose -f deploy/compose.dev.yaml up -d",

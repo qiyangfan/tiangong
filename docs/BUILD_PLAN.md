@@ -118,25 +118,30 @@ tiangong/
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0-6 全部收官（§7 表全勾）。Stage 6 已交付：deploy/compose.yaml 全栈（mysql 8.4 + api migrate/seed/serve + web nginx 反代）+ 双 Dockerfile + .dockerignore；全栈 e2e = compose 起→api healthy→8080 health 通→浏览器登录→SampleRecord 新增/编辑/删除闭环（已 down 清理）；README 整体重写为现状形态；交付报告 docs/quality/DELIVERY_REPORT.md（含 FUNCTION_MATRIX P0 逐项对照 + NOT VERIFIED 清单）；6 个 openspec spec 头部全部转 Implemented。Stage 5 已交付：`apps/miniapp`（uni-app CLI 工程，dcloudio 3.0.0-503 + Vue3 + TS strict）——登录 / 我的（profile+退出） / 示例数据（列表+新增编辑删除）三页；请求封装复用 `@tiangong/contracts`（envelope/错误码单源），401 单飞刷新重放对齐 web 语义，token 落 `uni.setStorageSync`，refresh 走 body `client='miniapp'`。门禁：`build:mp-weixin` 产物生成（3 页 app.json + env 注入，248K）；`vue-tsc` 绿；集成 26 例全绿（更新动词全线 PUT）。真机/微信开发者工具运行 NOT VERIFIED（本机无工具）。**下一个任务是 Stage 6（收官）**。
+**完成度速览**：Stage 0-6 全部收官；2026-11-07 五变更经 owner 验收归档（`openspec/changes/archive/2026-11-07-*`），openspec 10 个能力基线 validate 全绿：`add-e2e-test-hardening`（Playwright e2e 5 例入 CI + `TEST_DATABASE_URL` 修复 + 死配置清除）、`unify-terminal-401-relogin`（两端终局 401 统一：按 HTTP 状态码判定、终局清理回登录、文案区分停用/过期，identity-access spec 增补不变量）、`add-frontend-global-error-handling`（两端全局异常兜底 + 节流提示 + miniapp requestId 透传）、`align-miniapp-ui`（UnoCSS token 单源 + 三页 utility 化 + dayjs 双端时间单源，修 UTC 裸切时区 bug）、`add-miniapp-state-i18n`（pinia + vue-i18n 基线：文案收编、语言切换、导航/tabBar 运行时同步、`tg_locale` 持久化）；新增能力基线 miniapp-ui / frontend-resilience / miniapp-client，e2e-testing 基线落地。归档前完成一轮全树评审循环：spec 文案规则与 miniapp 位置感知实现对齐（无凭据终局不误报停用）、unify delta 结构修复、文档 preset 命名纠偏（unocss-applet 0.16 = presetApplet/presetRemRpx/transformerApplet）、UI_STYLEGUIDE 补 miniapp 节、ci 死配置（作业级 ADMIN_INITIAL_PASSWORD）删除。当前测试矩阵：单元 67（contracts 17 + api 生成器 7 + web 16 + miniapp 27）+ 真库集成 26 + 浏览器 e2e 5（`pnpm test:e2e` 一键跑，自动起 api:3001 + web:5174 指向 tiangong_test，globalSetup 自动 migrate+seed+复位 admin 锁定计数）。**下一个任务：无在途变更；后续会话按 §8 入口进入。**
 
 **环境基线**（动手前核对，勿凭记忆）：
 
-- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4（@types/multer 已入 api devDeps，tsconfig types 含 multer）
+- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4 / vitest 3.2（contracts/web）/ @playwright/test 1.5x（apps/e2e）
 - dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
-- dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）
+- dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）。注意本机 3000 若有遗留 dev api 进程属正常，e2e 用 3001/5174 与其隔离互不影响
+- e2e 账号约定：admin 密码固定 `TestAdmin1pw`（globalSetup 以 env 注入 seed/服务进程）；fixture 零权限角色 `e2e_noperm_role` + 用户 `e2e_noperm`，用后即删（apps/e2e/tests/helpers.ts）
 - API 端点全集：/health/live|ready、/auth/*、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs、**/files(+/:id/download)、/samples、/gen-definitions(+/preview|:id/preview)**；swagger /docs
 - 前端锚点：五段式页模板看 `views/system/user/index.vue`（带字典的看 `views/dev/sample/index.vue`）；request 层 `src/utils/request.ts`；公共件 FormDialog/SearchForm/Pagination/RightToolbar/DictTag/MenuIcon + useDict/usePermission + confirmDelete/confirmBox（选用表见 UI_STYLEGUIDE）
 - 样式与 UI 规矩：见 ADR-0006 + `docs/architecture/UI_STYLEGUIDE.md`（token 单源 `apps/web/src/styles/index.css`；EP 管控件、Tailwind 管布局；preflight 禁用；禁魔法值/emoji 图标/AI 味套路）
 - 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
-- openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`；file-management spec 已标 Implemented，其余 5 spec 头部仍是「TARGET」模板文案（历史遗留，Stage 6 交付报告前统一处理）
 
-**Stage 4/5 关键事实**：
+**平台模块关键事实**：
 
 - **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径；CLI `pnpm gen:crud <name>` 留在 `apps/api/scripts/`（pnpm 严格解析），仓库根用 pnpm-workspace.yaml 探测（**不可用 import.meta.url**，tsx CJS 转译下 shim 不可靠）；任一目标文件已存在整体拒绝
 - **files 模块**：`src/common/storage/` + `src/modules/files/`；上限 = min(sys.file.maxSizeMb, MAX_UPLOAD_MB)；busboy latin1 文件名 mojibake 已修复；下载非 envelope 二进制流
 - **更新动词 = PUT（跨端统一，部分合并语义）**：曾用 PATCH + `X-HTTP-Method-Override` 适配层（微信 request 不支持 PATCH），2026-11-07 owner 决策改为全线 PUT（对齐 RuoYi 约定，微信原生支持），适配层已删除；约定写明在 docs/architecture/API_CONTRACT.md；集成测试含 miniapp 原生 PUT 更新用例
 - **miniapp**：`apps/miniapp`（uni preset vite-ts；vite 5.2.8 为 uni 插件约束勿升；typescript 已升 5.9 + 自写 tsconfig——模板 extends 的 @vue/tsconfig@0.1.3 含 TS5.9 移除项）；API 基地址 `VITE_API_BASE_URL`（.env，真机需 https+域名白名单）；模板 eslint 由根 flat config 覆盖
+- **miniapp 状态与文案基线（add-miniapp-state-i18n）**：pinia 4 + vue-i18n 11（版本对齐 web 已锁线）；凭据存储单源仍是 `utils/auth.ts`，auth store 只做其上的响应式会话态（401 终局路径不经 store，防模块环）；语言偏好 `tg_locale` 持久化（非法值回落 zh-CN），导航标题/tabBar 由 app store `syncChrome` 运行时同步（pages.json 中文仅首帧默认）；终局 401 提示分类 `sessionExpiredCategory`（expired/disabled）为可测枚举，测试锁分类与次数、不锁文案
+- **e2e 工程**：`apps/e2e`（单 worker 顺序执行保确定性；reuseExistingServer 本地 true/CI false；CI 失败上传 playwright-report artifact）；web/miniapp 单测纯逻辑走 node 环境（miniapp 用 uni 全局桩），组件行为统一由 e2e 覆盖，不在单测层 mount
+- **终局 401 不变量（两端同语义，勿再分叉）**：非 auth 路径收到 HTTP 401 → 单飞刷新重放一次 → 重放仍 401 或刷新失败 ⇒ 清理本地会话并引导重登；判定按状态码不按错误码；auth 路径 401 不清理；提示恰好一次且区分停用/过期文案（带凭据重放后仍被拒 = 停用，无凭据/刷新失败 = 过期；web 无凭据终局不可达按码判定等价，miniapp 以是否已重放为信号；web 归 auth store 防抖，miniapp 单 toast）。实现锚点 `apps/web/src/utils/request.ts` / `apps/miniapp/src/utils/request.ts`，契约见 identity-access spec
+- **错误文案国际化分层（ADR-0007）**：`code` 为对外契约，服务端 message（英文）为日志/回落文本，用户可见文案归客户端 locale 层——web 走 vue-i18n 键，miniapp 走 `locales/` vue-i18n 资源的 `errors` 组映射（未收录码回落英文）。后端 i18n 不预建；触发条件 = 服务端主动用户文本能力（通知/邮件/短信）立项时随该能力 ADR 重开
+- **miniapp vite 配置为 ESM（vite.config.mts，勿改回 .ts）**：`unocss/vite` 为 ESM-only 而 `@dcloudio/*` 为 CJS-only 且缺类型声明——.mts 下 uni 插件须取 `.default`（unocss#3776 维护者方案）；uni 插件硬编码 `resolve.preserveSymlinks: true`，pnpm 虚拟仓库中的传递依赖（pinia 的 `nostics`、vue-i18n 的 `@intlify/*`）沿符号链接路径解析必炸，配置内以置于 uni 之后的定制 Plugin 的 config 钩子翻回 `false`（config 钩子按插件顺序合并、后者覆盖标量；与 web 裸 vite 语义一致）
 
 **已知坑**（违反必返工）：
 
@@ -149,14 +154,17 @@ tiangong/
 7. Element Plus 未全局注册图标：el-button 必须用 `:icon="组件"`（显式 import）
 8. 契约细节：字典类型/项 update 的 remark 只能省略不能置 null；列表 enabled 过滤传 `'true'/'false'` 字符串（contracts 已修 coerce 缺陷，勿改回）
 9. **IAB 浏览器自动化**：Playwright locator click 对按钮持续超时（actionability 卡死），用 `tab.cua.click({x,y})` 坐标点击；`node_repl` 每次 js 调用必须重跑完整 bootstrap；IAB 不支持 file chooser（上传类走查用 curl 打真实进程）
-10. **miniapp typecheck**：`pnpm --filter @tiangong/miniapp type-check`（vue-tsc 3）；uni 的 SFC 需要 `@dcloudio/types`；微信 request method 无 PATCH——更新动词已全线统一为 PUT（见「Stage 4/5 关键事实」）
+10. **miniapp typecheck**：`pnpm --filter @tiangong/miniapp type-check`（vue-tsc 3）；uni 的 SFC 需要 `@dcloudio/types`；微信 request method 无 PATCH——更新动词已全线统一为 PUT（见「平台模块关键事实」）
+11. **vite 8 loadEnv 不合并 process.env**：外部环境注入代理目标（e2e 切 3001）必须由 vite.config 显式读 `process.env.VITE_DEV_PROXY_TARGET` 优先（已实现，勿改回）；`pnpm --filter x dev -- --port` 的 `--` 会被原样透传给 vite，透传参数用 `exec vite`
+12. **axios 自定义 adapter 需自行 settle**：非 2xx 必须用 AxiosError 附带 response 拒绝，否则走成功分支——范本见 `apps/web/src/utils/__tests__/request.test.ts` 假 adapter
+13. **playwright install 官方源在本机停滞**：用 `PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/` 下载；seed 幂等 upsert 的 `update: {}` 不覆盖既有 admin 密码——换测试密码需先清库或直接改库
 
 ## 8. 后续工作指引（项目收官态）
 
-建设阶段已全部完成；无「下一任务」。后续会话按需从以下入口进入：
+建设阶段与 2026-11-07 五变更均已收官归档；`openspec/changes/` 无在途变更。后续会话按需从以下入口进入：
 
 1. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
 2. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
 3. **真实环境上线前必办**：配置远端仓库验证 CI 实跑（当前 NOT VERIFIED）；微信开发者工具/真机验证 miniapp；生产 secrets 与域名注入演练。
-4. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；门禁不变：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`。
-5. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`。
+4. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build && pnpm test:e2e`（集成与 e2e 需本地共享栈 MySQL 3307 在跑）。
+5. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`；既有基线 spec 共 10 个（openspec/specs/），改动平台行为先改对应基线或走变更 delta。

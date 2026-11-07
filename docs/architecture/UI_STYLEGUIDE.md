@@ -1,6 +1,7 @@
 # UI 样式规范（Styleguide）
 
-> 适用 `apps/web`（后续 miniapp 参照执行）。token 事实源：`apps/web/src/styles/index.css`（亮暗两套，单源）。
+> 适用 `apps/web`；miniapp 自 2026-11-07 起参照执行（见下方「miniapp 参照执行」节）。token 事实源：`apps/web/src/styles/index.css`（亮暗两套，单源）。
+> 文案纪律两端一致（2026-11-07 起 miniapp 已生效）：用户可见文案一律进 i18n 资源单源——web `apps/web/src/locales/`，miniapp `apps/miniapp/src/locales/`（vue-i18n，zh-CN 默认 + en，键结构类型约束一致），禁止页面散落硬编码。
 > 背景：owner 反馈初版 UI「AI 味重、有棱有角、不高级」——本规范即为整改标准，新页面/新组件验收按此执行。
 
 ## 硬规矩（违反即返工）
@@ -121,3 +122,12 @@
 - 卡片内图表高度统一 `BaseChart` 默认 320px；饼图 legend 置底。
 - **图表卡片三态**：加载态用 wrapper `v-loading`（对齐表格先例）；数据空或请求失败渲染
   `el-empty`（`common.noData`），禁空白卡体。页面加载函数自行吞错——错误提示由 request 层给出。
+
+## miniapp 参照执行（2026-11-07 起）
+
+- **token 事实源**：`apps/miniapp/uno.config.ts` 的 theme；色值常量单源 `apps/miniapp/src/theme.ts`（`tgTokens`），色板与本文件上表亮色列同值。页面原生组件 prop（如 `<switch color>`）必须引用 `tgTokens`，禁裸 hex。
+- **换算基准**：1 工具类单位 = 0.25rem = 8rpx = 4px（与 web 4px 基数一致）；mp 构建经 `presetRemRpx` 自动 rem→rpx（1rem = 32rpx），H5 保持 rem。
+- **字号/圆角档位**（对齐 web 四档）：title 1.25rem（40rpx/20px）、body 0.875rem（28rpx/14px）、caption 0.75rem（24rpx/12px）、dialog-title 1rem（32rpx/16px）；圆角 control 0.5rem（16rpx/8px）、card 0.75rem（24rpx/12px）、胶囊 `rounded-full`（999rpx）。
+- **pages.json / uni.scss 同步纪律**：两者为静态文件无法引用 token，其色值（globalStyle 导航栏/页面底、tabBar）必须与 `theme.ts` 同值——改色三处同步（theme.ts ↔ pages.json ↔ uni.scss），评审逐一核对。
+- **页面样式一律 UnoCSS 工具类**，禁裸 hex/魔法字号/非 4px 基数间距；scoped style 仅保留 utility 覆盖不了的场景。图标纪律沿「硬规矩 2」：一律组件库图标，禁 emoji/Unicode 符号。
+- **暗色**：miniapp 当前仅亮色基线（暗色主题为后续独立能力）；新增样式值先在 `theme.ts` 建语义名，为暗色扩展预留位。文案纪律见顶部引言（vue-i18n 资源单源）。

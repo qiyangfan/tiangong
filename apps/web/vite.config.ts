@@ -5,7 +5,8 @@ import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const target = env.VITE_DEV_PROXY_TARGET ?? 'http://localhost:3000';
+  // 显式进程环境优先（vite 8 loadEnv 不合并 process.env；e2e 依赖 env 注入切换代理目标）
+  const target = process.env.VITE_DEV_PROXY_TARGET ?? env.VITE_DEV_PROXY_TARGET ?? 'http://localhost:3000';
   return {
     plugins: [vue(), tailwindcss()],
     resolve: {

@@ -39,6 +39,7 @@ pnpm dev:web   # 另开终端
 | `pnpm lint` / `pnpm typecheck` | 全仓 lint（eslint9 flat）/ 类型检查（TS strict） |
 | `pnpm test` | 单元测试（vitest；api 单测走 unplugin-swc） |
 | `pnpm --filter @tiangong/api test:integration` | 真库集成 26 例（自动对 tiangong_test migrate + seed） |
+| `pnpm test:e2e` | 浏览器端到端（Playwright 自动起 api+web，指向 tiangong_test） |
 | `pnpm build` | 全仓构建（contracts → api/web） |
 | `pnpm --filter @tiangong/miniapp build:mp-weixin` | 小程序产物（dist/build/mp-weixin） |
 | `pnpm gen:crud <module-name>` | 代码生成器 CLI（先在 Web「开发工具 → 代码生成」建定义） |
@@ -48,7 +49,7 @@ pnpm dev:web   # 另开终端
 
 ```bash
 cd deploy
-JWT_ACCESS_SECRET=<≥32字符> JWT_REFRESH_SECRET=<≥32字符> ADMIN_INITIAL_PASSWORD=<初始密码> \
+JWT_ACCESS_SECRET=<≥32字符> ADMIN_INITIAL_PASSWORD=<初始密码> \
   docker compose up -d --build
 # web: http://localhost:8080（nginx 反代 /api → api:3000）
 ```
@@ -62,18 +63,19 @@ apps/
   api/        NestJS（路由 /api/v1；common 全局件 / security 守卫 / modules 业务模块）
   web/        Vue3 + Vite + Element Plus + Tailwind v4（token 单源 styles/index.css）
   miniapp/    uni-app Vue3（登录 / 我的 / 示例数据）
+  e2e/        Playwright 端到端（自动起 api+web，指向 tiangong_test）
 packages/
   contracts/  Zod schema + 错误码 + 分页类型（三端契约唯一来源）
 deploy/       compose.yaml 全栈 / compose.dev.yaml 回退库 / nginx.conf
 docs/         BUILD_PLAN（交接权威）/ ADR / API_CONTRACT / UI_STYLEGUIDE / requirements
-openspec/     6 个能力 spec（已实现基线）
+openspec/     能力 spec（已实现基线）
 ```
 
 ## 工程约定
 
 - 工作契约：`AGENTS.md`（所有 Coding Agent 必读）；治理宪法：`CONSTITUTION.md`
 - 架构决策：`docs/adr/`；API 契约细节：`docs/architecture/API_CONTRACT.md`；前端样式规矩：`docs/architecture/UI_STYLEGUIDE.md`
-- 质量门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（CI 为最终执法点）
+- 质量门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build && pnpm test:e2e`（CI 为最终执法点）
 - 交付验收证据与遗留项：`docs/quality/DELIVERY_REPORT.md`
 
 ## 参考资料

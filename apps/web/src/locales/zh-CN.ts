@@ -41,6 +41,7 @@ const zhCN = {
     accountDisabled: '账号已被停用，请联系管理员',
     rateLimited: '请求过于频繁，请稍后再试',
     serverError: '服务异常，请稍后重试',
+    unexpected: '出错了，请稍后重试',
   },
   login: {
     title: '天工后台管理',

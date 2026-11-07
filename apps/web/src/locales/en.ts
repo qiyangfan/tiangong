@@ -43,6 +43,7 @@ const en: typeof zhCN = {
     accountDisabled: 'Account is disabled, contact the administrator',
     rateLimited: 'Too many requests, please retry later',
     serverError: 'Server error, please retry later',
+    unexpected: 'Something went wrong. Please try again later.',
   },
   login: {
     title: 'Tiangong Admin',

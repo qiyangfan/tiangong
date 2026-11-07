@@ -1,41 +1,58 @@
 <template>
-  <view class="login-page">
-    <view class="login-brand">
-      <text class="login-title">天工</text>
-      <text class="login-subtitle">通用后台脚手架 · 移动端</text>
+  <view class="min-h-screen flex flex-col justify-center bg-page px-6">
+    <view class="flex flex-col items-center mb-12">
+      <text class="text-title font-bold text-primary">{{ t('login.title') }}</text>
+      <text class="mt-2 text-caption text-ink-3">{{ t('login.subtitle') }}</text>
     </view>
-    <view class="login-form">
+    <view class="flex flex-col gap-4">
       <input
         v-model="username"
-        class="login-input"
-        placeholder="账号"
+        class="h-11.5 px-3.5 rounded-control bg-surface text-body"
+        :placeholder="t('login.usernamePlaceholder')"
+        placeholder-class="text-ink-3"
         :maxlength="30"
         confirm-type="next"
       />
       <input
         v-model="password"
-        class="login-input"
-        placeholder="密码"
+        class="h-11.5 px-3.5 rounded-control bg-surface text-body"
+        :placeholder="t('login.passwordPlaceholder')"
+        placeholder-class="text-ink-3"
         password
         :maxlength="72"
         confirm-type="done"
         @confirm="onLogin"
       />
-      <button class="login-btn" :disabled="loading || !username || !password" @click="onLogin">
-        {{ loading ? '登录中…' : '登录' }}
+      <button
+        class="mt-2 rounded-control bg-primary text-white text-body"
+        :class="{ 'opacity-60': loading || !username || !password }"
+        :disabled="loading || !username || !password"
+        @click="onLogin"
+      >
+        {{ loading ? t('login.loggingIn') : t('login.loginBtn') }}
       </button>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
+import { onShow } from '@dcloudio/uni-app';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { apiLogin } from '@/api/auth';
-import { storeSession } from '@/utils/auth';
+import { useAppStore } from '@/stores/app';
+import { useAuthStore } from '@/stores/auth';
 
+const { t } = useI18n();
+const appStore = useAppStore();
+const authStore = useAuthStore();
 const username = ref('');
 const password = ref('');
 const loading = ref(false);
+
+onShow(() => {
+  appStore.syncChrome('login');
+});
 
 async function onLogin(): Promise<void> {
   if (loading.value || !username.value || !password.value) {
@@ -49,7 +66,7 @@ async function onLogin(): Promise<void> {
       client: 'miniapp',
     });
     // miniapp 端 refresh 经响应体下发并落本地存储
-    storeSession(res.accessToken, res.refreshToken ?? '', {
+    authStore.applySession(res.accessToken, res.refreshToken ?? '', {
       id: res.user.id,
       username: res.user.username,
       nickname: res.user.nickname,
@@ -57,59 +74,9 @@ async function onLogin(): Promise<void> {
     uni.reLaunch({ url: '/pages/sample/index' });
   } catch (err) {
     const e = err as { message?: string };
-    uni.showToast({ title: e.message || '登录失败', icon: 'none' });
+    uni.showToast({ title: e.message || t('login.loginFailed'), icon: 'none' });
   } finally {
     loading.value = false;
   }
 }
 </script>
-
-<style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 48rpx;
-  background-color: #f6f7f9;
-}
-.login-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 96rpx;
-}
-.login-title {
-  font-size: 64rpx;
-  font-weight: 700;
-  color: #2f5d9e;
-}
-.login-subtitle {
-  margin-top: 16rpx;
-  font-size: 26rpx;
-  color: #8a8f99;
-}
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 28rpx;
-}
-.login-input {
-  height: 92rpx;
-  padding: 0 28rpx;
-  border-radius: 16rpx;
-  background-color: #ffffff;
-  font-size: 30rpx;
-}
-.login-btn {
-  margin-top: 16rpx;
-  border-radius: 16rpx;
-  background-color: #2f5d9e;
-  color: #ffffff;
-  font-size: 32rpx;
-}
-.login-btn[disabled] {
-  opacity: 0.55;
-  color: #ffffff;
-}
-</style>

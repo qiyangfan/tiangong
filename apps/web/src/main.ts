@@ -8,11 +8,14 @@ import { i18n } from './locales';
 import { router } from './router';
 import { setupPermissionDirective } from './directive/permission';
 import { bindTokenBus } from './utils/token-bus';
+import { setupGlobalErrorHandlers } from './utils/global-error';
 import { useAppStore } from './stores/app';
 import { useAuthStore } from './stores/auth';
 import './styles/index.css';
 
 const app = createApp(App);
+// 全局异常兜底先行注册：后续装配链路（store 恢复、守卫、挂载）的异常同样被收口
+setupGlobalErrorHandlers(app);
 app.use(createPinia());
 
 // 主题/语言在挂载前恢复，避免闪烁
@@ -26,8 +29,8 @@ const auth = useAuthStore();
 bindTokenBus({
   getToken: () => auth.accessToken,
   refresh: () => auth.refreshAccessToken(),
-  onSessionExpired: () => {
-    void auth.sessionExpired();
+  onSessionExpired: (code) => {
+    void auth.sessionExpired(code);
   },
 });
 

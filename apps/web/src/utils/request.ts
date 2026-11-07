@@ -103,8 +103,11 @@ service.interceptors.response.use(
     const body = error.response?.data as ApiError | undefined;
     const code = body && typeof body.code === 'string' ? body.code : `HTTP_${status ?? 0}`;
     const message = body?.message ?? error.message;
+    // 受保护路径的 HTTP 401 是会话级事件（过期/无效/被停用统一按状态码判定）；
+    // auth 路径（登录/刷新/登出）的 401 是操作本身的预期结果，不得触发全局会话清理
+    const sessionDead = status === 401 && !!config && !isAuthPath(config.url);
 
-    if (status === 401 && config && !isAuthPath(config.url) && !config.__retried) {
+    if (sessionDead && !config.__retried) {
       refreshing ??= tokenBus.refresh().finally(() => {
         refreshing = null;
       });
@@ -113,11 +116,15 @@ service.interceptors.response.use(
         config.__retried = true;
         return service.request(config);
       }
-      tokenBus.onSessionExpired();
+    }
+    const err = tgError(code, message, body?.requestId, status);
+    if (sessionDead) {
+      // 终局 401（刷新失败或重放仍被拒）：会话不可用，清理并引导重登；
+      // 终局码随事件上交供会话方区分提示（停用/过期），此处不再叠加错误提示
+      tokenBus.onSessionExpired(err.code);
     }
 
-    const err = tgError(code, message, body?.requestId, status);
-    if (!config?.silent) {
+    if (!config?.silent && !sessionDead) {
       showApiError(err);
     }
     throw err;

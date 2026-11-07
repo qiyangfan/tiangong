@@ -108,13 +108,19 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    /** 会话彻底失效（401 且刷新失败）：清理并引导重登，提示一次性。 */
-    async sessionExpired(): Promise<void> {
+    /**
+     * 会话彻底失效（终局 401）：清理并引导重登，提示一次性。
+     * 终局码区分文案：停用/删除（实时查库拒绝）明示联系管理员，避免误导用户重登；
+     * 其余（过期/失效）提示重新登录。access 与 refresh 同时失效的窗口期只能提示过期
+     * （refresh 端点按设计不泄露账号状态），重登时会得到明确停用提示。
+     */
+    async sessionExpired(code?: string): Promise<void> {
       const hadSession = this.accessToken !== null || this.user !== null;
       this.reset();
       if (hadSession && !this.expiredNotified) {
         this.expiredNotified = true;
-        ElMessage.warning(i18n.global.t('layout.sessionExpired'));
+        const disabled = code === 'AUTH_ACCOUNT_DISABLED' || code === 'AUTH_UNAUTHENTICATED';
+        ElMessage.warning(i18n.global.t(disabled ? 'error.accountDisabled' : 'layout.sessionExpired'));
       }
       await router.push('/login');
     },

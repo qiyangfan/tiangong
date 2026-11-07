@@ -23,10 +23,10 @@
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "天工",
     "navigationBarBackgroundColor": "#2f5d9e",
-    "backgroundColor": "#F6F7F9"
+    "backgroundColor": "#f2f3f5"
   },
   "tabBar": {
-    "color": "#8a8f99",
+    "color": "#909399",
     "selectedColor": "#2f5d9e",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",

@@ -1,4 +1,5 @@
 import { SUCCESS_CODE, type ApiError } from '@tiangong/contracts';
+import { i18n } from '@/locales';
 import {
   clearSession,
   getAccessToken,
@@ -10,15 +11,17 @@ import {
 /** API 基地址：编译期由 VITE_API_BASE_URL 注入（真机需 https 且配域名白名单）。 */
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1';
 
-/** 业务错误：携带契约错误码，调用方按需分支。 */
+/** 业务错误：携带契约错误码与请求 id，调用方按需分支。 */
 export interface TgError extends Error {
   code: string;
+  requestId?: string;
   status?: number;
 }
 
-function tgError(code: string, message: string, status?: number): TgError {
+function tgError(code: string, message: string, requestId?: string, status?: number): TgError {
   const err = new Error(message) as TgError;
   err.code = code;
+  err.requestId = requestId;
   err.status = status;
   return err;
 }
@@ -29,7 +32,13 @@ interface RequestOptions {
 }
 
 function showError(err: TgError): void {
-  uni.showToast({ title: err.message || '请求失败', icon: 'none' });
+  // 错误码命中用户文案则本地化（errors 组键 = 契约错误码 ∪ NETWORK_ERROR），未收录码回落服务端 message
+  const key = `errors.${err.code}`;
+  const localized = i18n.global.te(key) ? i18n.global.t(key) : '';
+  uni.showToast({
+    title: localized || err.message || i18n.global.t('common.requestFailed'),
+    icon: 'none',
+  });
 }
 
 function gotoLogin(): void {
@@ -50,7 +59,9 @@ function rawRequest<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', url: string, d
       success: (res) => {
         const body = res.data as { code?: number | string; data?: T; message?: string };
         if (typeof body?.code !== 'number' && typeof body?.code !== 'string') {
-          reject(tgError(`HTTP_${res.statusCode}`, 'unexpected response', res.statusCode));
+          reject(
+            tgError(`HTTP_${res.statusCode}`, 'unexpected response', undefined, res.statusCode),
+          );
           return;
         }
         if (body.code === SUCCESS_CODE) {
@@ -58,7 +69,8 @@ function rawRequest<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', url: string, d
           return;
         }
         const apiError = body as unknown as ApiError;
-        reject(tgError(apiError.code, apiError.message, res.statusCode));
+        // requestId 透传：用户报障时可对齐服务端日志与审计记录（与 web 层同字段）
+        reject(tgError(apiError.code, apiError.message, apiError.requestId, res.statusCode));
       },
       fail: () => {
         reject(tgError('NETWORK_ERROR', 'network unavailable'));
@@ -90,6 +102,16 @@ async function refreshSession(): Promise<boolean> {
   }
 }
 
+/**
+ * 终局 401 提示分类：带有效 Bearer 仍被拒（重放后）＝账号被停用/删除；
+ * 无凭据或刷新失败＝引导重登（凭据可能只是被系统清理，非账号问题）。
+ */
+export function sessionExpiredCategory(err: TgError, retried: boolean): 'expired' | 'disabled' {
+  const disabled =
+    err.code === 'AUTH_ACCOUNT_DISABLED' || (err.code === 'AUTH_UNAUTHENTICATED' && retried);
+  return disabled ? 'disabled' : 'expired';
+}
+
 async function request<T>(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   url: string,
@@ -101,21 +123,30 @@ async function request<T>(
     return await rawRequest<T>(method, url, data);
   } catch (err) {
     const e = err as TgError;
-    const authDead = e.code === 'AUTH_TOKEN_INVALID';
-    if (e.code === 'AUTH_TOKEN_EXPIRED' && !retried && !url.startsWith('/auth/')) {
+    // 受保护路径的 HTTP 401 是会话级事件（过期/无效/被停用统一按状态码判定，与 web 层同语义）；
+    // auth 路径（登录/刷新/登出）的 401 是操作本身的预期结果，不得触发全局会话清理
+    const sessionDead = e.status === 401 && !url.startsWith('/auth/');
+    if (sessionDead && !retried) {
       refreshing ??= refreshSession().finally(() => {
         refreshing = null;
       });
       if (await refreshing) {
         return request<T>(method, url, data, options, true);
       }
-      // 刷新失败 = 会话不可恢复：清会话回登录（与 web request 层同语义）
-      clearSession();
-      gotoLogin();
     }
-    if (authDead || (e.code === 'AUTH_TOKEN_EXPIRED' && retried)) {
+    if (sessionDead) {
+      // 终局 401（无凭据/被停用/刷新失败/重放仍被拒）：会话不可用，统一清理回登录。
+      // 提示按终局位置区分：带有效 Bearer 仍被拒（重放后）= 账号被停用/删除；
+      // 无凭据或刷新失败 = 引导重登（凭据可能只是被系统清理，非账号问题）
       clearSession();
       gotoLogin();
+      if (!options?.silent) {
+        uni.showToast({
+          title: i18n.global.t(`session.${sessionExpiredCategory(e, retried)}`),
+          icon: 'none',
+        });
+      }
+      throw e;
     }
     if (!options?.silent) {
       showError(e);
