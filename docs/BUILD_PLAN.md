@@ -112,13 +112,13 @@ tiangong/
 | 3 M1-M2 | web 全部页面与布局                                                                                               | vite build 绿+对 api 真实联调              | [x]  |
 | 4 M2-M3 | files/SampleRecord 闭环/生成器/@Audit                                                                            | 越权负例+确定性测试绿                      | [x]  |
 | 5 M3    | miniapp 登录/我的/SampleRecord                                                                                   | build:mp-weixin 产物生成                   | [x]  |
-| 6 M4    | e2e/安全回归/compose 全栈/README/交付报告                                                                        | compose 起→health 通→浏览器闭环            | [ ]  |
+| 6 M4    | e2e/安全回归/compose 全栈/README/交付报告                                                                        | compose 起→health 通→浏览器闭环            | [x]  |
 
 ## 7.1 当前状态与接手必读事实
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0/1/2/3/4/5 已过门禁入仓（§7 表）。Stage 5 已交付：`apps/miniapp`（uni-app CLI 工程，dcloudio 3.0.0-503 + Vue3 + TS strict）——登录 / 我的（profile+退出） / 示例数据（列表+新增编辑删除）三页；请求封装复用 `@tiangong/contracts`（envelope/错误码单源），401 单飞刷新重放对齐 web 语义，token 落 `uni.setStorageSync`，refresh 走 body `client='miniapp'`。门禁：`build:mp-weixin` 产物生成（3 页 app.json + env 注入，248K）；`vue-tsc` 绿；集成 26 例全绿（新增 PATCH 兼容用例）。真机/微信开发者工具运行 NOT VERIFIED（本机无工具）。**下一个任务是 Stage 6（收官）**。
+**完成度速览**：Stage 0-6 全部收官（§7 表全勾）。Stage 6 已交付：deploy/compose.yaml 全栈（mysql 8.4 + api migrate/seed/serve + web nginx 反代）+ 双 Dockerfile + .dockerignore；全栈 e2e = compose 起→api healthy→8080 health 通→浏览器登录→SampleRecord 新增/编辑/删除闭环（已 down 清理）；README 整体重写为现状形态；交付报告 docs/quality/DELIVERY_REPORT.md（含 FUNCTION_MATRIX P0 逐项对照 + NOT VERIFIED 清单）；6 个 openspec spec 头部全部转 Implemented。Stage 5 已交付：`apps/miniapp`（uni-app CLI 工程，dcloudio 3.0.0-503 + Vue3 + TS strict）——登录 / 我的（profile+退出） / 示例数据（列表+新增编辑删除）三页；请求封装复用 `@tiangong/contracts`（envelope/错误码单源），401 单飞刷新重放对齐 web 语义，token 落 `uni.setStorageSync`，refresh 走 body `client='miniapp'`。门禁：`build:mp-weixin` 产物生成（3 页 app.json + env 注入，248K）；`vue-tsc` 绿；集成 26 例全绿（新增 PATCH 兼容用例）。真机/微信开发者工具运行 NOT VERIFIED（本机无工具）。**下一个任务是 Stage 6（收官）**。
 
 **环境基线**（动手前核对，勿凭记忆）：
 
@@ -151,22 +151,12 @@ tiangong/
 9. **IAB 浏览器自动化**：Playwright locator click 对按钮持续超时（actionability 卡死），用 `tab.cua.click({x,y})` 坐标点击；`node_repl` 每次 js 调用必须重跑完整 bootstrap；IAB 不支持 file chooser（上传类走查用 curl 打真实进程）
 10. **miniapp typecheck**：`pnpm --filter @tiangong/miniapp type-check`（vue-tsc 3）；uni 的 SFC 需要 `@dcloudio/types`；微信 request method 无 PATCH（见上兼容层）
 
-## 8. 下一任务执行指令（每次交接随 §7.1 一并重写）
+## 8. 后续工作指引（项目收官态）
 
-1. 先读：本文档 → AGENTS.md → docs/architecture/API_CONTRACT.md → 既有代码模式（新代码仿照已建成模块写）。
-2. Stage 6（收官）清单：
-   - **e2e/安全回归**：compose 全栈起 → health 通 → 浏览器登录→SampleRecord CRUD 闭环；越权负例清单复跑（集成 26 例已覆盖 RBAC/文件/生成器越权，报告引用即可）
-   - **compose 全栈**：`deploy/compose.yaml`（MySQL 8.4 + api + web nginx 静态）——api 镜像内 prisma migrate deploy + seed 后起；web 构建产物走 nginx；`/api` 反代 api
-   - **README**：根 README（项目定位/快速开始/环境要求/命令速查/目录结构/契约要点）
-   - **交付报告**：`docs/quality/` 下交付报告（现状快照形态：能力清单/验证证据/NOT VERIFIED 清单/已知限制）；FUNCTION_MATRIX P0 逐项对照
-   - **spec 头部**：其余 5 个 spec 的「TARGET」模板文案统一转已实现（对照 file-management spec 的改法）
-3. 门禁失败：修到绿为止或如实标 NOT VERIFIED。权威门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（miniapp 另有 `pnpm --filter @tiangong/miniapp build:mp-weixin` 与 `type-check`）。
-4. 常用命令：
-   - 本机 MySQL：`cd ~/workspace/env && docker compose --profile mysql up -d mysql`（宿主 **3307**）
-   - `pnpm --filter @tiangong/api prisma:migrate` / `prisma:seed`（幂等）
-   - `pnpm --filter @tiangong/api test:integration`（26 用例）
-   - `pnpm dev:api` + `pnpm dev:web`（联调）
-   - `pnpm gen:crud <module-name>`（生成器 CLI）
-   - 根目录聚合：`pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build`
-5. Stage 6（flash 会话）开场白，可直接粘贴：
-   > 先完整阅读 `/Users/solvela/workspace/tiangong/AGENTS.md` 与 `docs/BUILD_PLAN.md`（重点 §7.1 当前状态与接手必读事实、§8 执行指令），然后执行 Stage 6（e2e/安全回归/compose 全栈/README/交付报告收官）。
+建设阶段已全部完成；无「下一任务」。后续会话按需从以下入口进入：
+
+1. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
+2. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
+3. **真实环境上线前必办**：配置远端仓库验证 CI 实跑（当前 NOT VERIFIED）；微信开发者工具/真机验证 miniapp；生产 secrets 与域名注入演练。
+4. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；门禁不变：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`。
+5. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`。

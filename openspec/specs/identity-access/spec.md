@@ -1,6 +1,6 @@
-# 用户、角色、菜单及权限 — Target baseline specification
+# 用户、角色、菜单及权限 — Implemented baseline specification
 
-> TARGET / 尚待实现；验收后归档为已实现规范。
+> 已实现并通过验收（Stage 2-6，2026-11-07）：验收证据见 docs/quality/DELIVERY_REPORT.md 与测试套件（单元 + 真库集成 26 例）。
 
 ## Purpose
 

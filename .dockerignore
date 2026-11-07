@@ -1,0 +1,19 @@
+# Docker build context 裁剪：镜像构建只需源码与 lockfile，运行时产物在镜像内重新生成
+.git
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+storage
+apps/api/storage
+apps/miniapp
+docs
+openspec
+agent-prompts
+.github
+*.log
+*.md
+!README.md
+apps/web/dist

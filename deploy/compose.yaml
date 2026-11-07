@@ -1,0 +1,54 @@
+# 天工全栈部署（MySQL 8.4 + api + web nginx 反代）
+# 生产/CI 侧覆盖敏感值：JWT secrets、ADMIN_INITIAL_PASSWORD、CORS_ORIGINS 用 .env 或编排层注入；
+# 本文件内的默认值仅为本地演示哑值，禁止用于真实环境。
+name: tiangong
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-tg_change_me_root}
+      MYSQL_DATABASE: tiangong
+      MYSQL_USER: tiangong
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tg_change_me_app}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-ptg_change_me_root']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: mysql://tiangong:${MYSQL_PASSWORD:-tg_change_me_app}@mysql:3306/tiangong
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET must be provided (>=32 chars)}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be provided (>=32 chars)}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      NODE_ENV: production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/v1/health/live']
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '8080:80'
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  mysql-data:

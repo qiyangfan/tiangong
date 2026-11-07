@@ -1,46 +1,83 @@
-# Universal TS Admin Starter — 通用全栈后台脚手架建设规范包
+# 天工 (tiangong)
 
-> **当前状态：建设规范与 Agent 执行材料（Specification Pack），不是已实现或测试通过的可运行框架。**
-> 不包含任何行业/客户业务模块，不复制 RuoYi 源码；目标是指导 Coding Agent 从零交付通用脚手架。
+以 RuoYi 能力为基准的**通用 TS 全栈后台脚手架**（业务无关）：NestJS 11 + Prisma 6 + MySQL 8.4 + Vue 3.5 / Element Plus + uni-app 微信小程序，pnpm workspace 单仓三端。不包含任何行业/客户业务模块，不复制 RuoYi 源码（重写其模式，不拷贝实现）。
 
-## 目标
+## 能力总览（P0）
 
-打造可直接复用的管理型应用底座，面向通用中后台/企业业务系统；首个业务项目通过插件式业务模块扩展，不改变平台核心。**明确参考 RuoYi 的基础功能覆盖与产品体验，但重新实现为现代 TypeScript 技术栈；参考产品能力而非拷贝实现。**
+- **认证与会话**：账号密码（argon2id）、登录失败锁定、JWT access 15min + refresh 7d 轮换吊销（web 走 HttpOnly Cookie，小程序走 body）
+- **RBAC**：独立 Permission + 角色关联，API 默认拒绝，超管 `*:*:*`；菜单树按权限过滤，按钮级 perms 显隐
+- **系统管理**：用户 / 角色 / 菜单 / 权限 / 字典 / 系统参数；审计中心（操作日志 + 登录日志，敏感字段脱敏）
+- **文件服务**：multipart 上传（大小 / 扩展名白名单 / MIME 一致性）、随机存储键、授权流式下载
+- **代码生成器**：gen_definition 元数据 CRUD + 服务端预览 + CLI `pnpm gen:crud`（已存在文件一律拒绝覆盖，两次生成 diff 为空）
+- **示例实体**：SampleRecord 三端同源 CRUD（Web 管理页 + 小程序页读写同一 API）
+- **健康检查**：`/api/v1/health/live|ready`；OpenAPI 文档 `/docs`
 
-技术决策：Node.js 当前适用 LTS、TypeScript strict、NestJS、Prisma、MySQL 8.4 LTS、Vue 3/Vite/Element Plus、uni-app(Vue3)、pnpm workspace、REST+OpenAPI、Docker Compose。版本锁定和兼容性必须在实施时核验。单体模块化优先，不采用微服务。
+## 快速开始
 
-## 从哪里开始
+环境要求：Node ≥ 24（mise 锚定）、pnpm 12、Docker（MySQL 8.4）。
 
-1. 阅读 `AGENTS.md` → `CONSTITUTION.md` → `docs/requirements/FUNCTION_MATRIX.md` → `docs/requirements/ACCEPTANCE.md`。
-2. 将 `agent-prompts/BUILD_STARTER.md` 原文交给你的 Coding Agent，在**新仓库**执行。
-3. 先 `openspec init`（按官方最新 CLI），再将 `openspec/specs/` 中的能力规范对齐到初始化后的仓库；不要手工伪造已初始化命令/skills。
-4. 按 `docs/requirements/DELIVERY_PHASES.md` 分阶段实现，逐项验证；所有未通过项目明确标记。
-5. 创建具体业务应用时，增加业务模块与独立 OpenSpec 变更；不要修改平台模块承载业务规则。
+```bash
+# 1. 起开发库（共享栈 env-mysql，宿主 3307；或回退 deploy/compose.dev.yaml）
+cd ~/workspace/env && docker compose --profile mysql up -d mysql
 
-## 本包内容
+# 2. 安装 + 迁移 + 种子（幂等；admin 密码读 ADMIN_INITIAL_PASSWORD）
+pnpm install --frozen-lockfile
+pnpm --filter @tiangong/api prisma:deploy
+pnpm --filter @tiangong/api prisma:seed
 
-- `AGENTS.md`：Agent 工作方式、可执行质量门槛、任务范围
-- `CONSTITUTION.md`：稳定工程宪法、优先级与治理程序
-- `docs/adr/`：有依据的架构决策记录；包含候选方案取舍
-- `docs/requirements/FUNCTION_MATRIX.md`：RuoYi 能力对照 + P0/P1/P2 + 非目标
-- `docs/requirements/ACCEPTANCE.md`：完成定义、端到端验收
-- `docs/requirements/DELIVERY_PHASES.md`：实现顺序与里程碑
-- `docs/architecture/`：架构、数据模型边界、契约/安全约定
-- `docs/quality/`：测试、安全、可运维性检查
-- `openspec/specs/`：正式能力规范（要求与场景）；`openspec/changes/` 用官方流程生成
-- `agent-prompts/BUILD_STARTER.md`：Agent 一次性任务入口
-- `.github/`：PR 模板与 CI 建设说明，不假装 CI 已经存在
+# 3. 联调（api :3000，web :5173 代理 /api）
+pnpm dev:api
+pnpm dev:web   # 另开终端
+```
 
-## 完成的定义
+登录账号 `admin`，密码为 `apps/api/.env` 的 `ADMIN_INITIAL_PASSWORD`。
 
-仅当后台和小程序真实登录、RBAC 服务端鉴权、可审计 CRUD、数据迁移、文件上传、代码生成示例、自动化测试及 Docker 部署均通过验收，才可宣称“生产可用基础脚手架”。单纯有页面/目录/Mock 不算完成。
+## 常用命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `pnpm lint` / `pnpm typecheck` | 全仓 lint（eslint9 flat）/ 类型检查（TS strict） |
+| `pnpm test` | 单元测试（vitest；api 单测走 unplugin-swc） |
+| `pnpm --filter @tiangong/api test:integration` | 真库集成 26 例（自动对 tiangong_test migrate + seed） |
+| `pnpm build` | 全仓构建（contracts → api/web） |
+| `pnpm --filter @tiangong/miniapp build:mp-weixin` | 小程序产物（dist/build/mp-weixin） |
+| `pnpm gen:crud <module-name>` | 代码生成器 CLI（先在 Web「开发工具 → 代码生成」建定义） |
+| `pnpm db:migrate` / `pnpm db:seed` | Prisma 迁移 / 幂等种子 |
+
+## 全栈部署
+
+```bash
+cd deploy
+JWT_ACCESS_SECRET=<≥32字符> JWT_REFRESH_SECRET=<≥32字符> ADMIN_INITIAL_PASSWORD=<初始密码> \
+  docker compose up -d --build
+# web: http://localhost:8080（nginx 反代 /api → api:3000）
+```
+
+生产必须经环境变量注入 secrets 与初始密码；compose 内默认值仅为本地演示哑值，禁止用于真实环境。
+
+## 目录结构
+
+```
+apps/
+  api/        NestJS（路由 /api/v1；common 全局件 / security 守卫 / modules 业务模块）
+  web/        Vue3 + Vite + Element Plus + Tailwind v4（token 单源 styles/index.css）
+  miniapp/    uni-app Vue3（登录 / 我的 / 示例数据）
+packages/
+  contracts/  Zod schema + 错误码 + 分页类型（三端契约唯一来源）
+deploy/       compose.yaml 全栈 / compose.dev.yaml 回退库 / nginx.conf
+docs/         BUILD_PLAN（交接权威）/ ADR / API_CONTRACT / UI_STYLEGUIDE / requirements
+openspec/     6 个能力 spec（已实现基线）
+```
+
+## 工程约定
+
+- 工作契约：`AGENTS.md`（所有 Coding Agent 必读）；治理宪法：`CONSTITUTION.md`
+- 架构决策：`docs/adr/`；API 契约细节：`docs/architecture/API_CONTRACT.md`；前端样式规矩：`docs/architecture/UI_STYLEGUIDE.md`
+- 质量门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build`（CI 为最终执法点）
+- 交付验收证据与遗留项：`docs/quality/DELIVERY_REPORT.md`
 
 ## 参考资料
 
 - RuoYi 官方仓库（能力参考）：https://github.com/yangzongzhuan/RuoYi-Vue
 - RuoYi 官方文档：https://doc.ruoyi.vip/
 - OpenSpec 官方：https://github.com/Fission-AI/OpenSpec
-
-## 授权
-
-本包为原创的架构和需求文字，不包含第三方工程源码。正式脚手架使用的依赖与可复制模板需逐项检查许可、归属和商用限制。
