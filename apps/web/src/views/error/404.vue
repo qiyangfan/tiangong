@@ -9,7 +9,7 @@ const router = useRouter();
 <template>
   <div class="tg-404">
     <el-result
-      icon="warning"
+      icon="info"
       :title="t('error.notFoundTitle')"
       :sub-title="t('error.notFoundDesc')"
     >

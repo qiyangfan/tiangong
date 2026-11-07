@@ -2,8 +2,8 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, RefreshLeft, Search as SearchIcon } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue';
 import type { DictItem, DictTypeItem, TagType } from '@tiangong/contracts';
 import {
   apiCreateDictItem,
@@ -15,8 +15,11 @@ import {
   apiUpdateDictItem,
   apiUpdateDictType,
 } from '@/api/dict';
+import FormDialog from '@/components/FormDialog.vue';
 import Pagination from '@/components/Pagination.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
+import SearchForm from '@/components/SearchForm.vue';
+import { confirmDelete } from '@/utils/confirm';
 
 const { t } = useI18n();
 
@@ -131,11 +134,7 @@ async function submitType(): Promise<void> {
 
 async function onDeleteType(row: DictTypeItem): Promise<void> {
   try {
-    await ElMessageBox.confirm(t('common.confirmDelete'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmDelete();
   } catch {
     return;
   }
@@ -267,11 +266,7 @@ async function submitItem(): Promise<void> {
 
 async function onDeleteItem(row: DictItem): Promise<void> {
   try {
-    await ElMessageBox.confirm(t('common.confirmDelete'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmDelete();
   } catch {
     return;
   }
@@ -287,36 +282,28 @@ onMounted(() => {
 
 <template>
   <div class="tg-page">
-    <el-card v-show="showSearch" shadow="never" class="tg-search-card">
-      <el-form inline @submit.prevent>
-        <el-form-item :label="t('common.keyword')">
-          <el-input
-            v-model.trim="query.keyword"
-            :placeholder="t('dict.typeName') + '/' + t('dict.dictKey')"
-            clearable
-            style="width: 200px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item :label="t('common.status')">
-          <el-select
-            v-model="query.enabled"
-            clearable
-            style="width: 120px"
-            :placeholder="t('common.all')"
-          >
-            <el-option :label="t('common.enabled')" :value="true" />
-            <el-option :label="t('common.disabled')" :value="false" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="SearchIcon" @click="onSearch">{{
-            t('common.search')
-          }}</el-button>
-          <el-button :icon="RefreshLeft" @click="onReset">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <SearchForm v-show="showSearch" @search="onSearch" @reset="onReset">
+      <el-form-item :label="t('common.keyword')">
+        <el-input
+          v-model.trim="query.keyword"
+          :placeholder="t('dict.typeName') + '/' + t('dict.dictKey')"
+          clearable
+          style="width: 200px"
+          @keyup.enter="onSearch"
+        />
+      </el-form-item>
+      <el-form-item :label="t('common.status')">
+        <el-select
+          v-model="query.enabled"
+          clearable
+          style="width: 120px"
+          :placeholder="t('common.all')"
+        >
+          <el-option :label="t('common.enabled')" :value="true" />
+          <el-option :label="t('common.disabled')" :value="false" />
+        </el-select>
+      </el-form-item>
+    </SearchForm>
 
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">
@@ -398,10 +385,12 @@ onMounted(() => {
     </el-card>
 
     <!-- 字典类型表单 -->
-    <el-dialog
+    <FormDialog
       v-model="typeDialog.visible"
       :title="typeDialog.editingId === null ? t('dict.addTypeTitle') : t('dict.editTypeTitle')"
       width="480px"
+      :loading="typeSubmitting"
+      @submit="submitType"
     >
       <el-form ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="90px">
         <el-form-item :label="t('dict.typeName')" prop="name">
@@ -422,13 +411,7 @@ onMounted(() => {
           <el-input v-model="typeForm.remark" type="textarea" :rows="2" maxlength="500" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="typeDialog.visible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="typeSubmitting" @click="submitType">{{
-          t('common.submit')
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
 
     <!-- 字典项抽屉 -->
     <el-drawer
@@ -480,7 +463,7 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column :label="t('common.actions')" width="130">
+        <el-table-column :label="t('common.actions')" width="140" fixed="right">
           <template #default="{ row }">
             <el-button
               v-permission="'system:dict:update'"
@@ -498,13 +481,18 @@ onMounted(() => {
             >
           </template>
         </el-table-column>
+        <template #empty>
+          <el-empty :description="t('common.noData')" :image-size="60" />
+        </template>
       </el-table>
 
-      <el-dialog
+      <FormDialog
         v-model="itemDialog.visible"
         :title="itemDialog.editingId === null ? t('dict.addItemTitle') : t('dict.editItemTitle')"
-        width="460px"
+        width="480px"
+        :loading="itemSubmitting"
         append-to-body
+        @submit="submitItem"
       >
         <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="90px">
           <el-form-item :label="t('dict.label')" prop="label">
@@ -536,13 +524,7 @@ onMounted(() => {
             <el-input v-model="itemForm.remark" type="textarea" :rows="2" maxlength="500" />
           </el-form-item>
         </el-form>
-        <template #footer>
-          <el-button @click="itemDialog.visible = false">{{ t('common.cancel') }}</el-button>
-          <el-button type="primary" :loading="itemSubmitting" @click="submitItem">{{
-            t('common.submit')
-          }}</el-button>
-        </template>
-      </el-dialog>
+      </FormDialog>
     </el-drawer>
   </div>
 </template>

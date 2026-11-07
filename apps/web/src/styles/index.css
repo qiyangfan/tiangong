@@ -138,6 +138,14 @@ html.theme-switching *::after {
   transition: none !important;
 }
 
+/* preflight 禁用（ADR-0006）则须自带 box-sizing：Tailwind 的 w-*/p-*/border-* 组合
+   与 Element Plus 组件（如 .el-card 无自身 box-sizing）都按 border-box 假设布局。 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;

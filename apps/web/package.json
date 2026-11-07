@@ -15,6 +15,7 @@
     "@tailwindcss/vite": "^4.3.5",
     "@tiangong/contracts": "workspace:*",
     "axios": "^1.21.0",
+    "echarts": "^6.1.0",
     "element-plus": "^2.14.8",
     "pinia": "^4.1.0",
     "tailwindcss": "^4.3.5",

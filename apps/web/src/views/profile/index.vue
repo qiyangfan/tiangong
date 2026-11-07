@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { apiUpdateProfile } from '@/api/auth';
+import FormDialog from '@/components/FormDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateTime } from '@/utils/datetime';
 
@@ -168,7 +169,14 @@ async function submitPassword(): Promise<void> {
       </el-col>
     </el-row>
 
-    <el-dialog v-model="profileDialog" :title="t('profile.editProfile')" width="440px">
+    <FormDialog
+      v-model="profileDialog"
+      :title="t('profile.editProfile')"
+      width="420px"
+      :loading="profileSubmitting"
+      :confirm-text="t('common.save')"
+      @submit="submitProfile"
+    >
       <el-form ref="profileFormRef" :model="profileForm" label-width="80px">
         <el-form-item :label="t('profile.nickname')" required>
           <el-input v-model.trim="profileForm.nickname" maxlength="30" />
@@ -177,13 +185,7 @@ async function submitPassword(): Promise<void> {
           <el-input v-model.trim="profileForm.email" maxlength="100" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="profileDialog = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="profileSubmitting" @click="submitProfile">{{
-          t('common.save')
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
   </div>
 </template>
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { RefreshLeft, Search as SearchIcon } from '@element-plus/icons-vue';
 import type { LoginLogItem } from '@tiangong/contracts';
 import { apiListLoginLogs } from '@/api/audit';
 import Pagination from '@/components/Pagination.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
+import SearchForm from '@/components/SearchForm.vue';
 import { formatDateTime } from '@/utils/datetime';
 
 const { t } = useI18n();
@@ -55,35 +55,27 @@ onMounted(() => {
 
 <template>
   <div class="tg-page">
-    <el-card v-show="showSearch" shadow="never" class="tg-search-card">
-      <el-form inline @submit.prevent>
-        <el-form-item :label="t('loginLog.operator')">
-          <el-input
-            v-model.trim="query.username"
-            clearable
-            style="width: 160px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item :label="t('loginLog.status')">
-          <el-select
-            v-model="query.status"
-            clearable
-            style="width: 120px"
-            :placeholder="t('common.all')"
-          >
-            <el-option :label="t('loginLog.ok')" value="ok" />
-            <el-option :label="t('loginLog.error')" value="error" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="SearchIcon" @click="onSearch">{{
-            t('common.search')
-          }}</el-button>
-          <el-button :icon="RefreshLeft" @click="onReset">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <SearchForm v-show="showSearch" @search="onSearch" @reset="onReset">
+      <el-form-item :label="t('loginLog.operator')">
+        <el-input
+          v-model.trim="query.username"
+          clearable
+          style="width: 160px"
+          @keyup.enter="onSearch"
+        />
+      </el-form-item>
+      <el-form-item :label="t('loginLog.status')">
+        <el-select
+          v-model="query.status"
+          clearable
+          style="width: 120px"
+          :placeholder="t('common.all')"
+        >
+          <el-option :label="t('loginLog.ok')" value="ok" />
+          <el-option :label="t('loginLog.error')" value="error" />
+        </el-select>
+      </el-form-item>
+    </SearchForm>
 
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">

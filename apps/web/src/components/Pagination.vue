@@ -36,7 +36,7 @@ function onSizeChange(pageSize: number): void {
     :page-size="pageSize"
     :page-sizes="[10, 20, 50, 100]"
     :total="total"
-    :layout="'total, sizes, prev, pager, next, jumper'"
+    :layout="'total, sizes, prev, pager, next'"
     :aria-label="t('common.total', { total })"
     @current-change="onCurrentChange"
     @size-change="onSizeChange"

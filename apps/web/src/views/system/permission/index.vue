@@ -2,8 +2,8 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, Refresh, Search as SearchIcon } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue';
 import type { PermissionGroup, PermissionItem } from '@tiangong/contracts';
 import {
   apiCreatePermission,
@@ -11,13 +11,17 @@ import {
   apiListPermissions,
   apiUpdatePermission,
 } from '@/api/permissions';
+import FormDialog from '@/components/FormDialog.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
+import SearchForm from '@/components/SearchForm.vue';
+import { confirmDelete } from '@/utils/confirm';
 
 const { t } = useI18n();
 
 const loading = ref(false);
 const groups = ref<PermissionGroup[]>([]);
 const keyword = ref('');
+const showSearch = ref(true);
 
 async function getList(): Promise<void> {
   loading.value = true;
@@ -36,7 +40,7 @@ function onSearch(): void {
 
 function onReset(): void {
   keyword.value = '';
-  void getList();
+  onSearch();
 }
 
 // ---- 新增/修改 ----
@@ -129,11 +133,7 @@ async function submit(): Promise<void> {
 
 async function onDelete(row: PermissionItem): Promise<void> {
   try {
-    await ElMessageBox.confirm(t('common.confirmDelete'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmDelete();
   } catch {
     return;
   }
@@ -149,25 +149,17 @@ onMounted(() => {
 
 <template>
   <div class="tg-page">
-    <el-card shadow="never" class="tg-search-card">
-      <el-form inline @submit.prevent>
-        <el-form-item :label="t('common.keyword')">
-          <el-input
-            v-model.trim="keyword"
-            :placeholder="t('permission.resource') + '/' + t('permission.name')"
-            clearable
-            style="width: 220px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="SearchIcon" @click="onSearch">{{
-            t('common.search')
-          }}</el-button>
-          <el-button :icon="Refresh" @click="onReset">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <SearchForm v-show="showSearch" @search="onSearch" @reset="onReset">
+      <el-form-item :label="t('common.keyword')">
+        <el-input
+          v-model.trim="keyword"
+          :placeholder="t('permission.resource') + '/' + t('permission.name')"
+          clearable
+          style="width: 220px"
+          @keyup.enter="onSearch"
+        />
+      </el-form-item>
+    </SearchForm>
 
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">
@@ -181,7 +173,7 @@ onMounted(() => {
             {{ t('permission.addTitle') }}
           </el-button>
         </div>
-        <RightToolbar @refresh="getList" />
+        <RightToolbar v-model:show-search="showSearch" @refresh="getList" />
       </div>
 
       <div v-loading="loading">
@@ -212,7 +204,11 @@ onMounted(() => {
           </template>
           <el-table :data="group.permissions" size="small">
             <el-table-column :label="t('permission.action')" prop="action" width="140" />
-            <el-table-column :label="t('permission.identifier')" min-width="200">
+            <el-table-column
+              :label="t('permission.identifier')"
+              min-width="200"
+              show-overflow-tooltip
+            >
               <template #default="{ row }">
                 <code class="tg-perm__code">{{ group.resource }}:{{ row.action }}</code>
               </template>
@@ -229,7 +225,7 @@ onMounted(() => {
               min-width="160"
               show-overflow-tooltip
             />
-            <el-table-column :label="t('common.actions')" width="140">
+            <el-table-column :label="t('common.actions')" width="140" fixed="right">
               <template #default="{ row }">
                 <el-button
                   v-permission="'system:permission:update'"
@@ -252,10 +248,12 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-dialog
+    <FormDialog
       v-model="dialog.visible"
       :title="dialog.editingId === null ? t('permission.addTitle') : t('permission.editTitle')"
       width="480px"
+      :loading="submitting"
+      @submit="submit"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('permission.resource')" prop="resource">
@@ -281,13 +279,7 @@ onMounted(() => {
           <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="dialog.visible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitting" @click="submit">{{
-          t('common.submit')
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
   </div>
 </template>
 

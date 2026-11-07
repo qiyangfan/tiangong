@@ -24,6 +24,9 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: { parser: tseslint.parser },
     },
+    // 未定义全局（DOM API 等）由 vue-tsc 类型检查兜底；TS 文件经 typescript-eslint
+    // 已关闭 no-undef，.vue script 块同理对齐
+    rules: { 'no-undef': 'off' },
   },
   prettierConfig,
   {

@@ -2,12 +2,14 @@
 import { nextTick, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import type { CreateMenuRequest, MenuNode, MenuNodeWithMeta, MenuTree } from '@tiangong/contracts';
 import { apiCreateMenu, apiDeleteMenu, apiGetMenuTree, apiUpdateMenu } from '@/api/menus';
-import RightToolbar from '@/components/RightToolbar.vue';
+import FormDialog from '@/components/FormDialog.vue';
 import MenuIcon from '@/components/MenuIcon.vue';
+import RightToolbar from '@/components/RightToolbar.vue';
+import { confirmDelete } from '@/utils/confirm';
 
 const { t } = useI18n();
 
@@ -208,11 +210,7 @@ async function submit(): Promise<void> {
 
 async function onDelete(row: MenuNodeWithMeta): Promise<void> {
   try {
-    await ElMessageBox.confirm(t('common.confirmDelete'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmDelete();
   } catch {
     return;
   }
@@ -338,10 +336,12 @@ onMounted(() => {
       </el-table>
     </el-card>
 
-    <el-dialog
+    <FormDialog
       v-model="dialog.visible"
       :title="dialog.editingId === null ? t('common.add') : t('common.edit')"
       width="560px"
+      :loading="submitting"
+      @submit="submit"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item :label="t('menu.parentMenu')">
@@ -394,12 +394,6 @@ onMounted(() => {
           <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="dialog.visible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitting" @click="submit">{{
-          t('common.submit')
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
   </div>
 </template>

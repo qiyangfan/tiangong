@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { Fold, Expand, Moon, Sunny, User, ArrowDown } from '@element-plus/icons-vue';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
+import { confirmBox } from '@/utils/confirm';
 import Breadcrumb from './Breadcrumb.vue';
 
 const router = useRouter();
@@ -14,11 +15,7 @@ const auth = useAuthStore();
 
 async function onLogout(): Promise<void> {
   try {
-    await ElMessageBox.confirm(t('layout.logoutConfirm'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmBox(t('layout.logoutConfirm'));
   } catch {
     return;
   }
@@ -65,7 +62,7 @@ function onToggleLocale(): void {
       </el-button>
       <el-dropdown trigger="click">
         <span
-          class="flex cursor-pointer items-center gap-1.5 text-[var(--el-text-color-regular)] outline-none"
+          class="flex cursor-pointer items-center gap-2 text-[var(--el-text-color-regular)] outline-none"
         >
           <el-icon :size="16"><User /></el-icon>
           <span class="max-w-[140px] truncate">{{ auth.displayName }}</span>

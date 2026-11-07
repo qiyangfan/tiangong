@@ -67,6 +67,11 @@
   应用账号 `tiangong/tiangong_dev`，库 `tiangong`，dev 账号持有 ALL ON `*.*` 供 migrate shadow 库）；`deploy/compose.dev.yaml` 仅作无共享栈环境的回退；
   CI/生产口径恒为 mysql:8.4。
 - 最小可验证改动；复用既有模式与组件；不为「未来可能需要」新增抽象。
+- **封装红线（Jeecg 反例，owner 明令）**：不搞「必须依赖文档才能看懂」的深度定制组件。验收标准 =
+  熟悉底层库（Element Plus / axios / echarts / Prisma）的人**不看任何文档就能用**；props/参数语义与
+  底层 1:1 或近 1:1 透传。封装只允许收敛两类东西：**重复样板**与**必须统一的全局行为**。
+  禁止：配置驱动生成 UI、隐式约定魔法、自造 DSL、多层套壳、为「统一」抹平真实业务差异。
+  合规范本：`FormDialog` / `Pagination` / `BaseChart`（会 EP/echarts 的人零学习成本）。
 - 输入边界必校验；错误信息不得泄露内部异常、密钥、令牌。
 - 前端筛选只服务展示；权限、状态、数据量类条件必须同时在服务端校验。
 - 生成文件不手改（代码生成器产物、OpenAPI 生成物）；重新生成而非手工修补。
@@ -81,7 +86,9 @@
   新页面/新组件必须按其执行**：色值/字号/圆角/间距只用 token；图标一律组件库
   （`@element-plus/icons-vue`），**禁止 emoji 与 Unicode 符号充当图标**；
   禁紫色渐变/玻璃拟态/彩色光斑等 AI 味套路；新增 token 必须亮暗成对。
-- 同类 UI 出现第 2 处即抽公共组件；页面骨架只用既有标准件（Pagination/DictTag/SearchForm 等）。
+- 同类 UI 出现第 2 处即抽公共组件；页面骨架只用既有标准件，选用表见
+  UI_STYLEGUIDE「标准件清单」（SearchForm/FormDialog/Pagination/RightToolbar/DictTag、
+  `utils/confirm` 的 confirmDelete/confirmBox）；EP 原生够用的场景（toast/通知/空态）不包壳。
 - 空态、加载态、错误态必须有界面；错误走明确提示，禁静默空白。
 - 时间/数字格式一律走 `src/utils/datetime.ts` 单源，禁页面内裸渲染 ISO 串。
 - 暗色主题一级公民：新增样式 token 必须同时给暗色值；用户可见文案进 i18n 资源（zh-CN 默认）。

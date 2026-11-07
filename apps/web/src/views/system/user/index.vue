@@ -2,8 +2,8 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, RefreshLeft, Search as SearchIcon } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue';
 import type { RoleItem, UserItem } from '@tiangong/contracts';
 import { passwordSchema } from '@tiangong/contracts';
 import {
@@ -16,8 +16,11 @@ import {
 } from '@/api/users';
 import { apiListRoles } from '@/api/roles';
 import { useAuthStore } from '@/stores/auth';
+import FormDialog from '@/components/FormDialog.vue';
 import Pagination from '@/components/Pagination.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
+import SearchForm from '@/components/SearchForm.vue';
+import { confirmDelete } from '@/utils/confirm';
 import { formatDateTime } from '@/utils/datetime';
 
 const { t } = useI18n();
@@ -200,11 +203,7 @@ async function onDelete(row: UserItem): Promise<void> {
     return;
   }
   try {
-    await ElMessageBox.confirm(t('common.confirmDelete'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmDelete();
   } catch {
     return;
   }
@@ -276,36 +275,28 @@ onMounted(() => {
 <template>
   <div class="tg-page">
     <!-- 第 1 段：搜索表单 -->
-    <el-card v-show="showSearch" shadow="never" class="tg-search-card">
-      <el-form inline @submit.prevent>
-        <el-form-item :label="t('common.keyword')">
-          <el-input
-            v-model.trim="query.keyword"
-            :placeholder="t('user.username') + '/' + t('user.nickname') + '/' + t('user.phone')"
-            clearable
-            style="width: 200px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item :label="t('common.status')">
-          <el-select
-            v-model="query.enabled"
-            clearable
-            style="width: 120px"
-            :placeholder="t('common.all')"
-          >
-            <el-option :label="t('common.enabled')" :value="true" />
-            <el-option :label="t('common.disabled')" :value="false" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="SearchIcon" @click="onSearch">{{
-            t('common.search')
-          }}</el-button>
-          <el-button :icon="RefreshLeft" @click="onReset">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <SearchForm v-show="showSearch" @search="onSearch" @reset="onReset">
+      <el-form-item :label="t('common.keyword')">
+        <el-input
+          v-model.trim="query.keyword"
+          :placeholder="t('user.username') + '/' + t('user.nickname') + '/' + t('user.phone')"
+          clearable
+          style="width: 200px"
+          @keyup.enter="onSearch"
+        />
+      </el-form-item>
+      <el-form-item :label="t('common.status')">
+        <el-select
+          v-model="query.enabled"
+          clearable
+          style="width: 120px"
+          :placeholder="t('common.all')"
+        >
+          <el-option :label="t('common.enabled')" :value="true" />
+          <el-option :label="t('common.disabled')" :value="false" />
+        </el-select>
+      </el-form-item>
+    </SearchForm>
 
     <el-card shadow="never" class="tg-table-card">
       <!-- 第 2 段：按钮行 -->
@@ -372,7 +363,7 @@ onMounted(() => {
         <el-table-column :label="t('common.createdAt')" min-width="150">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column :label="t('common.actions')" width="230" fixed="right">
+        <el-table-column :label="t('common.actions')" width="220" fixed="right">
           <template #default="{ row }">
             <el-button
               v-permission="'system:user:update'"
@@ -413,10 +404,12 @@ onMounted(() => {
     </el-card>
 
     <!-- 第 5 段：弹窗表单 -->
-    <el-dialog
+    <FormDialog
       v-model="dialog.visible"
       :title="dialog.editingId === null ? t('user.createTitle') : t('user.editTitle')"
       width="520px"
+      :loading="submitting"
+      @submit="submit"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('user.username')" prop="username">
@@ -456,18 +449,14 @@ onMounted(() => {
           <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="dialog.visible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitting" @click="submit">{{
-          t('common.submit')
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
 
-    <el-dialog
+    <FormDialog
       v-model="resetDialog.visible"
       :title="`${t('user.resetPwdTitle')}：${resetDialog.username}`"
       width="420px"
+      :confirm-text="t('common.confirm')"
+      @submit="submitReset"
     >
       <el-form ref="resetFormRef" :model="resetDialog" :rules="resetRules" label-width="80px">
         <el-form-item :label="t('user.newPassword')" prop="newPassword">
@@ -479,11 +468,7 @@ onMounted(() => {
           />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="resetDialog.visible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitReset">{{ t('common.confirm') }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
   </div>
 </template>
 

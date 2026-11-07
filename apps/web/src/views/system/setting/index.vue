@@ -2,8 +2,8 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, Refresh, Search as SearchIcon } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue';
 import type { SettingItem } from '@tiangong/contracts';
 import {
   apiCreateSetting,
@@ -11,7 +11,10 @@ import {
   apiListSettings,
   apiUpdateSetting,
 } from '@/api/settings';
+import FormDialog from '@/components/FormDialog.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
+import SearchForm from '@/components/SearchForm.vue';
+import { confirmDelete } from '@/utils/confirm';
 import { formatDateTime } from '@/utils/datetime';
 
 const { t } = useI18n();
@@ -19,6 +22,7 @@ const { t } = useI18n();
 const loading = ref(false);
 const rows = ref<SettingItem[]>([]);
 const keyword = ref('');
+const showSearch = ref(true);
 
 async function getList(): Promise<void> {
   loading.value = true;
@@ -37,7 +41,7 @@ function onSearch(): void {
 
 function onReset(): void {
   keyword.value = '';
-  void getList();
+  onSearch();
 }
 
 const dialog = reactive({ visible: false, editingId: null as number | null, isBuiltin: false });
@@ -124,11 +128,7 @@ async function onDelete(row: SettingItem): Promise<void> {
     return;
   }
   try {
-    await ElMessageBox.confirm(t('common.confirmDelete'), t('common.tip'), {
-      type: 'warning',
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-    });
+    await confirmDelete();
   } catch {
     return;
   }
@@ -144,25 +144,17 @@ onMounted(() => {
 
 <template>
   <div class="tg-page">
-    <el-card shadow="never" class="tg-search-card">
-      <el-form inline @submit.prevent>
-        <el-form-item :label="t('common.keyword')">
-          <el-input
-            v-model.trim="keyword"
-            :placeholder="t('setting.name') + '/' + t('setting.settingKey')"
-            clearable
-            style="width: 220px"
-            @keyup.enter="onSearch"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="SearchIcon" @click="onSearch">{{
-            t('common.search')
-          }}</el-button>
-          <el-button :icon="Refresh" @click="onReset">{{ t('common.reset') }}</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <SearchForm v-show="showSearch" @search="onSearch" @reset="onReset">
+      <el-form-item :label="t('common.keyword')">
+        <el-input
+          v-model.trim="keyword"
+          :placeholder="t('setting.name') + '/' + t('setting.settingKey')"
+          clearable
+          style="width: 220px"
+          @keyup.enter="onSearch"
+        />
+      </el-form-item>
+    </SearchForm>
 
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">
@@ -176,7 +168,7 @@ onMounted(() => {
             {{ t('common.add') }}
           </el-button>
         </div>
-        <RightToolbar @refresh="getList" />
+        <RightToolbar v-model:show-search="showSearch" @refresh="getList" />
       </div>
 
       <el-table v-loading="loading" :data="rows" row-key="id">
@@ -212,7 +204,7 @@ onMounted(() => {
           min-width="150"
           show-overflow-tooltip
         />
-        <el-table-column :label="t('common.createdAt')" min-width="160">
+        <el-table-column :label="t('common.updatedAt')" min-width="160">
           <template #default="{ row }">{{ formatDateTime(row.updatedAt) }}</template>
         </el-table-column>
         <el-table-column :label="t('common.actions')" width="140" fixed="right">
@@ -240,10 +232,12 @@ onMounted(() => {
       </el-table>
     </el-card>
 
-    <el-dialog
+    <FormDialog
       v-model="dialog.visible"
       :title="dialog.editingId === null ? t('setting.addTitle') : t('setting.editTitle')"
-      width="500px"
+      width="520px"
+      :loading="submitting"
+      @submit="submit"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
         <el-form-item :label="t('setting.name')" prop="name">
@@ -266,12 +260,6 @@ onMounted(() => {
           <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="dialog.visible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="submitting" @click="submit">{{
-          t('common.submit')
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </FormDialog>
   </div>
 </template>
