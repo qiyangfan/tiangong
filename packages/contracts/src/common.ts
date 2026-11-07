@@ -49,8 +49,21 @@ export const idListSchema = z.object({ ids: z.array(z.coerce.number().int().posi
 /** 通用关键词搜索（用于列表页搜索框，服务端按字段 like 匹配）。 */
 export const keywordSchema = z.string().trim().max(100).optional();
 
-/** 启用状态过滤。 */
-export const enabledFilterSchema = z.coerce.boolean().optional();
+/**
+ * 启用状态过滤。
+ * query string 语义解析：'true'/'false' 字符串正确映射，其余值视为未提供；
+ * 不能用 z.coerce.boolean()——Boolean('false') === true 会让「停用」筛选永远失效。
+ */
+export const enabledFilterSchema = z
+  .preprocess((v) => {
+    if (v === true || v === 'true') {
+      return true;
+    }
+    if (v === false || v === 'false') {
+      return false;
+    }
+    return undefined;
+  }, z.boolean().optional());
 
 /** 排序方向。 */
 export const sortDirectionSchema = z.enum(['asc', 'desc']);

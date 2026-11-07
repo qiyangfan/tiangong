@@ -7,6 +7,7 @@ import {
   type RefreshResponse,
   type UpdateProfileRequest,
   type UserMenus,
+  type UserPermissions,
   changePasswordRequestSchema,
   loginRequestSchema,
   refreshRequestSchema,
@@ -109,6 +110,13 @@ export class AuthController {
   @ApiOperation({ summary: '当前用户导航菜单树（按权限过滤）' })
   async myMenus(@CurrentUser() user: AuthenticatedUser): Promise<UserMenus> {
     return this.menus.userMenuTree(user.permissions);
+  }
+
+  @Get('permissions')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '当前用户权限串集合（会话恢复后重建权限上下文）' })
+  async myPermissions(@CurrentUser() user: AuthenticatedUser): Promise<UserPermissions> {
+    return { permissions: user.permissions };
   }
 
   @Get('profile')

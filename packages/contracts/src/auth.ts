@@ -28,6 +28,10 @@ export const currentUserSchema = z.object({
 });
 export type CurrentUser = z.infer<typeof currentUserSchema>;
 
+/** 当前用户权限串集合（页面刷新经 refresh 恢复会话后，前端重建权限上下文用）。 */
+export const userPermissionsSchema = z.object({ permissions: z.array(z.string()) });
+export type UserPermissions = z.infer<typeof userPermissionsSchema>;
+
 export const loginResponseSchema = z.object({
   accessToken: z.string(),
   accessExpiresIn: z.number().int(),

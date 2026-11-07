@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ERROR_CODES,
+  enabledFilterSchema,
   errorMeta,
   loginRequestSchema,
   menuNodeSchema,
@@ -28,6 +29,21 @@ describe('pageQuerySchema（分页契约）', () => {
 
   it('page < 1 被拒绝', () => {
     expect(pageQuerySchema.safeParse({ page: 0 }).success).toBe(false);
+  });
+});
+
+describe('enabledFilterSchema（启用状态过滤契约）', () => {
+  it('query 字符串 true/false 正确解析为布尔', () => {
+    expect(enabledFilterSchema.parse('true')).toBe(true);
+    expect(enabledFilterSchema.parse('false')).toBe(false);
+    expect(enabledFilterSchema.parse(true)).toBe(true);
+    expect(enabledFilterSchema.parse(false)).toBe(false);
+  });
+
+  it('未提供或非布尔语义值视为 undefined（不参与过滤）', () => {
+    expect(enabledFilterSchema.parse(undefined)).toBeUndefined();
+    expect(enabledFilterSchema.parse('')).toBeUndefined();
+    expect(enabledFilterSchema.parse('1')).toBeUndefined();
   });
 });
 

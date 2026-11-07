@@ -186,6 +186,20 @@ describe('RBAC 默认拒绝', () => {
     const flat = JSON.stringify(menus.body.data);
     expect(flat).not.toContain('用户管理');
   });
+
+  it('permissions 端点返回当前用户权限串（超管通配，零权限用户为空）', async () => {
+    const admin = await app.http
+      .get('/api/v1/auth/permissions')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(admin.status).toBe(200);
+    expect(admin.body.data.permissions).toContain('*:*:*');
+
+    const noperm = await app.http
+      .get('/api/v1/auth/permissions')
+      .set('Authorization', `Bearer ${nopermToken}`);
+    expect(noperm.status).toBe(200);
+    expect(noperm.body.data.permissions).toEqual([]);
+  });
 });
 
 describe('分页与唯一性契约', () => {
