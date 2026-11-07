@@ -70,7 +70,6 @@ const en: typeof zhCN = {
     subtitle: 'Welcome to Tiangong admin starter. Quick links below follow your permissions.',
     quickLinks: 'Quick Links',
     stackTitle: 'Tech Stack',
-    stack: 'NestJS 11 · Prisma · MySQL 8.4 · Vue 3 · Element Plus · uni-app',
   },
   quickLinks: {
     users: 'Users',

@@ -127,7 +127,7 @@ tiangong/
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）
 - API 端点全集：/health/live|ready、/auth/login|refresh|logout|menus|**permissions**|profile|change-password、/users(+reset-password|enabled)、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs；swagger /docs
 - 前端结构锚点：动态路由按后端菜单 component 字符串映射 `apps/web/src/views/<component>.vue`（`import.meta.glob`）；五段式页面模板看 `apps/web/src/views/system/user/index.vue`；request 层 `src/utils/request.ts`（401 单飞刷新重放、envelope 解包）；公共件 Pagination/RightToolbar/DictTag/MenuIcon + useDict/usePermission
-- **样式分工（ADR-0006）**：交互控件及其内部样式一律 Element Plus（主题靠覆盖 EP css-vars，见 `src/styles/index.css` 亮暗两套品牌 token）；布局/间距/响应式/门面视觉用 Tailwind utility（`dark:` 变体已绑 html.dark）；**Tailwind preflight 禁用**（只引 theme+utilities 两层，防重置 EP），新样式勿引 `tailwindcss/index.css`
+- **样式分工（ADR-0006 + `docs/architecture/UI_STYLEGUIDE.md`）**：交互控件及其内部样式一律 Element Plus（主题靠覆盖 EP css-vars，见 `src/styles/index.css` 亮暗两套 token）；布局/间距/响应式/门面视觉用 Tailwind utility（`dark:` 变体已绑 html.dark）；**Tailwind preflight 禁用**（只引 theme+utilities 两层，防重置 EP）。**设计 token 标准**：品牌色绀青（亮 #2f5d9e / 暗 #5b87bd）、语义色竹青/赭金/赭红（与 longzhong 生态同值）、圆角控件 8/卡片 12、字号标题 20/正文 14/注释 12、间距 4px 基数；新页面必须按 UI_STYLEGUIDE 执行（禁魔法值、禁 emoji/符号图标、禁紫渐变/玻璃拟态套路）
 - 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
 - openspec 校验：`npx -y @fission-ai/openspec@latest validate --all --specs`（npm 无 `@openspec/cli` 包）；当前 6 spec 全绿
 

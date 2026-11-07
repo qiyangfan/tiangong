@@ -68,7 +68,6 @@ const zhCN = {
     subtitle: '欢迎使用天工通用后台脚手架，下方快捷入口按当前账号权限显示。',
     quickLinks: '快捷入口',
     stackTitle: '技术栈',
-    stack: 'NestJS 11 · Prisma · MySQL 8.4 · Vue 3 · Element Plus · uni-app',
   },
   quickLinks: {
     users: '用户管理',

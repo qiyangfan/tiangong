@@ -40,20 +40,25 @@ async function onLogin(): Promise<void> {
 </script>
 
 <template>
+  <!-- 门面基准（UI_STYLEGUIDE）：页面底色 + 品牌色单色顶部淡晕，无渐变光斑无玻璃 -->
   <div
-    class="flex h-screen items-center justify-center bg-[var(--el-bg-color-page)] [background-image:radial-gradient(ellipse_60%_50%_at_20%_10%,rgba(79,70,229,0.12),transparent),radial-gradient(ellipse_50%_60%_at_85%_85%,rgba(139,92,246,0.10),transparent)] dark:[background-image:radial-gradient(ellipse_60%_50%_at_20%_10%,rgba(129,140,248,0.14),transparent),radial-gradient(ellipse_50%_60%_at_85%_85%,rgba(167,139,250,0.10),transparent)]"
+    class="flex h-screen items-center justify-center bg-[var(--el-bg-color-page)] [background-image:linear-gradient(180deg,color-mix(in_srgb,var(--el-color-primary)_7%,transparent),transparent_60%)]"
   >
-    <el-card class="w-[400px] shadow-xl" shadow="always">
-      <div class="mb-6 text-center">
+    <el-card class="w-[400px]" shadow="always">
+      <div class="mb-8 text-center">
         <div
-          class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-xl font-bold text-white"
+          class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--el-color-primary)] text-xl font-bold text-white"
         >
           天
         </div>
-        <h1 class="m-0 text-[22px] font-semibold text-[var(--el-text-color-primary)]">
+        <h1
+          class="m-0 text-[var(--tg-font-size-title)] font-semibold text-[var(--el-text-color-primary)]"
+        >
           {{ t('login.title') }}
         </h1>
-        <p class="mt-1.5 mb-0 text-[13px] text-[var(--el-text-color-secondary)]">
+        <p
+          class="mb-0 mt-2 text-[var(--tg-font-size-caption)] text-[var(--el-text-color-secondary)]"
+        >
           {{ t('login.subtitle') }}
         </p>
       </div>
@@ -78,7 +83,7 @@ async function onLogin(): Promise<void> {
         </el-form-item>
         <el-form-item class="mb-0">
           <el-button
-            class="w-full tracking-[6px]"
+            class="w-full tracking-[6px] [text-indent:6px]"
             type="primary"
             size="large"
             :loading="submitting"

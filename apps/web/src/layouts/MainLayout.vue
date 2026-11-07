@@ -16,10 +16,11 @@ const appStore = useAppStore();
           : 'var(--tg-sidebar-width)',
       }"
     >
+      <!-- logo 区：品牌色纯底白字（UI_STYLEGUIDE 门面基准，禁渐变） -->
       <div
-        class="flex h-[var(--tg-navbar-height)] shrink-0 items-center justify-center bg-gradient-to-r from-indigo-600 to-violet-600 text-white dark:from-indigo-500 dark:to-violet-500"
+        class="flex h-[var(--tg-navbar-height)] shrink-0 items-center justify-center bg-[var(--el-color-primary)] text-white"
       >
-        <span class="text-lg font-semibold tracking-widest">
+        <span class="text-lg font-semibold tracking-[8px] [text-indent:8px]">
           {{ appStore.sidebarCollapsed ? '天' : '天工' }}
         </span>
       </div>

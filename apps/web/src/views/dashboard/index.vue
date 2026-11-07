@@ -25,6 +25,17 @@ const allLinks: QuickLink[] = [
 ];
 const links = allLinks.filter((l) => !l.perm || checkPermi(l.perm));
 
+// 技术栈名词列表不进 i18n（专有名词，zh/en 一致）
+const stackItems = [
+  'NestJS 11',
+  'Prisma',
+  'MySQL 8.4',
+  'Vue 3',
+  'Element Plus',
+  'Tailwind v4',
+  'uni-app',
+];
+
 function go(path: string): void {
   void router.push(path);
 }
@@ -32,52 +43,60 @@ function go(path: string): void {
 
 <template>
   <div class="tg-page">
-    <!-- 问候横幅：品牌渐变，暗色降低饱和 -->
+    <!-- 问候横幅：品牌淡底纯色（UI_STYLEGUIDE 门面基准，禁渐变/玻璃） -->
     <div
-      class="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-7 text-white shadow-md dark:from-indigo-500/90 dark:to-violet-500/90"
+      class="flex items-center gap-4 rounded-xl border border-[var(--el-border-color-light)] bg-[var(--el-color-primary-light-9)] px-6 py-6"
     >
-      <div class="flex items-center gap-4">
-        <div
-          class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur"
+      <div
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--el-color-primary)] text-white"
+      >
+        <el-icon :size="22"><Odometer /></el-icon>
+      </div>
+      <div>
+        <h2
+          class="m-0 text-[var(--tg-font-size-title)] font-semibold text-[var(--el-text-color-primary)]"
         >
-          <el-icon :size="26"><Odometer /></el-icon>
-        </div>
-        <div>
-          <h2 class="m-0 text-xl font-semibold">
-            {{ t('dashboard.greeting', { name: auth.displayName }) }}
-          </h2>
-          <p class="mt-1 mb-0 text-[13px] text-white/80">
-            {{ t('dashboard.subtitle') }}
-          </p>
-        </div>
+          {{ t('dashboard.greeting', { name: auth.displayName }) }}
+        </h2>
+        <p class="mb-0 mt-1 text-[var(--tg-font-size-body)] text-[var(--el-text-color-secondary)]">
+          {{ t('dashboard.subtitle') }}
+        </p>
       </div>
     </div>
 
-    <el-card shadow="never" class="mt-3">
+    <el-card shadow="never" class="mt-4">
       <template #header>
-        <span class="font-semibold">{{ t('dashboard.quickLinks') }}</span>
+        <span class="tg-card-title">{{ t('dashboard.quickLinks') }}</span>
       </template>
       <div class="flex flex-wrap gap-3">
         <div
           v-for="link in links"
           :key="link.path"
-          class="flex cursor-pointer items-center gap-2.5 rounded-md border border-[var(--el-border-color-light)] px-5 py-3 text-[var(--el-text-color-regular)] transition-colors hover:border-[var(--el-color-primary)] hover:text-[var(--el-color-primary)]"
+          class="flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--el-border-color-light)] px-4 py-2.5 text-[var(--el-text-color-regular)] transition-colors hover:border-[var(--el-color-primary)] hover:text-[var(--el-color-primary)]"
           @click="go(link.path)"
         >
-          <el-icon :size="18"><component :is="link.icon" /></el-icon>
+          <el-icon :size="16"><component :is="link.icon" /></el-icon>
           <span>{{ link.label }}</span>
         </div>
         <el-empty v-if="links.length === 0" :description="t('common.noData')" :image-size="60" />
       </div>
     </el-card>
 
-    <el-card shadow="never" class="mt-3">
+    <el-card shadow="never" class="mt-4">
       <template #header>
-        <span class="font-semibold">{{ t('dashboard.stackTitle') }}</span>
+        <span class="tg-card-title">{{ t('dashboard.stackTitle') }}</span>
       </template>
-      <span class="text-[13px] text-[var(--el-text-color-secondary)]">
-        {{ t('dashboard.stack') }}
-      </span>
+      <div class="flex flex-wrap gap-2">
+        <el-tag
+          v-for="item in stackItems"
+          :key="item"
+          type="info"
+          effect="plain"
+          disable-transitions
+        >
+          {{ item }}
+        </el-tag>
+      </div>
     </el-card>
   </div>
 </template>

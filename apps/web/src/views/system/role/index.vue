@@ -371,7 +371,7 @@ onMounted(() => {
 
     <el-dialog
       v-model="assignDialog.visible"
-      :title="`${t('role.assignTitle')} — ${assignDialog.roleName}`"
+      :title="`${t('role.assignTitle')}：${assignDialog.roleName}`"
       width="560px"
     >
       <el-scrollbar max-height="420px">

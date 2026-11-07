@@ -77,6 +77,10 @@
 ### 前端约定（Element Plus 语境，承 longzhong 前端宪法精神）
 
 - 元原则：**用组件不用手搓；用默认不胡乱覆盖；用 token 不用魔法值**。
+- **UI 样式规范见 `docs/architecture/UI_STYLEGUIDE.md`（token 单源 `apps/web/src/styles/index.css`），
+  新页面/新组件必须按其执行**：色值/字号/圆角/间距只用 token；图标一律组件库
+  （`@element-plus/icons-vue`），**禁止 emoji 与 Unicode 符号充当图标**；
+  禁紫色渐变/玻璃拟态/彩色光斑等 AI 味套路；新增 token 必须亮暗成对。
 - 同类 UI 出现第 2 处即抽公共组件；页面骨架只用既有标准件（Pagination/DictTag/SearchForm 等）。
 - 空态、加载态、错误态必须有界面；错误走明确提示，禁静默空白。
 - 时间/数字格式一律走 `src/utils/datetime.ts` 单源，禁页面内裸渲染 ISO 串。

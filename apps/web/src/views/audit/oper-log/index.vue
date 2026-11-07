@@ -185,7 +185,7 @@ onMounted(() => {
           <DictTag :options="sys_oper_type" :value="detail.businessType" />
         </el-descriptions-item>
         <el-descriptions-item :label="t('operLog.request')">
-          {{ detail.method }} · {{ detail.requestMethod }} {{ detail.requestPath }}
+          {{ detail.method }}（{{ detail.requestMethod }} {{ detail.requestPath }}）
         </el-descriptions-item>
         <el-descriptions-item :label="t('operLog.operator')"
           >{{ detail.username }}（{{ detail.client }}）</el-descriptions-item
@@ -195,7 +195,9 @@ onMounted(() => {
           <el-tag :type="detail.status === 'ok' ? 'success' : 'danger'" disable-transitions>
             {{ detail.status === 'ok' ? t('operLog.ok') : t('operLog.error') }}
           </el-tag>
-          <span v-if="detail.errorMsg" class="tg-operlog__error">— {{ detail.errorMsg }}</span>
+        </el-descriptions-item>
+        <el-descriptions-item v-if="detail.errorMsg" :label="t('operLog.errorMsg')">
+          <span class="tg-operlog__error">{{ detail.errorMsg }}</span>
         </el-descriptions-item>
         <el-descriptions-item :label="t('operLog.costMs')">{{
           formatCost(detail.costMs)

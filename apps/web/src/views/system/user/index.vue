@@ -466,7 +466,7 @@ onMounted(() => {
 
     <el-dialog
       v-model="resetDialog.visible"
-      :title="t('user.resetPwdTitle') + ' — ' + resetDialog.username"
+      :title="`${t('user.resetPwdTitle')}：${resetDialog.username}`"
       width="420px"
     >
       <el-form ref="resetFormRef" :model="resetDialog" :rules="resetRules" label-width="80px">
