@@ -1,0 +1,22 @@
+# 开发用 MySQL 8.4（仅本地开发；生产用 deploy/compose.yaml，密钥走环境变量）
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: tiangong-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: tiangong_dev_root
+      MYSQL_DATABASE: tiangong
+      MYSQL_USER: tiangong
+      MYSQL_PASSWORD: tiangong_dev
+    ports:
+      - '3307:3306' # 避让宿主机已有 env-mysql(3306)
+    volumes:
+      - tiangong_mysql_dev:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-ptiangong_dev_root']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  tiangong_mysql_dev:

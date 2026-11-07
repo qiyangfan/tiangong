@@ -1,0 +1,286 @@
+// 天工 Prisma schema — 数据库存储模型事实来源（ADR-0003）
+// 蓝本：ruoyi-vue-plus ry_vue.sql 裁剪（差异见 docs/BUILD_PLAN.md §5）：
+//   Int 自增主键 / Boolean enabled / 无软删 / 无 ancestors 冗余列
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ 身份与权限 ============
+
+model User {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique @db.VarChar(30)
+  nickname        String    @db.VarChar(30)
+  email           String?   @unique @db.VarChar(100)
+  phone           String?   @db.VarChar(20)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  avatarFileId    Int?      @map("avatar_file_id")
+  enabled         Boolean   @default(true)
+  remark          String?   @db.VarChar(500)
+  failedAttempts  Int       @default(0) @map("failed_attempts")
+  lockUntil       DateTime? @map("lock_until")
+  lastLoginIp     String?   @map("last_login_ip") @db.VarChar(64)
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdBy       Int?      @map("created_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedBy       Int?      @map("updated_by")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  roles       UserRole[]
+  refreshTokens RefreshToken[]
+  operLogs    OperLog[]
+
+  @@index([enabled])
+  @@map("user")
+}
+
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(30)
+  roleKey   String   @unique @map("role_key") @db.VarChar(100)
+  sort      Int      @default(0)
+  enabled   Boolean  @default(true)
+  builtin   Boolean  @default(false)
+  remark    String?  @db.VarChar(500)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("role")
+}
+
+model Permission {
+  id        Int      @id @default(autoincrement())
+  resource  String   @db.VarChar(64)
+  action    String   @db.VarChar(32)
+  name      String   @db.VarChar(100)
+  remark    String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  roles RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permission")
+}
+
+model Menu {
+  id        Int      @id @default(autoincrement())
+  parentId  Int      @default(0) @map("parent_id")
+  name      String   @db.VarChar(50)
+  menuType  String   @map("menu_type") @db.VarChar(1)
+  path      String?  @db.VarChar(200)
+  component String?  @db.VarChar(255)
+  perms     String?  @db.VarChar(100)
+  icon      String?  @db.VarChar(100)
+  sort      Int      @default(0)
+  visible   Boolean  @default(true)
+  enabled   Boolean  @default(true)
+  remark    String?  @db.VarChar(500)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([parentId])
+  @@map("menu")
+}
+
+model UserRole {
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_role")
+}
+
+model RolePermission {
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permission")
+}
+
+// ============ 字典与参数 ============
+
+model DictType {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  dictKey   String   @unique @map("dict_key") @db.VarChar(100)
+  enabled   Boolean  @default(true)
+  remark    String?  @db.VarChar(500)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("dict_type")
+}
+
+model DictItem {
+  id        Int      @id @default(autoincrement())
+  dictKey   String   @map("dict_key") @db.VarChar(100)
+  label     String   @db.VarChar(100)
+  value     String   @db.VarChar(100)
+  tagType   String?  @map("tag_type") @db.VarChar(20)
+  sort      Int      @default(0)
+  isDefault Boolean  @default(false) @map("is_default")
+  enabled   Boolean  @default(true)
+  remark    String?  @db.VarChar(500)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([dictKey, value])
+  @@index([dictKey])
+  @@map("dict_item")
+}
+
+/// 非机密运行参数；禁止存放任何密钥（服务层校验拒绝敏感键值形态）
+model Setting {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(100)
+  settingKey String   @unique @map("setting_key") @db.VarChar(100)
+  value      String   @db.VarChar(500)
+  builtin    Boolean  @default(false)
+  remark     String?  @db.VarChar(500)
+  createdBy  Int?     @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedBy  Int?     @map("updated_by")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("setting")
+}
+
+// ============ 审计 ============
+
+model OperLog {
+  id            Int      @id @default(autoincrement())
+  title         String   @db.VarChar(50)
+  businessType  String   @map("business_type") @db.VarChar(20)
+  method        String   @db.VarChar(200)
+  requestMethod String   @map("request_method") @db.VarChar(10)
+  requestPath   String   @map("request_path") @db.VarChar(255)
+  userId        Int?     @map("user_id")
+  username      String   @db.VarChar(50)
+  client        String   @default("-") @db.VarChar(10)
+  ip            String   @default("") @db.VarChar(64)
+  params        String?  @db.VarChar(4000)
+  result        String?  @db.VarChar(2000)
+  status        String   @db.VarChar(10)
+  errorMsg      String?  @map("error_msg") @db.VarChar(2000)
+  costMs        Int      @map("cost_ms")
+  requestId     String   @map("request_id") @db.VarChar(36)
+  operatedAt    DateTime @map("operated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([operatedAt])
+  @@index([username])
+  @@map("oper_log")
+}
+
+model LoginLog {
+  id        Int      @id @default(autoincrement())
+  username  String   @db.VarChar(50)
+  userId    Int?     @map("user_id")
+  client    String   @default("-") @db.VarChar(10)
+  ip        String   @default("") @db.VarChar(64)
+  status    String   @db.VarChar(10)
+  message   String?  @db.VarChar(255)
+  requestId String   @map("request_id") @db.VarChar(36)
+  loggedAt  DateTime @map("logged_at")
+
+  @@index([loggedAt])
+  @@index([username])
+  @@map("login_log")
+}
+
+// ============ 会话 ============
+
+/// opaque refresh token：仅存 sha256 哈希；轮换时吊销旧值并记录替换
+model RefreshToken {
+  id            Int       @id @default(autoincrement())
+  tokenHash     String    @unique @map("token_hash") @db.VarChar(128)
+  userId        Int       @map("user_id")
+  client        String    @db.VarChar(10)
+  expiresAt     DateTime  @map("expires_at")
+  revokedAt     DateTime? @map("revoked_at")
+  replacedByHash String?  @map("replaced_by_hash") @db.VarChar(128)
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_token")
+}
+
+// ============ 文件 ============
+
+/// 文件元数据与物理存储分离；storage_key 为服务端生成的随机键（用户不可控）
+model FileObject {
+  id           Int      @id @default(autoincrement())
+  storageKey   String   @unique @map("storage_key") @db.VarChar(255)
+  originalName String   @map("original_name") @db.VarChar(255)
+  suffix       String   @default("") @db.VarChar(10)
+  mimeType     String   @default("") @map("mime_type") @db.VarChar(100)
+  sizeBytes    Int      @map("size_bytes")
+  storage      String   @default("local") @db.VarChar(20)
+  checksumSha256 String? @map("checksum_sha256") @db.VarChar(64)
+  createdBy    Int?     @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("file_object")
+}
+
+// ============ 示例与生成器 ============
+
+/// 通用 CRUD 示范实体（业务无关；跨端闭环载体）
+model SampleRecord {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  category  String?  @db.VarChar(50)
+  amount    Decimal? @db.Decimal(12, 2)
+  enabled   Boolean  @default(true)
+  remark    String?  @db.VarChar(500)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sample_record")
+}
+
+/// 代码生成元数据（fields 为 GenFieldDef[] JSON）
+model GenDefinition {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50)
+  displayName String   @map("display_name") @db.VarChar(50)
+  fields      Json
+  remark      String?  @db.VarChar(500)
+  createdBy   Int?     @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedBy   Int?     @map("updated_by")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("gen_definition")
+}

@@ -1,0 +1,36 @@
+{
+  "name": "tiangong",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "天工 — 通用 TS 后台脚手架（NestJS + Vue3 + uni-app）",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r run typecheck",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "dev:api": "pnpm --filter @tiangong/api dev",
+    "dev:web": "pnpm --filter @tiangong/web dev",
+    "db:up": "docker compose -f deploy/compose.dev.yaml up -d",
+    "db:down": "docker compose -f deploy/compose.dev.yaml down",
+    "db:reset": "docker compose -f deploy/compose.dev.yaml down -v",
+    "db:migrate": "pnpm --filter @tiangong/api prisma:migrate",
+    "db:seed": "pnpm --filter @tiangong/api prisma:seed"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.6.0",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4"
+  }
+}

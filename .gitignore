@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+*.log
+
+# runtime artifacts
+storage/
+*.tsbuildinfo
+apps/miniapp/unpackage/
+.turbo/

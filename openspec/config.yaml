@@ -1,0 +1,13 @@
+# 示例配置：交给 openspec init 后按官方 CLI 版本验证并调整；不保证直接被所有版本接受。
+schema: spec-driven
+context: |
+  A business-agnostic, RuoYi-inspired TS admin platform. Modular monolith.
+  NestJS + Prisma + MySQL, Vue3 web, uni-app miniapp, shared DTO contracts.
+  Refer to CONSTITUTION.md and docs/requirements/FUNCTION_MATRIX.md.
+rules:
+  proposal:
+    - Explain P0/P1/P2 scope and contract/security effects.
+  design:
+    - Explicitly analyze authorization, migration and test impact.
+  tasks:
+    - Include executable tests and docs updates; report unverified items.
