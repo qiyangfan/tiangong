@@ -1,12 +1,13 @@
-# 天工脚手架交付报告（2026-11-07）
+# 天工脚手架交付报告（2026-11-08）
 
 > 现状快照：只写当前形态、验证证据与遗留项；过程与变更历史看 git log。
 > 交接权威文件是 `docs/BUILD_PLAN.md`（§7 状态表 / §7.1 必读事实 / §8 执行指令）。
 
 ## 交付范围
 
-BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变更经 owner 验收归档
-（`openspec/changes/archive/2026-11-07-*`），`openspec/specs/` 现为 10 个能力基线（validate 全绿）：
+BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变更与 2026-11-08
+wot 组件层变更经 owner 验收归档（`openspec/changes/archive/2026-11-0{7,8}-*`），
+`openspec/specs/` 现为 10 个能力基线（validate 全绿）：
 
 - `add-e2e-test-hardening`：补齐 FUNCTION_MATRIX P0「测试/CI/部署」承诺的自动化 e2e
   （Playwright 驱动真实 api + web + MySQL，3 spec 5 例入 CI）+ web 请求层/时间单源单测防护
@@ -22,6 +23,13 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变
 - `add-miniapp-state-i18n`（owner 决策，推翻 align-miniapp-ui「不引 vue-i18n」口径）：
   pinia 会话态/语言偏好 + vue-i18n 双语资源（文案收编、语言切换、导航/tabBar 运行时同步、
   `tg_locale` 持久化）；miniapp-client 基线落地。
+- `adopt-wot-design-uni`（2026-11-08 归档）：miniapp 组件层选型 wot-design-uni 1.14.0
+  （uni_modules 内联安装，npm 直装路线经 PoC 实证被 uni 小程序编译器阻断）——三页
+  表单/交互控件换 wd-* 组件、主题经 `theme.ts` wotThemeVars 单点桥接 tgTokens、
+  tabBar 增 EP 同源字形图标（生成脚本可复现）、46px 控件档统一；门禁与双端构建全绿，
+  模拟器渲染走查 + H5 playwright 全交互环走查通过（console.error=0）。决策记录
+  （含「v1 冻结 ≠ 断更」证据链）见 `docs/adr/0008-adopt-wot-design-uni.md`；
+  组件库控件层与 tabBar 图标条款并入 miniapp-ui 基线。
 
 归档前完成一轮全树评审循环（文档契约与实现对齐、delta 结构修复、死配置清理），见验证记录。
 
@@ -44,28 +52,31 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变
 | 通用 CRUD 模块示例 | SampleRecord api + Web 五段式页 + 小程序页                                                           | 集成：web 建档→miniapp 改同一条记录；e2e：UI 新增/编辑/删除                                        |
 | 代码生成工具       | gen_definition CRUD + 预览 + CLI 拒绝覆盖 + 确定性渲染                                               | 单测（两次落盘 diff 为空）+ CLI 端到端实测                                                         |
 | API 文档           | OpenAPI（nestjs-zod 桥接）/docs + Bearer 标注                                                        | swagger 可访问                                                                                     |
-| 微信小程序端       | uni-app CLI 工程：登录/我的/SampleRecord                                                             | build:mp-weixin 产物 3 页                                                                          |
+| 微信小程序端       | uni-app CLI 工程：登录/我的/SampleRecord                                                             | build:mp-weixin 产物 3 页；开发者工具模拟器走查三页                                                |
 | Web 管理界面       | 登录/布局/菜单/系统管理/日志/文件/代码生成 UI                                                        | e2e 5 例（真实浏览器 + 真库）                                                                      |
 | 国际化/主题        | zh-CN 默认 + en；亮暗 token 成对；375/768/1280 走查                                                  | UI_STYLEGUIDE + 浏览器亮暗切换                                                                     |
 | 系统基础运行指标   | /health/live（进程）与 /health/ready（DB）分离                                                       | 集成：ready 检查 database up                                                                       |
-| 测试/CI/部署       | 单测 67（contracts 17 + api 7 + web 16 + miniapp 27）+ 集成 26 + e2e 5；CI 含 e2e 步骤；compose 全栈 | 下方验证记录                                                                                       |
+| 测试/CI/部署       | 单测 70（contracts 17 + api 7 + web 16 + miniapp 30）+ 集成 26 + e2e 5；CI 含 e2e 步骤；compose 全栈 | 下方验证记录                                                                                       |
 
 ## 验证记录（2026-11-07）
 
 - `pnpm lint`、`pnpm typecheck`（contracts/api/web/miniapp/e2e）、`pnpm test`（67）、`pnpm build`：全绿
-- miniapp 状态/i18n 基线（add-miniapp-state-i18n）：单测 27/27（终局 401 九例 + datetime + auth store 6 + app store 6，提示断言锁分类枚举与次数、不锁文案）；`build:h5` 与 `build:mp-weixin` 编译通过（pinia 4 + vue-i18n 11 × uni 插件兼容性验证点；uni `preserveSymlinks` 与 pnpm 虚拟仓库冲突的解法见 BUILD_PLAN §7.1 已知坑）；语言切换/导航标题/tabBar 同步行为有 store 级结构断言
+- **微信开发者工具模拟器真实走查（2026-11-08 补录）**：小程序测试号 appid 经 `MP_WEIXIN_APPID` 环境变量注入产物（manifest 内恒为 touristappid 占位，见 `apps/miniapp/scripts/patch-mp-appid.mjs`）后重建，`cli auto --auto-port 9420` 启用自动化，miniprogram-automator 驱动模拟器三页走查——登录（账号密码打真 3000 dev api，登录成功）→ 示例数据（真实请求返回空列表，空态正确）→ 我的（profile 渲染、最近登录时间=本次走查时刻、语言切换项渲染、tabBar 选中态正确），`console.error`=0。期间验证终局 401 防抖改动随产物实机运行无异
+- **adopt-wot-design-uni 实施（2026-11-08）**：wot 1.14.0 uni_modules 内联 + sass 1.78.0 后——根门禁 lint/typecheck(4 包)/单测 70/build 全绿；`build:h5`/`build:mp-weixin` 双链路编译通过，mp 产物含 wd-* 组件（easycom 按需：直用 6 件 + 内部依赖 5 件）与 tab 图标资产，appid 注入链路不受影响。走查双轨：① 微信模拟器（wot 产物）三页渲染截图 + tabBar 图标选中态正确 + `console.error`=0（automator 桥对 virtualHost 上提树无法可靠打字/点击——几何与 data 序列化残缺，已登记 BUILD_PLAN 已知坑 14）；② H5 playwright 驱动同一套组件补全交互环：登录打字（真 3000 api 登录成功→跳示例数据）→ 弹层开/switch 切/取消关 → 语言切 English 再切回 → 退出登录回登录页，`console.error`=0。走查中消化 owner 两项反馈：登录输入框 46px 控件档（`inputInnerHeightNoBorder` 桥接修复文字偏上）、tabBar 图标补齐（EP 字形栅格 PNG + 生成脚本入库）。代码评审循环：修复 2 项细节（两文件 CRLF 归一、theme.ts 头注陈旧引用），复验全绿
+- 归档（2026-11-08 owner 指令）：`adopt-wot-design-uni` 移入 `openspec/changes/archive/2026-11-08-*`；组件库控件层（ADDED）与「样式 token 单源」「双端构建可通过」增补（MODIFIED）合入 miniapp-ui 基线并按惯例抛光头部与 Purpose
+- miniapp 状态/i18n 基线（add-miniapp-state-i18n）：单测 30/30（终局 401 十二例 + datetime 4 + auth store 6 + app store 8，提示断言锁分类枚举与次数、不锁文案）；`build:h5` 与 `build:mp-weixin` 编译通过（pinia 4 + vue-i18n 11 × uni 插件兼容性验证点；uni `preserveSymlinks` 与 pnpm 虚拟仓库冲突的解法见 BUILD_PLAN §7.1 已知坑）；语言切换/导航标题/tabBar 同步行为有 store 级结构断言
 - `pnpm --filter @tiangong/api test:integration`：26/26（认证契约、RBAC 默认拒绝、分页与唯一性、审计脱敏、files 8 负例、SampleRecord 跨端、miniapp 原生 PUT、生成器预览与越权）
 - `pnpm test:e2e`：**5/5**（错密停留登录页 401、登录→仪表盘→菜单渲染→登出、未登录守卫重定向含回跳地址、零权限用户菜单过滤+未注册路由 404、SampleRecord UI 纵向新增/编辑/删除含两位小数金额）——Playwright 自动拉起 api(:3001)+web(:5174)，指向 tiangong_test，globalSetup 自动 migrate+seed+复位锁定计数
 - 生成器确定性：同一输入两次渲染/两次独立落盘逐字节一致；CLI 端到端（落盘 7 件 → 二跑整体拒绝并列全部冲突）
 - 安全回归：越权负例（RBAC 403/文件下载 403/生成器预览 403）、路径遍历剥离、上传白名单、暴力锁定、refresh 轮换复用拒绝——集成套件持续执行；`docs/quality/SECURITY_TESTING.md` 基线逐条覆盖
-- web 请求层单测锁定 401 单飞刷新契约（并发共享一次 refresh/成功重放/终局清理会话/auth 路径豁免/防循环/silent 静默/并发终局各自清理）与 envelope 解包；miniapp 请求层单测锁定同语义（过期重放仍拒、被停用、无凭据、auth 路径豁免、silent、恢复成功）
+- web 请求层单测锁定 401 单飞刷新契约（并发共享一次 refresh/成功重放/终局清理会话/auth 路径豁免/防循环/silent 静默/并发终局各自清理）与 envelope 解包；miniapp 请求层单测锁定同语义（过期重放仍拒、被停用、无凭据、auth 路径豁免、silent、恢复成功）并额外锁定并发终局收敛——同一死亡周期仅首个终局请求执行清理+回登录+提示，其余仅抛出（一次性 claim 落在凭据单源 `utils/auth.ts`，写入新凭据即复位，与 web 层 store 防抖同构）
 - 归档前全树评审循环（2026-11-07）：终局 401 文案规则的 spec/proposal/BUILD_PLAN 四处表述与 miniapp 位置感知实现对齐（补「无凭据终局不误报停用」scenario）；unify delta 结构修复（`## MODIFIED Requirements` + `### Requirement:`，validate 由 ✗ 转全绿）；align 文档 preset 命名纠偏为 unocss-applet 0.16 实际导出（presetApplet/presetRemRpx/transformerApplet）；UI_STYLEGUIDE 补「miniapp 参照执行」节；ci.yml 作业级死配置 `ADMIN_INITIAL_PASSWORD` 删除；`.gitignore` 增 `.zcode/`。验证：`openspec validate --all --specs` 10/10、actionlint OK、prettier（编辑集）clean、`pnpm lint && pnpm typecheck && pnpm test`（67）复跑全绿
 - 归档（2026-11-07 owner 指令）：5 个变更移入 `openspec/changes/archive/2026-11-07-*`；三个新基线（miniapp-ui/frontend-resilience/miniapp-client）由 archive 生成并按仓库惯例抛光头部与 Purpose
 
 ## NOT VERIFIED（如实标注）
 
 - **GitHub Actions 实跑**：仓库无远端，CI workflow（含新增 e2e 步骤）未经真实 runner 验证（actionlint 本地过）
-- **微信小程序真机/开发者工具运行**：本机无工具，仅 build:mp-weixin 产物级验证
+- **微信小程序真机运行**：开发者工具模拟器走查已通过（2026-11-08，见验证记录）；真机预览未执行
 - **生产部署**：compose 验证为本地演示口径；生产 secrets/域名/HTTPS 未演练
 
 ## 已知限制与设计取舍

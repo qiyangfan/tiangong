@@ -72,18 +72,18 @@
 
 原则：**Element Plus 原生能直接用的不包壳**（包壳=加间接层，无收益）；只对「同一样板重复出现」的场景收敛薄壳（AGENTS 元原则：第 2 处即抽公共组件）。
 
-| 场景 | 用什么 | 说明 |
-| --- | --- | --- |
-| 表单弹窗（新增/编辑/带确认按钮的操作弹窗） | `components/FormDialog.vue` | 内置取消/确定 footer、submit loading、`close-on-click-modal=false`；确定文案默认「提交」，保存语义传 `:confirm-text="t('common.save')"` |
-| 只读详情展示 | 裸 `el-drawer` / `el-dialog` | 无 footer 的展示场景不套 FormDialog |
-| 删除/登出等确认框 | `utils/confirm.ts` 的 `confirmDelete()` / `confirmBox(content)` | type 与按钮文案全仓单源，调用方只传内容 |
-| 列表页搜索区 | `components/SearchForm.vue` | 字段经默认插槽传入；折叠经 `v-show="showSearch"` 配合 RightToolbar `v-model:show-search` |
-| toast 轻提示 | `ElMessage` 直用 | success 一律 `common.opSuccess`（或页面专属成功文案）；**错误文案一律 request 层映射，页面不自行解析错误码**；不写 duration/grouping 覆盖，默认值即标准 |
-| 通知 | `ElNotification` 直用 | 当前无场景；出现第 2 处使用后再评估是否封装 |
-| 空态 | `el-empty` 直用 | description 固定 `common.noData` |
-| 结果页/错误页 | `el-result` 直用 | 图标按语义选（404 用 `info`，禁 warning 表达「不存在」） |
-| 顶部横幅 | 门面基准 pattern（无组件） | 当前仅仪表盘 1 处；第 2 处出现后再抽组件 |
-| 图表 | `components/BaseChart.vue` | 注册/主题/配色见下方「图表规矩」；页面禁直接 `echarts.init` |
+| 场景                                       | 用什么                                                          | 说明                                                                                                                                                    |
+| ------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 表单弹窗（新增/编辑/带确认按钮的操作弹窗） | `components/FormDialog.vue`                                     | 内置取消/确定 footer、submit loading、`close-on-click-modal=false`；确定文案默认「提交」，保存语义传 `:confirm-text="t('common.save')"`                 |
+| 只读详情展示                               | 裸 `el-drawer` / `el-dialog`                                    | 无 footer 的展示场景不套 FormDialog                                                                                                                     |
+| 删除/登出等确认框                          | `utils/confirm.ts` 的 `confirmDelete()` / `confirmBox(content)` | type 与按钮文案全仓单源，调用方只传内容                                                                                                                 |
+| 列表页搜索区                               | `components/SearchForm.vue`                                     | 字段经默认插槽传入；折叠经 `v-show="showSearch"` 配合 RightToolbar `v-model:show-search`                                                                |
+| toast 轻提示                               | `ElMessage` 直用                                                | success 一律 `common.opSuccess`（或页面专属成功文案）；**错误文案一律 request 层映射，页面不自行解析错误码**；不写 duration/grouping 覆盖，默认值即标准 |
+| 通知                                       | `ElNotification` 直用                                           | 当前无场景；出现第 2 处使用后再评估是否封装                                                                                                             |
+| 空态                                       | `el-empty` 直用                                                 | description 固定 `common.noData`                                                                                                                        |
+| 结果页/错误页                              | `el-result` 直用                                                | 图标按语义选（404 用 `info`，禁 warning 表达「不存在」）                                                                                                |
+| 顶部横幅                                   | 门面基准 pattern（无组件）                                      | 当前仅仪表盘 1 处；第 2 处出现后再抽组件                                                                                                                |
+| 图表                                       | `components/BaseChart.vue`                                      | 注册/主题/配色见下方「图表规矩」；页面禁直接 `echarts.init`                                                                                             |
 
 ## 表格规矩
 
@@ -99,14 +99,14 @@
 
 ## 容器尺寸档位
 
-| 容器 | 档位 | 用途 |
-| --- | --- | --- |
-| 弹窗宽 | 420px | 小型表单（≤2 字段：重置密码、编辑资料） |
-| 弹窗宽 | 480px | 标准表单（3-5 字段） |
-| 弹窗宽 | 520px | 复杂表单（多字段/多选） |
-| 弹窗宽 | 560px | 最复杂（树选择：菜单表单；权限分配面板） |
+| 容器   | 档位  | 用途                                       |
+| ------ | ----- | ------------------------------------------ |
+| 弹窗宽 | 420px | 小型表单（≤2 字段：重置密码、编辑资料）    |
+| 弹窗宽 | 480px | 标准表单（3-5 字段）                       |
+| 弹窗宽 | 520px | 复杂表单（多字段/多选）                    |
+| 弹窗宽 | 560px | 最复杂（树选择：菜单表单；权限分配面板）   |
 | 抽屉宽 | 480px | 只读详情（日志详情，el-descriptions 单列） |
-| 抽屉宽 | 640px | 管理型（内嵌表格操作：字典项管理） |
+| 抽屉宽 | 640px | 管理型（内嵌表格操作：字典项管理）         |
 
 - 弹窗/抽屉高度一律内容自适应，禁写死 height；超长内容用 max-height + 内部滚动（先例 `el-scrollbar max-height="420px"`、`.tg-pre max-height 240px`）。
 - 卡片：流式自适应，禁写死宽高；登录卡 400px 属门面例外。卡片纵向间距 `mt-4`（= `--tg-card-gap` 16px）。
@@ -131,3 +131,9 @@
 - **pages.json / uni.scss 同步纪律**：两者为静态文件无法引用 token，其色值（globalStyle 导航栏/页面底、tabBar）必须与 `theme.ts` 同值——改色三处同步（theme.ts ↔ pages.json ↔ uni.scss），评审逐一核对。
 - **页面样式一律 UnoCSS 工具类**，禁裸 hex/魔法字号/非 4px 基数间距；scoped style 仅保留 utility 覆盖不了的场景。图标纪律沿「硬规矩 2」：一律组件库图标，禁 emoji/Unicode 符号。
 - **暗色**：miniapp 当前仅亮色基线（暗色主题为后续独立能力）；新增样式值先在 `theme.ts` 建语义名，为暗色扩展预留位。文案纪律见顶部引言（vue-i18n 资源单源）。
+- **组件库控件层（wot-design-uni，2026-11-08 起）**：表单与交互控件一律 wd-* 组件（已启用：wd-button/wd-input/wd-switch/wd-cell(-group)/wd-popup/wd-config-provider），决策与版本约束见 ADR-0008。纪律四条：
+  1. **theme-vars 桥接单点**——组件库语义色/尺寸一律经 `src/theme.ts` 的 `wotThemeVars`（派生自 tgTokens，零裸 hex）供给，页面以 `<wd-config-provider :theme-vars="wotThemeVars">` 包裹；禁在页面直接覆盖组件样式变量。
+  2. **控件档统一**——输入框/按钮高度 46px（`h-11.5`），`wd-button` 必须 `:round="false"` + `rounded-control`（v1 默认胶囊形）；v1 无边框输入内层定高 24px，由桥接键 `inputInnerHeightNoBorder: '46px'` 拉齐，禁页面另行覆写。
+  3. **平台反馈层不替换**——`uni.showToast`/`uni.showModal` 全站保持（请求层语义已被单测锁定）；wd-toast/wd-message-box 不引入。
+  4. **库更新流程**——`npm pack wot-design-uni@<ver>` → 解包替换 `src/uni_modules/wot-design-uni/` → 双目标构建 + 走查；库源码不进 eslint/prettier/vue-tsc（隔离三件见 BUILD_PLAN §7.1），禁手改库内文件。
+- **tabBar 图标**：微信 tabBar 只收位图——图标为 EP icons-vue 同源字形栅格 PNG（81×81@2x），由 `apps/miniapp/scripts/gen-tab-icons.mjs` 生成（chromium 取自 apps/e2e 的 playwright），未选中 #909399 / 选中 #2f5d9e 与 token 同值；换字形或换色重跑脚本再生成，禁手改 PNG。

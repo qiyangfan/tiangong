@@ -1,31 +1,38 @@
 <template>
-  <view class="min-h-screen bg-page p-3 flex flex-col gap-3">
-    <view class="rounded-card bg-surface py-5 px-4 flex flex-col gap-2">
-      <text class="text-title font-bold text-ink">{{ authStore.profile?.nickname ?? authStore.user?.nickname ?? '-' }}</text>
-      <text class="text-caption text-ink-3">{{ authStore.profile?.username ?? authStore.user?.username ?? '' }}</text>
+  <wd-config-provider :theme-vars="wotThemeVars">
+    <view class="min-h-screen bg-page p-3 flex flex-col gap-3">
+      <view class="rounded-card bg-surface py-5 px-4 flex flex-col gap-2">
+        <text class="text-title font-bold text-ink">{{ authStore.profile?.nickname ?? authStore.user?.nickname ?? '-' }}</text>
+        <text class="text-caption text-ink-3">{{ authStore.profile?.username ?? authStore.user?.username ?? '' }}</text>
+      </view>
+      <wd-cell-group border custom-class="rounded-card overflow-hidden">
+        <wd-cell :title="t('mine.language')" clickable @click="onToggleLocale">
+          <text class="text-body text-primary">{{ localeLabel }}</text>
+        </wd-cell>
+        <wd-cell :title="t('mine.email')" :value="authStore.profile?.email ?? '-'" />
+        <wd-cell
+          :title="t('mine.createdAt')"
+          :value="authStore.profile ? formatDateTime(authStore.profile.createdAt) : '-'"
+        />
+        <wd-cell
+          :title="t('mine.lastLoginAt')"
+          :value="authStore.profile?.lastLoginAt ? formatDateTime(authStore.profile.lastLoginAt) : '-'"
+        />
+      </wd-cell-group>
+      <wd-button
+        block
+        size="large"
+        plain
+        type="error"
+        :round="false"
+        custom-class="mt-6 rounded-control"
+        :loading="loggingOut"
+        @click="onLogout"
+      >
+        {{ t('mine.logout') }}
+      </wd-button>
     </view>
-    <view class="rounded-card bg-surface py-5 px-4 flex flex-col gap-3">
-      <view class="flex justify-between items-center" @click="onToggleLocale">
-        <text class="text-body text-ink-3">{{ t('mine.language') }}</text>
-        <text class="text-body text-primary">{{ localeLabel }}</text>
-      </view>
-      <view class="flex justify-between items-center">
-        <text class="text-body text-ink-3">{{ t('mine.email') }}</text>
-        <text class="text-body text-ink">{{ authStore.profile?.email ?? '-' }}</text>
-      </view>
-      <view class="flex justify-between items-center">
-        <text class="text-body text-ink-3">{{ t('mine.createdAt') }}</text>
-        <text class="text-body text-ink">{{ authStore.profile ? formatDateTime(authStore.profile.createdAt) : '-' }}</text>
-      </view>
-      <view class="flex justify-between items-center">
-        <text class="text-body text-ink-3">{{ t('mine.lastLoginAt') }}</text>
-        <text class="text-body text-ink">{{ authStore.profile?.lastLoginAt ? formatDateTime(authStore.profile.lastLoginAt) : '-' }}</text>
-      </view>
-    </view>
-    <button class="mt-6 rounded-control bg-surface text-danger text-body" :loading="loggingOut" @click="onLogout">
-      {{ t('mine.logout') }}
-    </button>
-  </view>
+  </wd-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -34,6 +41,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { LOCALE_LABELS, useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
+import { wotThemeVars } from '@/theme';
 import { formatDateTime } from '@/utils/datetime';
 
 const { t } = useI18n();

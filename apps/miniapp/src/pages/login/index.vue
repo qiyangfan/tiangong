@@ -1,38 +1,43 @@
 <template>
-  <view class="min-h-screen flex flex-col justify-center bg-page px-6">
-    <view class="flex flex-col items-center mb-12">
-      <text class="text-title font-bold text-primary">{{ t('login.title') }}</text>
-      <text class="mt-2 text-caption text-ink-3">{{ t('login.subtitle') }}</text>
+  <wd-config-provider :theme-vars="wotThemeVars">
+    <view class="min-h-screen flex flex-col justify-center bg-page px-6">
+      <view class="flex flex-col items-center mb-12">
+        <text class="text-title font-bold text-primary">{{ t('login.title') }}</text>
+        <text class="mt-2 text-caption text-ink-3">{{ t('login.subtitle') }}</text>
+      </view>
+      <view class="flex flex-col gap-4">
+        <wd-input
+          v-model="username"
+          custom-class="rounded-control bg-surface h-11.5 px-3.5"
+          no-border
+          :placeholder="t('login.usernamePlaceholder')"
+          :maxlength="30"
+          confirm-type="next"
+        />
+        <wd-input
+          v-model="password"
+          custom-class="rounded-control bg-surface h-11.5 px-3.5"
+          no-border
+          show-password
+          :placeholder="t('login.passwordPlaceholder')"
+          :maxlength="72"
+          confirm-type="done"
+          @confirm="onLogin"
+        />
+        <wd-button
+          block
+          size="large"
+          :round="false"
+          custom-class="mt-2 rounded-control"
+          :loading="loading"
+          :disabled="!username || !password"
+          @click="onLogin"
+        >
+          {{ loading ? t('login.loggingIn') : t('login.loginBtn') }}
+        </wd-button>
+      </view>
     </view>
-    <view class="flex flex-col gap-4">
-      <input
-        v-model="username"
-        class="h-11.5 px-3.5 rounded-control bg-surface text-body"
-        :placeholder="t('login.usernamePlaceholder')"
-        placeholder-class="text-ink-3"
-        :maxlength="30"
-        confirm-type="next"
-      />
-      <input
-        v-model="password"
-        class="h-11.5 px-3.5 rounded-control bg-surface text-body"
-        :placeholder="t('login.passwordPlaceholder')"
-        placeholder-class="text-ink-3"
-        password
-        :maxlength="72"
-        confirm-type="done"
-        @confirm="onLogin"
-      />
-      <button
-        class="mt-2 rounded-control bg-primary text-white text-body"
-        :class="{ 'opacity-60': loading || !username || !password }"
-        :disabled="loading || !username || !password"
-        @click="onLogin"
-      >
-        {{ loading ? t('login.loggingIn') : t('login.loginBtn') }}
-      </button>
-    </view>
-  </view>
+  </wd-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -42,6 +47,7 @@ import { useI18n } from 'vue-i18n';
 import { apiLogin } from '@/api/auth';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
+import { wotThemeVars } from '@/theme';
 
 const { t } = useI18n();
 const appStore = useAppStore();

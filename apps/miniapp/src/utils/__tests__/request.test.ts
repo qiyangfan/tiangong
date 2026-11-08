@@ -88,6 +88,9 @@ describe('终局 401 会话恢复（与 web 层同语义）', () => {
   });
 
   it('无凭据的 401（如系统清理存储后）：终局清理并提示引导重登，不误报账号被停用', async () => {
+    // 先登录再清空：模拟「曾有会话、凭据被系统清理」，同时复位终局周期标记
+    loginFixture();
+    clearSession();
     script.push({ statusCode: 401, body: { code: 'AUTH_UNAUTHENTICATED', message: 'no token' } });
 
     await expect(http.get('/samples')).rejects.toMatchObject({ code: 'AUTH_UNAUTHENTICATED' });
@@ -132,6 +135,43 @@ describe('终局 401 会话恢复（与 web 层同语义）', () => {
 
     expect(launches).toEqual(['/pages/login/index']);
     expect(toasts).toHaveLength(0);
+  });
+
+  it('并发终局 401：同一死亡周期收敛为一次清理+跳转+提示，各请求均拒绝', async () => {
+    loginFixture();
+    clearSession();
+    script.push(expired401, { statusCode: 401, body: { code: 'AUTH_UNAUTHENTICATED', message: 'gone' } });
+
+    const results = await Promise.allSettled([http.get('/samples'), http.get('/samples')]);
+
+    expect(results.every((r) => r.status === 'rejected')).toBe(true);
+    expect(launches).toEqual(['/pages/login/index']);
+    expect(toasts).toHaveLength(1);
+    expect(script).toHaveLength(0);
+  });
+
+  it('同周期 silent 终局先到：清理跳转执行但不弹提示，后续非静默终局不补弹', async () => {
+    loginFixture();
+    clearSession();
+    script.push(expired401, { statusCode: 401, body: { code: 'AUTH_TOKEN_EXPIRED', message: 'expired' } });
+
+    await Promise.allSettled([http.get('/samples', { silent: true }), http.get('/samples')]);
+
+    expect(launches).toEqual(['/pages/login/index']);
+    expect(toasts).toHaveLength(0);
+  });
+
+  it('写入新凭据开启新死亡周期：重新登录后再终局，提示再次出现', async () => {
+    loginFixture();
+    script.push(expired401, refreshOk, expired401);
+    await expect(http.get('/samples')).rejects.toBeTruthy();
+    expect(toasts).toHaveLength(1);
+
+    // 模拟重新登录写入新凭据 → claim 复位，后续终局是新周期
+    loginFixture();
+    script.push(expired401, refreshOk, expired401);
+    await expect(http.get('/samples')).rejects.toBeTruthy();
+    expect(toasts).toHaveLength(2);
   });
 
   it('刷新成功且重放通过：不触发清理（正常恢复路径）', async () => {

@@ -4,5 +4,6 @@ coverage/
 node_modules/
 apps/api/prisma/migrations/
 apps/miniapp/unpackage/
+apps/miniapp/src/uni_modules/
 storage/
 *.min.*

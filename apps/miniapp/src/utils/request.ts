@@ -1,6 +1,7 @@
 import { SUCCESS_CODE, type ApiError } from '@tiangong/contracts';
 import { i18n } from '@/locales';
 import {
+  claimSessionTerminalHandling,
   clearSession,
   getAccessToken,
   getRefreshToken,
@@ -135,16 +136,20 @@ async function request<T>(
       }
     }
     if (sessionDead) {
-      // 终局 401（无凭据/被停用/刷新失败/重放仍被拒）：会话不可用，统一清理回登录。
+      // 终局 401（无凭据/被停用/刷新失败/重放仍被拒）：会话不可用。并发/跨页在途请求会各自
+      // 到此，同一死亡周期只由首个终局请求执行清理+回登录+提示，其余仅抛出
+      // （claim 以写入新凭据为复位点，silent 终局同样消费 claim，与 web 层 store 防抖同语义）；
       // 提示按终局位置区分：带有效 Bearer 仍被拒（重放后）= 账号被停用/删除；
       // 无凭据或刷新失败 = 引导重登（凭据可能只是被系统清理，非账号问题）
-      clearSession();
-      gotoLogin();
-      if (!options?.silent) {
-        uni.showToast({
-          title: i18n.global.t(`session.${sessionExpiredCategory(e, retried)}`),
-          icon: 'none',
-        });
+      if (claimSessionTerminalHandling()) {
+        clearSession();
+        gotoLogin();
+        if (!options?.silent) {
+          uni.showToast({
+            title: i18n.global.t(`session.${sessionExpiredCategory(e, retried)}`),
+            icon: 'none',
+          });
+        }
       }
       throw e;
     }

@@ -33,11 +33,15 @@
     "list": [
       {
         "pagePath": "pages/sample/index",
-        "text": "示例数据"
+        "text": "示例数据",
+        "iconPath": "static/tab-sample.png",
+        "selectedIconPath": "static/tab-sample-active.png"
       },
       {
         "pagePath": "pages/mine/index",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "static/tab-mine.png",
+        "selectedIconPath": "static/tab-mine-active.png"
       }
     ]
   }
