@@ -15,7 +15,8 @@ permissions:
 
 jobs:
   quality:
-    runs-on: ubuntu-26.04
+    # 26.04 标签在当前账号不可用（启动期 startup_failure，0 jobs 物化）；钉 24.04 LTS 确定可用
+    runs-on: ubuntu-24.04
     services:
       mysql:
         image: mysql:8.4
