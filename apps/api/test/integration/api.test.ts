@@ -82,6 +82,24 @@ describe('health 探针', () => {
   });
 });
 
+describe('metrics 基础指标', () => {
+  it('未认证公开可达：Prometheus 文本含进程与 HTTP 指标族，不套 envelope', async () => {
+    const res = await app.http.get('/api/v1/metrics');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/plain');
+    expect(res.text).toContain('process_cpu_seconds_total');
+    expect(res.text).toContain('http_requests_total');
+    // 套件此前已发起登录（POST 200），HTTP 计数器必有样本
+    expect(res.text).toMatch(/http_requests_total\{[^}]*method="POST"[^}]*status_code="200"/);
+  });
+
+  it('route 标签只含路由模板：查询串不入指标', async () => {
+    const res = await app.http.get('/api/v1/metrics?probe=leak-check');
+    expect(res.status).toBe(200);
+    expect(res.text).not.toContain('leak-check');
+  });
+});
+
 describe('认证契约', () => {
   it('错误密码返回 401 + 稳定错误码（不泄露用户是否存在）', async () => {
     const res = await app.http
@@ -308,7 +326,10 @@ describe('文件模块（受控上传与授权下载）', () => {
     const up = await app.http
       .post('/api/v1/files')
       .set('Authorization', `Bearer ${adminToken}`)
-      .attach('file', Buffer.from('MZfake'), { filename: 'evil.exe', contentType: 'application/x-msdownload' });
+      .attach('file', Buffer.from('MZfake'), {
+        filename: 'evil.exe',
+        contentType: 'application/x-msdownload',
+      });
     expect(up.status).toBe(415);
     expect(up.body.code).toBe('FILE_TYPE_REJECTED');
   });
@@ -323,16 +344,18 @@ describe('文件模块（受控上传与授权下载）', () => {
   });
 
   it('缺 file 字段返回 400 VALIDATION_ERROR', async () => {
-    const res = await app.http
-      .post('/api/v1/files')
-      .set('Authorization', `Bearer ${adminToken}`);
+    const res = await app.http.post('/api/v1/files').set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(400);
     expect(res.body.code).toBe('VALIDATION_ERROR');
   });
 
   it('超过系统参数上限返回 413 FILE_TOO_LARGE（设置读缓存生效）', async () => {
-    const list = await app.http.get('/api/v1/settings').set('Authorization', `Bearer ${adminToken}`);
-    const setting = list.body.data.find((s: { settingKey: string }) => s.settingKey === 'sys.file.maxSizeMb');
+    const list = await app.http
+      .get('/api/v1/settings')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const setting = list.body.data.find(
+      (s: { settingKey: string }) => s.settingKey === 'sys.file.maxSizeMb',
+    );
     settingsId = setting.id;
     const shrink = await app.http
       .put(`/api/v1/settings/${settingsId}`)
@@ -375,7 +398,9 @@ describe('文件模块（受控上传与授权下载）', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .attach('file', PNG_BYTES, { filename: 'todelete.png', contentType: 'image/png' });
     const id = victim.body.data.id;
-    const del = await app.http.delete(`/api/v1/files/${id}`).set('Authorization', `Bearer ${adminToken}`);
+    const del = await app.http
+      .delete(`/api/v1/files/${id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
     expect(del.status).toBe(200);
     const down = await app.http
       .get(`/api/v1/files/${id}/download`)
@@ -471,8 +496,26 @@ describe('代码生成器', () => {
     name: 'it-gen-item',
     displayName: '集成生成项',
     fields: [
-      { name: 'title', label: '标题', type: 'string', required: true, enumOptions: [], inList: true, inForm: true, searchable: true },
-      { name: 'grade', label: '等级', type: 'enum', required: true, enumOptions: ['a', 'b'], inList: true, inForm: true, searchable: false },
+      {
+        name: 'title',
+        label: '标题',
+        type: 'string',
+        required: true,
+        enumOptions: [],
+        inList: true,
+        inForm: true,
+        searchable: true,
+      },
+      {
+        name: 'grade',
+        label: '等级',
+        type: 'enum',
+        required: true,
+        enumOptions: ['a', 'b'],
+        inList: true,
+        inForm: true,
+        searchable: false,
+      },
     ],
   };
   let defId = 0;

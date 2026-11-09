@@ -12,6 +12,11 @@ const envSchema = z.object({
   LOGIN_LOCK_MINUTES: z.coerce.number().int().positive().default(15),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
   PORT: z.coerce.number().int().positive().default(3000),
+  // 仅接受字面 true/false，避免 coerce.boolean 把 'false' 误判为 true
+  METRICS_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
   ADMIN_INITIAL_PASSWORD: z.string().optional(),
   STORAGE_DIR: z.string().default('./storage/uploads'),
   MAX_UPLOAD_MB: z.coerce.number().int().positive().default(20),

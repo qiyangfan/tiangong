@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
@@ -10,6 +10,8 @@ import { AuditModule } from './common/audit/audit.module';
 import { CacheModule } from './common/cache.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { EnvelopeInterceptor } from './common/envelope.interceptor';
+import { MetricsModule } from './modules/metrics/metrics.module';
+import { HttpMetricsMiddleware } from './modules/metrics/http-metrics.middleware';
 import { PrismaModule } from './prisma/prisma.module';
 import { JwtGuard } from './security/jwt.guard';
 import { PermissionsGuard } from './security/permissions.guard';
@@ -36,7 +38,11 @@ import { getRequestId } from './common/request-context';
         pinoHttp: {
           level: config.get('NODE_ENV') === 'test' ? 'warn' : 'info',
           mixin: () => ({ requestId: getRequestId() }),
-          autoLogging: { ignore: (req) => String(req.url).startsWith('/api/v1/health') },
+          autoLogging: {
+            ignore: (req) =>
+              String(req.url).startsWith('/api/v1/health') ||
+              String(req.url).startsWith('/api/v1/metrics'),
+          },
           transport:
             config.get('NODE_ENV') === 'production'
               ? undefined
@@ -59,6 +65,7 @@ import { getRequestId } from './common/request-context';
     AuditModule,
     CacheModule,
     HealthModule,
+    MetricsModule,
     AuthModule,
     UsersModule,
     RolesModule,
@@ -80,4 +87,8 @@ import { getRequestId } from './common/request-context';
     { provide: APP_INTERCEPTOR, useClass: EnvelopeInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(HttpMetricsMiddleware).forRoutes('*');
+  }
+}

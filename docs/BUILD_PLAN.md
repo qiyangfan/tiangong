@@ -118,11 +118,11 @@ tiangong/
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0-6 全部收官；2026-11-07 五变更与 2026-11-08 `adopt-wot-design-uni`（miniapp 组件层 wot-design-uni 1.14.0：uni_modules 内联 + 三页 wd-* 替换 + tgTokens 主题桥接 + tabBar 图标，细节见下方「miniapp 组件层」事实与 §8 入口 1）经 owner 验收归档（`openspec/changes/archive/2026-11-0{7,8}-*`），openspec 10 个能力基线 validate 全绿：`add-e2e-test-hardening`（Playwright e2e 5 例入 CI + `TEST_DATABASE_URL` 修复 + 死配置清除）、`unify-terminal-401-relogin`（两端终局 401 统一：按 HTTP 状态码判定、终局清理回登录、文案区分停用/过期，identity-access spec 增补不变量）、`add-frontend-global-error-handling`（两端全局异常兜底 + 节流提示 + miniapp requestId 透传）、`align-miniapp-ui`（UnoCSS token 单源 + 三页 utility 化 + dayjs 双端时间单源，修 UTC 裸切时区 bug）、`add-miniapp-state-i18n`（pinia + vue-i18n 基线：文案收编、语言切换、导航/tabBar 运行时同步、`tg_locale` 持久化）；新增能力基线 miniapp-ui / frontend-resilience / miniapp-client，e2e-testing 基线落地。归档前评审循环：五变更收官时全树复审（spec 文案规则对齐、delta 结构修复、preset 命名纠偏、ci 死配置清除）；wot 变更实施后一轮评审循环修复 2 项细节（CRLF 归一、theme.ts 头注陈旧引用）。当前测试矩阵：单元 70（contracts 17 + api 生成器 7 + web 16 + miniapp 30）+ 真库集成 26 + 浏览器 e2e 5（`pnpm test:e2e` 一键跑，自动起 api:3001 + web:5174 指向 tiangong_test，globalSetup 自动 migrate+seed+复位 admin 锁定计数）。**下一个任务：无在途变更（2026-11-08 六变更收官归档，wot 组件层基线并入 miniapp-ui）；后续会话按 §8 入口进入。**
+**完成度速览**：Stage 0-6 全部收官；七个变更经 owner 验收归档（`openspec/changes/archive/2026-11-0{7,8,9}-*`）：2026-11-07 五变更——`add-e2e-test-hardening`（Playwright e2e 5 例入 CI + TEST_DATABASE_URL 修复 + 死配置清除）、`unify-terminal-401-relogin`（两端终局 401 统一：按 HTTP 状态码判定、终局清理回登录、文案区分停用/过期，identity-access 增补不变量）、`add-frontend-global-error-handling`（两端全局异常兜底 + 节流提示 + miniapp requestId 透传）、`align-miniapp-ui`（UnoCSS token 单源 + dayjs 双端时间单源，修 UTC 裸切时区 bug）、`add-miniapp-state-i18n`（pinia + vue-i18n 基线：语言切换、导航/tabBar 同步、tg_locale 持久化）；2026-11-08 `adopt-wot-design-uni`（miniapp 组件层 wot 1.14.0 uni_modules 内联 + 三页 wd-* 替换 + tgTokens 主题桥接 + tabBar 图标 + 46px 控件档，决策证据链在 ADR-0008，细节见下方「miniapp 组件层」事实与 §8 入口 1）；2026-11-09 `add-basic-metrics`（P0 基础 metrics 补口：`GET /api/v1/metrics` Prometheus 文本 = prom-client 进程默认指标 + HTTP RED 中间件，route 标签仅路由模板，`METRICS_ENABLED` 开关；「基础运行指标」并入 platform-api 基线；同轮 FUNCTION_MATRIX 补「登录人机验证」X 取舍行）。能力基线 10 个（openspec/specs/），validate 全绿。当前测试矩阵：单元 72（contracts 17 + api 9 + web 16 + miniapp 30）+ 真库集成 28 + 浏览器 e2e 5（`pnpm test:e2e` 一键跑，自动起 api:3001 + web:5174 指向 tiangong_test，globalSetup 自动 migrate+seed+复位 admin 锁定计数）。**下一个任务：无在途变更（2026-11-09 add-basic-metrics 收官）；收尾队列见 §8 入口 4（CI 实跑解锁、LICENSE、备份恢复演练、真机预览、生产演练），后续会话按 §8 入口进入。**
 
 **环境基线**（动手前核对，勿凭记忆）：
 
-- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4 / vitest 3.2（contracts/web）/ @playwright/test 1.5x（apps/e2e）
+- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4 / prom-client 15.1（metrics 单源）/ vitest 3.2（contracts/web）/ @playwright/test 1.5x（apps/e2e）
 - dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）。注意本机 3000 若有遗留 dev api 进程属正常，e2e 用 3001/5174 与其隔离互不影响
 - e2e 账号约定：admin 密码固定 `TestAdmin1pw`（globalSetup 以 env 注入 seed/服务进程）；fixture 零权限角色 `e2e_noperm_role` + 用户 `e2e_noperm`，用后即删（apps/e2e/tests/helpers.ts）
@@ -164,11 +164,11 @@ tiangong/
 
 ## 8. 后续工作指引（项目收官态）
 
-建设阶段与 2026-11-07 五变更、2026-11-08 wot 组件层变更均已收官归档；`openspec/changes/` 无在途变更。后续会话按需从以下入口进入：
+建设阶段与七个变更（2026-11-07 五变更、2026-11-08 wot 组件层、2026-11-09 add-basic-metrics）均已收官归档；`openspec/changes/` 无在途变更。后续会话按需从以下入口进入：
 
 1. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
 2. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
 3. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
-4. **真实环境上线前必办**：配置远端仓库验证 CI 实跑（当前 NOT VERIFIED）；微信小程序真机预览验证（开发者工具模拟器走查已过，2026-11-08）；生产 secrets 与域名注入演练。
+4. **收尾队列（上线前必办）**：① GitHub Actions 实跑解锁（远端 qiyangfan/tiangong 私有仓已建，CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常；解锁后 push 任意提交自动全链验证）；② LICENSE 与第三方许可声明；③ 备份/恢复演练一次并记录（CONSTITUTION C8）；④ 微信小程序真机预览（开发者工具模拟器走查已过，2026-11-08）；⑤ 生产 secrets 与域名注入演练。
 5. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；门禁：`pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @tiangong/api test:integration && pnpm build && pnpm test:e2e`（集成与 e2e 需本地共享栈 MySQL 3307 在跑）。
 6. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`；既有基线 spec 共 10 个（openspec/specs/），改动平台行为先改对应基线或走变更 delta。

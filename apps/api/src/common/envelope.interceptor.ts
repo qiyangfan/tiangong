@@ -10,7 +10,7 @@ import { type Observable, map } from 'rxjs';
 
 /**
  * 成功响应统一包装为 { code: 0, data }（API_CONTRACT）。
- * 探针与文档路径直接透传原始结构。
+ * 探针、指标与文档路径直接透传原始结构。
  */
 @Injectable()
 export class EnvelopeInterceptor implements NestInterceptor {
@@ -20,6 +20,7 @@ export class EnvelopeInterceptor implements NestInterceptor {
     const req = http.getRequest<Request>();
     const passthrough =
       req.path.startsWith('/api/v1/health') ||
+      req.path.startsWith('/api/v1/metrics') ||
       req.path.startsWith('/health') ||
       res.statusCode >= 400;
     if (passthrough) {

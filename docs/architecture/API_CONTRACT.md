@@ -8,4 +8,5 @@
 - NestJS DTO 桥接需选择**唯一**契约生成路径（例如 Zod-first + OpenAPI）；不得同时维护两个不同事实来源。
 - 生产 API 文档需访问控制，不应暴露内部测试接口。
 - GET 只读；写操作：POST 新建、**PUT 更新（部分合并语义：只提交变更字段，省略字段不变更——对齐 RuoYi 约定；选 PUT 而非 PATCH 是因微信 request 不支持 PATCH method，三端统一原生可用动词）**、DELETE 删除；敏感操作要审计；幂等重试设计按实际场景确定。
+- 运维端点不套 envelope：`GET /api/v1/health/live|ready`（探针）；`GET /api/v1/metrics`（Prometheus 文本：进程默认指标 + HTTP RED，route 标签仅路由模板，`METRICS_ENABLED=false` 关闭）。
 - 非兼容变更先以 OpenSpec 评审，新增 v2 或提供迁移窗口；不得静默删除字段。
