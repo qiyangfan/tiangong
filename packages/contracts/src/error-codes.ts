@@ -80,6 +80,6 @@ export interface ErrorCodeMeta {
 
 /** 由错误码取元信息；未知码回落 INTERNAL_ERROR。 */
 export function errorMeta(code: string): ErrorCodeMeta {
-  const meta = ERROR_CODES[code as ErrorCode];
+  const meta = (ERROR_CODES as Record<string, ErrorCodeMeta | undefined>)[code];
   return meta ?? ERROR_CODES.INTERNAL_ERROR;
 }

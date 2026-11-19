@@ -1,6 +1,5 @@
 import type { RouteComponent, RouteRecordRaw } from 'vue-router';
 import type { MenuNode } from '@tiangong/contracts';
-import MainLayout from '@/layouts/MainLayout.vue';
 
 /**
  * 后端 component 字符串 → 懒加载组件映射（RuoYi import.meta.glob 模式）。
@@ -35,40 +34,36 @@ function toChildRoutes(nodes: MenuNode[]): RouteRecordRaw[] {
     }));
 }
 
-/** M 目录：Layout 壳承载子菜单，重定向到首个可见子菜单。 */
+/** 绝对路径便于作为 layout 根路由的 child 注册（vue-router 允许 child 使用绝对路径）。 */
+function absolutePath(path: string): string {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
+/** M 目录：无自身组件，子路由直接渲染在 layout 壳内。 */
 function toDirRoute(m: MenuNode): RouteRecordRaw | undefined {
   const children = toChildRoutes(m.children);
   if (children.length === 0) {
     return undefined;
   }
-  const dirPath = m.path ?? `/dir-${m.id}`;
+  const dirPath = absolutePath(m.path ?? `/dir-${m.id}`);
   const firstChildPath = children[0]?.path ?? '';
   return {
     path: dirPath,
     name: `dir-${m.id}`,
-    component: MainLayout,
     meta: { title: m.name, icon: m.icon ?? undefined },
     children,
     redirect: joinPath(dirPath, firstChildPath),
   };
 }
 
-/** 顶层 C 菜单：Layout 壳下挂单条视图路由。 */
+/** 顶层 C 菜单：直接作为 layout 的子路由（单一 layout 实例，跨菜单不重挂载）。 */
 function toTopMenuRoute(m: MenuNode): RouteRecordRaw {
-  const menuPath = m.path ?? `/menu-${m.id}`;
+  const menuPath = absolutePath(m.path ?? `/menu-${m.id}`);
   return {
     path: menuPath,
-    name: `top-menu-${m.id}`,
-    component: MainLayout,
+    name: `menu-${m.id}`,
+    component: viewLoader(m.component ?? ''),
     meta: { title: m.name, icon: m.icon ?? undefined },
-    children: [
-      {
-        path: '',
-        name: `menu-${m.id}`,
-        component: viewLoader(m.component ?? ''),
-        meta: { title: m.name, icon: m.icon ?? undefined },
-      },
-    ],
   };
 }
 

@@ -27,7 +27,9 @@ export class AuditService {
   }): void {
     void this.prisma.operLog
       .create({ data: { ...entry, operatedAt: new Date() } })
-      .catch((err: unknown) => this.logger.warn(`oper log write failed: ${String(err)}`));
+      .catch((err: unknown) => {
+        this.logger.warn(`oper log write failed: ${String(err)}`);
+      });
   }
 
   recordLogin(entry: {
@@ -41,6 +43,8 @@ export class AuditService {
   }): void {
     void this.prisma.loginLog
       .create({ data: { ...entry, loggedAt: new Date() } })
-      .catch((err: unknown) => this.logger.warn(`login log write failed: ${String(err)}`));
+      .catch((err: unknown) => {
+        this.logger.warn(`login log write failed: ${String(err)}`);
+      });
   }
 }

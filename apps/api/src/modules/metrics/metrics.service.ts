@@ -22,8 +22,8 @@ function routeTemplate(req: Request): string {
 export class MetricsService {
   readonly enabled: boolean;
   private readonly registry = new Registry();
-  private readonly httpRequestsTotal: Counter<string>;
-  private readonly httpRequestDuration: Histogram<string>;
+  private readonly httpRequestsTotal: Counter;
+  private readonly httpRequestDuration: Histogram;
 
   constructor(config: ConfigService) {
     this.enabled = config.get<boolean>('METRICS_ENABLED') ?? true;

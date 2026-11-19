@@ -45,6 +45,7 @@ const emit = defineEmits<UserTableEmits>();
           v-permission="'system:user:enable'"
           :model-value="row.enabled"
           :disabled="row.id === auth.user?.id"
+          :aria-label="`${t('common.status')}: ${row.username}`"
           @change="(v: boolean | string | number) => emit('toggleEnabled', row, Boolean(v))"
         />
       </template>

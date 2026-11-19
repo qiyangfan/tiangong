@@ -14,9 +14,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'add-child', row: MenuRow): void;
-  (e: 'edit', row: MenuRow): void;
-  (e: 'delete', row: MenuRow): void;
+  (e: 'add-child' | 'edit' | 'delete', row: MenuRow): void;
 }>();
 </script>
 

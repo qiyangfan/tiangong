@@ -12,4 +12,6 @@ export const router = createRouter({
 bindRouter(router);
 setupGuard(router);
 // 导航链路异常（异步组件加载失败、守卫抛错等）统一走全局异常通道
-router.onError((error) => reportError(error, 'router'));
+router.onError((error) => {
+  reportError(error, 'router');
+});

@@ -153,7 +153,8 @@ export class MenusService {
       if (node.parentId === 0 || !nodes.has(node.parentId)) {
         roots.push(node);
       } else {
-        nodes.get(node.parentId)!.children.push(node);
+        const parent = nodes.get(node.parentId);
+        parent?.children.push(node);
       }
     }
     return roots;
@@ -169,7 +170,8 @@ export class MenusService {
       if (node.parentId === 0 || !nodes.has(node.parentId)) {
         roots.push(node);
       } else {
-        nodes.get(node.parentId)!.children.push(node);
+        const parent = nodes.get(node.parentId);
+        parent?.children.push(node);
       }
     }
     return roots;

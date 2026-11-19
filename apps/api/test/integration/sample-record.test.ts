@@ -6,7 +6,9 @@ import { adminAuth, nopermAuth, testHttp } from './context';
 
 const codeOf = (body: unknown): string => (body as { code: string }).code;
 
-const dataOf = <T>(body: unknown): T => (body as { data: T }).data;
+function dataOf<T>(body: unknown): T {
+  return (body as { data: T }).data;
+}
 
 /** miniapp 客户端会话：refresh 走 body、client=miniapp，读写同一条记录。 */
 async function miniAuth(): Promise<{ Authorization: string }> {

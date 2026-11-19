@@ -211,6 +211,7 @@ onMounted(() => {
           clearable
           style="width: 120px"
           :placeholder="t('common.all')"
+          :aria-label="t('common.status')"
         >
           <el-option
             v-for="opt in enabledOptions"

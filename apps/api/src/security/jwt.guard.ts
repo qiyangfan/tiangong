@@ -47,7 +47,7 @@ export class JwtGuard implements CanActivate {
 
   private isPublic(context: ExecutionContext): boolean {
     return (
-      this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_METADATA, [
+      this.reflector.getAllAndOverride<boolean | undefined>(IS_PUBLIC_METADATA, [
         context.getHandler(),
         context.getClass(),
       ]) ?? false

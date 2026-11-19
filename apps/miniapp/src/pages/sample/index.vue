@@ -229,7 +229,9 @@ async function onDelete(): Promise<void> {
     uni.showModal({
       title: t('common.tip'),
       content: t('common.confirmDelete'),
-      success: (res) => resolve(res.confirm),
+      success: (res) => {
+        resolve(res.confirm);
+      },
     });
   });
   if (!confirmed) {

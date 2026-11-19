@@ -5,7 +5,9 @@ import { adminAuth, testHttp } from './context';
 
 const codeOf = (body: unknown): string => (body as { code: string }).code;
 
-const dataOf = <T>(body: unknown): T => (body as { data: T }).data;
+function dataOf<T>(body: unknown): T {
+  return (body as { data: T }).data;
+}
 
 describe('分页与唯一性契约', () => {
   it('pageSize 超上限被 400 拒绝', async () => {

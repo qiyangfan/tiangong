@@ -5,7 +5,9 @@ import { adminAuth, nopermAuth, prisma, testHttp } from './context';
 
 const codeOf = (body: unknown): string => (body as { code: string }).code;
 
-const dataOf = <T>(body: unknown): T => (body as { data: T }).data;
+function dataOf<T>(body: unknown): T {
+  return (body as { data: T }).data;
+}
 
 const PNG_BYTES = Buffer.concat([
   Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),

@@ -29,6 +29,14 @@ services:
       ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
       NODE_ENV: production
+    volumes:
+      # 文件上传需要可写目录；容器根文件系统只读
+      - api-storage:/app/storage
+    tmpfs:
+      - /tmp
+    read_only: true
+    cap_drop: ['ALL']
+    security_opt: ['no-new-privileges:true']
     depends_on:
       mysql:
         condition: service_healthy
@@ -46,9 +54,20 @@ services:
     ports:
       # 宿主机端口不变；容器内为 unprivileged nginx 的 8080
       - '8080:8080'
+    tmpfs:
+      - /tmp
+    read_only: true
+    cap_drop: ['ALL']
+    security_opt: ['no-new-privileges:true']
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8080/']
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
 volumes:
   mysql-data:
+  api-storage:

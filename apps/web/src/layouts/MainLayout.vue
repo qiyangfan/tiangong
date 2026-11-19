@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app';
+import { useAuthStore } from '@/stores/auth';
 import Sidebar from './components/Sidebar.vue';
 import Navbar from './components/Navbar.vue';
 
 const appStore = useAppStore();
+const auth = useAuthStore();
+
+function onLogout(): void {
+  void auth.logout();
+}
 </script>
 
 <template>
@@ -24,10 +30,10 @@ const appStore = useAppStore();
           {{ appStore.sidebarCollapsed ? '天' : '天工' }}
         </span>
       </div>
-      <Sidebar />
+      <Sidebar :menus="auth.menus" />
     </aside>
     <div class="flex min-w-0 flex-1 flex-col">
-      <Navbar />
+      <Navbar :display-name="auth.displayName" @logout="onLogout" />
       <main class="flex-1 overflow-auto bg-[var(--el-bg-color-page)]">
         <router-view />
       </main>

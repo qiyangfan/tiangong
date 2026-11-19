@@ -23,7 +23,7 @@ export const useDictStore = defineStore('dict', {
           this.dictMap[dictKey] = options;
         })
         .finally(() => {
-          delete this.inflight[dictKey];
+          Reflect.deleteProperty(this.inflight, dictKey);
         });
       return this.inflight[dictKey] ?? Promise.resolve();
     },

@@ -27,6 +27,8 @@ COPY --from=build /out/node_modules ./node_modules
 COPY --from=build /repo/apps/api/dist ./dist
 COPY --from=build /repo/apps/api/prisma ./prisma
 COPY --from=build /repo/apps/api/package.json ./
+# 上传目录随镜像预建并归属运行用户：命名卷首次挂载时继承该属主，只读根文件系统下仍可写
+RUN mkdir -p /app/storage/uploads && chown -R 1000:1000 /app/storage
 # 非 root 运行：node 镜像自带 node 用户（uid 1000），prisma 引擎与 dist 均为只读使用
 USER 1000:1000
 EXPOSE 3000

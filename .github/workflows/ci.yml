@@ -43,6 +43,14 @@ jobs:
         run: |
           trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tiangong-api:latest
           trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tiangong-web:latest
+      # 以真实部署形态（只读根文件系统 + 降权 + 安全头）做一次全栈冒烟
+      - name: 全栈冒烟与安全响应头
+        run: |
+          docker compose -f deploy/compose.yaml up -d --wait --wait-timeout 180
+          node scripts/check-headers.mjs http://127.0.0.1:8080/
+      - name: 停止全栈
+        if: always()
+        run: docker compose -f deploy/compose.yaml down -v
 
   quality:
     # 26.04 标签在当前账号不可用（启动期 startup_failure，0 jobs 物化）；钉 24.04 LTS 确定可用
@@ -89,6 +97,7 @@ jobs:
       - name: schema 与迁移漂移检查
         run: pnpm schema:drift
       - run: pnpm lint
+      - run: pnpm lint:arch
       - run: pnpm lint:style
       - run: pnpm lint:md
       # 重复率基线 3.62%（2026-11-19），阈值 4% 防回退

@@ -8,8 +8,6 @@ export interface UserTableProps {
 
 /** 表格向外抛出的事件：行操作回传整行，页面据此开弹窗或发起删改。 */
 export interface UserTableEmits {
-  (e: 'edit', row: UserItem): void;
-  (e: 'resetPassword', row: UserItem): void;
-  (e: 'delete', row: UserItem): void;
+  (e: 'edit' | 'resetPassword' | 'delete', row: UserItem): void;
   (e: 'toggleEnabled', row: UserItem, enabled: boolean): void;
 }

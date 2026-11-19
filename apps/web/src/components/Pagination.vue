@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextTick, onMounted, ref, watch, type ComponentPublicInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 defineProps<{
@@ -8,12 +9,24 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:page', value: number): void;
-  (e: 'update:pageSize', value: number): void;
+  (e: 'update:page' | 'update:pageSize', value: number): void;
   (e: 'change'): void;
 }>();
 
 const { t } = useI18n();
+
+// Element Plus 的每页条数选择器不暴露 aria-label，这里在包装层补齐可访问名称
+const root = ref<ComponentPublicInstance | null>(null);
+
+function labelPageSize(): void {
+  const el = root.value?.$el as HTMLElement | undefined;
+  el?.querySelectorAll<HTMLInputElement>('.el-pagination__sizes input').forEach((input) => {
+    input.setAttribute('aria-label', t('common.pageSize'));
+  });
+}
+
+onMounted(() => void nextTick(labelPageSize));
+watch(() => t('common.pageSize'), labelPageSize);
 
 function onCurrentChange(page: number): void {
   emit('update:page', page);
@@ -30,6 +43,7 @@ function onSizeChange(pageSize: number): void {
 
 <template>
   <el-pagination
+    ref="root"
     class="tg-pagination"
     background
     :current-page="page"

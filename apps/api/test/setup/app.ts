@@ -69,7 +69,7 @@ export async function createTestApp(): Promise<TestApp> {
 
 export async function loginData(http: TestHttp, credentials: Credentials): Promise<LoginResponse> {
   const res = await http.post('/api/v1/auth/login').send(credentials);
-  const envelope = res.body as ApiSuccess<LoginResponse>;
+  const envelope = res.body as { code: number; data: LoginResponse };
   if (res.status !== 200 || envelope.code !== 0) {
     throw new Error(`login failed: ${res.status} ${JSON.stringify(envelope)}`);
   }

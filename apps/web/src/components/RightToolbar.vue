@@ -36,11 +36,17 @@ function isChecked(key: string): boolean {
       <el-button
         circle
         :icon="showSearch ? Search : Hide"
+        :aria-label="t('common.search')"
         @click="emit('update:showSearch', !showSearch)"
       />
     </el-tooltip>
     <el-tooltip :content="t('common.refresh')" placement="top">
-      <el-button circle :icon="Refresh" @click="emit('refresh')" />
+      <el-button
+        circle
+        :icon="Refresh"
+        :aria-label="t('common.refresh')"
+        @click="emit('refresh')"
+      />
     </el-tooltip>
     <el-popover
       v-if="columns && columns.length > 0"
@@ -49,7 +55,7 @@ function isChecked(key: string): boolean {
       trigger="click"
     >
       <template #reference>
-        <el-button circle :icon="Operation" />
+        <el-button circle :icon="Operation" :aria-label="t('common.columns')" />
       </template>
       <el-checkbox
         v-for="col in columns"

@@ -15,10 +15,10 @@ export class CacheService {
   private readonly logger = new Logger(CacheService.name);
   private readonly store = new Map<string, CacheEntry>();
 
-  get<T>(key: string): T | undefined {
+  get<T>(key: string, fallback?: T): T | undefined {
     const entry = this.store.get(key);
     if (!entry) {
-      return undefined;
+      return fallback;
     }
     if (entry.expiresAt < Date.now()) {
       this.store.delete(key);

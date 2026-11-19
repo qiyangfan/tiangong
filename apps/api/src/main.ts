@@ -2,12 +2,13 @@ import 'reflect-metadata';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { requestIdMiddleware } from './common/request-id.middleware';
+import { createOpenApiDocument } from './openapi';
 
 function parseOrigins(raw: string): string[] {
   return raw
@@ -27,13 +28,7 @@ function configureHttp(app: NestExpressApplication, config: ConfigService): void
 }
 
 function setupSwagger(app: NestExpressApplication): void {
-  const doc = new DocumentBuilder()
-    .setTitle('天工 API')
-    .setDescription('通用后台脚手架平台 API（统一 envelope：code=0 成功；错误含稳定错误码）')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup('docs', app, () => SwaggerModule.createDocument(app, doc));
+  SwaggerModule.setup('docs', app, () => createOpenApiDocument(app));
 }
 
 function configureApp(app: NestExpressApplication): number {

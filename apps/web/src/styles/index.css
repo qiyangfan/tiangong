@@ -80,6 +80,10 @@
 
   /* ---- 弹窗标题字号 ---- */
   --el-dialog-title-font-size: 16px;
+
+  /* ---- 可读性：EP 默认 secondary #909399 / placeholder #a8abb2 对白底不足 4.5:1 ---- */
+  --el-text-color-secondary: #6b7280;
+  --el-text-color-placeholder: #6b7280;
 }
 
 html.dark {

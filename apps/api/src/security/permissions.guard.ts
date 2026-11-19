@@ -23,7 +23,7 @@ export class PermissionsGuard implements CanActivate {
 
   private requiredPermissions(context: ExecutionContext): string[] {
     return (
-      this.reflector.getAllAndOverride<string[]>(PERMISSIONS_METADATA, [
+      this.reflector.getAllAndOverride<string[] | undefined>(PERMISSIONS_METADATA, [
         context.getHandler(),
         context.getClass(),
       ]) ?? []

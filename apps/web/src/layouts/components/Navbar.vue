@@ -4,14 +4,15 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { Fold, Expand, Moon, Sunny, User, ArrowDown } from '@element-plus/icons-vue';
 import { useAppStore } from '@/stores/app';
-import { useAuthStore } from '@/stores/auth';
 import { confirmBox } from '@/utils/confirm';
 import Breadcrumb from './Breadcrumb.vue';
+
+defineProps<{ displayName: string }>();
+const emit = defineEmits<{ logout: [] }>();
 
 const router = useRouter();
 const { t } = useI18n();
 const appStore = useAppStore();
-const auth = useAuthStore();
 
 async function onLogout(): Promise<void> {
   try {
@@ -19,7 +20,7 @@ async function onLogout(): Promise<void> {
   } catch {
     return;
   }
-  await auth.logout();
+  emit('logout');
 }
 
 function onProfile(): void {
@@ -37,7 +38,7 @@ function onToggleLocale(): void {
     class="flex h-[var(--tg-navbar-height)] shrink-0 items-center justify-between border-b border-[var(--el-border-color-light)] bg-[var(--el-bg-color)] px-4"
   >
     <div class="flex min-w-0 items-center gap-2">
-      <el-button text @click="appStore.toggleSidebar()">
+      <el-button text :aria-label="t('layout.toggleSidebar')" @click="appStore.toggleSidebar()">
         <el-icon :size="18">
           <Fold v-if="!appStore.sidebarCollapsed" />
           <Expand v-else />
@@ -50,7 +51,12 @@ function onToggleLocale(): void {
         :content="appStore.theme === 'dark' ? t('layout.light') : t('layout.dark')"
         placement="bottom"
       >
-        <el-button text circle @click="appStore.toggleTheme()">
+        <el-button
+          text
+          circle
+          :aria-label="appStore.theme === 'dark' ? t('layout.light') : t('layout.dark')"
+          @click="appStore.toggleTheme()"
+        >
           <el-icon :size="18">
             <Sunny v-if="appStore.theme === 'dark'" />
             <Moon v-else />
@@ -65,7 +71,7 @@ function onToggleLocale(): void {
           class="flex cursor-pointer items-center gap-2 text-[var(--el-text-color-regular)] outline-none"
         >
           <el-icon :size="16"><User /></el-icon>
-          <span class="max-w-[140px] truncate">{{ auth.displayName }}</span>
+          <span class="max-w-[140px] truncate">{{ displayName }}</span>
           <el-icon :size="12"><ArrowDown /></el-icon>
         </span>
         <template #dropdown>

@@ -5,7 +5,9 @@ import { adminAuth, nopermAuth, prisma, testHttp } from './context';
 
 const codeOf = (body: unknown): string => (body as { code: string }).code;
 
-const dataOf = <T>(body: unknown): T => (body as { data: T }).data;
+function dataOf<T>(body: unknown): T {
+  return (body as { data: T }).data;
+}
 
 const PATHS = expectedGenPaths(EXECUTABLE_DEF.name);
 

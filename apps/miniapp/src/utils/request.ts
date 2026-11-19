@@ -76,7 +76,7 @@ function isEnvelope(body: unknown): body is ApiSuccess<unknown> | ApiError {
 }
 
 /** 成功 envelope 解包为 data；失败 envelope 抛统一 TgError。 */
-function unwrapBody<T>(body: unknown, status: number): T {
+function unwrapBody(body: unknown, status: number): unknown {
   if (!isEnvelope(body)) {
     const err = tgError({ code: `HTTP_${status}`, message: 'unexpected response', status });
     throw err;
@@ -86,7 +86,7 @@ function unwrapBody<T>(body: unknown, status: number): T {
     const { code, message, requestId } = body;
     throw tgError({ code, message, requestId, status });
   }
-  return body.data as T;
+  return body.data;
 }
 
 function rawRequest<T>({ method, url, data }: RequestInit): Promise<T> {
@@ -105,7 +105,7 @@ function rawRequest<T>({ method, url, data }: RequestInit): Promise<T> {
       success: (res) => {
         // 解包抛出的 TgError 走 reject 交上层统一处理
         try {
-          resolve(unwrapBody<T>(res.data, res.statusCode));
+          resolve(unwrapBody(res.data, res.statusCode) as T);
         } catch (err) {
           reject(err instanceof Error ? err : new Error(String(err)));
         }

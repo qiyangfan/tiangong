@@ -7,5 +7,7 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
   const incoming = req.header('x-request-id');
   const requestId = incoming && incoming.length <= 64 ? incoming : randomUUID();
   res.setHeader('X-Request-Id', requestId);
-  requestContextStorage.run({ requestId }, () => next());
+  requestContextStorage.run({ requestId }, () => {
+    next();
+  });
 }

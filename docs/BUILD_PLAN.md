@@ -172,12 +172,13 @@ tiangong/
 
 建设阶段与七个变更（2026-11-07 五变更、2026-11-08 wot 组件层、2026-11-09 add-basic-metrics）均已收官归档；当前在途 `2026-11-19-add-secret-scanning`（跨仓质量门禁批次 1 / P0-1）。后续会话按需从以下入口进入：
 
-1. **质量门禁（批次 1-3）**：批次 1 `2026-11-19-add-secret-scanning` 已提交推送，本地证据与容器等价复跑均通过；结构类 `2026-11-19-add-structural-gates`（4b9265a）与批次 2 `2026-11-19-add-quality-gates-batch2`（8da7e37）已提交；批次 3 `2026-11-19-add-quality-gates-batch3`（.vue 类型感知/a11y/markdownlint/Prisma schema/hadolint+非 root/镜像 CVE/actionlint+shellcheck/e2e 覆盖率）本地门禁与负向验收全绿，已提交。三批证据见 `docs/quality/DELIVERY_REPORT.md` 2026-11-19 验证记录。剩余步骤 = 修复 GitHub 账单锁 → workflow 实跑绿 → 分支保护把 `secrets` 设为 required（按 owner 指示暂缓）→ 批次归档。归档后按 `../QUALITY-GATES-HANDOFF.md` §5 进入下一批。
+1. **质量门禁（批次 1-4）**：批次 1 `2026-11-19-add-secret-scanning` 已提交推送，本地证据与容器等价复跑均通过；结构类 `2026-11-19-add-structural-gates`（4b9265a）、批次 2（8da7e37）、批次 3（b1a3bc4）已提交；批次 4 `2026-11-19-add-quality-gates-batch4`（运行时 a11y/架构分层/i18n 一致性/OpenAPI 契约/许可+SBOM/容器加固/strictTypeChecked）本地门禁与负向验收全绿。证据见 `docs/quality/DELIVERY_REPORT.md` 2026-11-19 验证记录。剩余步骤 = 修复 GitHub 账单锁 → workflow 实跑绿 → 分支保护把 `secrets` 设为 required（按 owner 指示暂缓）→ 批次归档。归档后按 `../QUALITY-GATES-HANDOFF.md` §5 进入下一批。
 2. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
 3. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
 4. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
 5. **收尾队列（上线前必办）**：① GitHub Actions 实跑解锁（远端 qiyangfan/tiangong 私有仓已建，CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常；解锁后 push 任意提交自动全链验证，也是批次 1 设置 required check 的前提）；② 第三方许可声明（Apache-2.0 LICENSE 已入库）；③ 备份/恢复演练一次并记录（CONSTITUTION C8）；④ 微信小程序真机预览（开发者工具模拟器走查已过，2026-11-08）；⑤ 生产 secrets 与域名注入演练。
 6. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；本地全量门禁（与 CI 对齐）：
-   `pnpm schema:validate && pnpm schema:format:check && pnpm schema:drift && pnpm lint && pnpm lint:style && pnpm lint:md && pnpm dup:check && pnpm format:check && pnpm build && pnpm typecheck && pnpm test:coverage && pnpm --filter @tiangong/e2e test:e2e:coverage && pnpm audit --prod --audit-level=high && actionlint && pnpm lint:docker && pnpm scan:images`
-   （`schema:drift` 需 `SHADOW_DATABASE_URL`；集成与 e2e 需 MySQL 在跑；scan:images 需先构建镜像）。
+   `pnpm schema:validate && pnpm schema:format:check && pnpm schema:drift && pnpm lint && pnpm lint:arch && pnpm lint:style && pnpm lint:md && pnpm dup:check && pnpm format:check && pnpm build && pnpm typecheck && pnpm test:coverage && pnpm --filter @tiangong/e2e test:e2e:coverage && pnpm audit --prod --audit-level=high && pnpm license:check && pnpm sbom:generate && actionlint && pnpm lint:docker && pnpm scan:images`
+   （`schema:drift` 需 `SHADOW_DATABASE_URL`；集成与 e2e 需 MySQL 在跑；scan:images 需先构建镜像；
+   e2e 含运行时 a11y；compose 冒烟与 `node scripts/check-headers.mjs <url>` 在有容器环境时执行）。
 7. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`；既有基线 spec 共 10 个（openspec/specs/），改动平台行为先改对应基线或走变更 delta。

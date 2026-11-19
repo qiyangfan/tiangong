@@ -66,9 +66,12 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: (data) => this.write({ ...writeInput, status: 'ok', data, err: null }),
-        error: (err: Error & { code?: string }) =>
-          this.write({ ...writeInput, status: 'error', data: null, err }),
+        next: (data) => {
+          this.write({ ...writeInput, status: 'ok', data, err: null });
+        },
+        error: (err: Error & { code?: string }) => {
+          this.write({ ...writeInput, status: 'error', data: null, err });
+        },
       }),
     );
   }

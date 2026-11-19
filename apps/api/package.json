@@ -10,6 +10,7 @@
     "test": "vitest run --exclude 'test/integration/**/*.test.ts' --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:integration": "vitest run test/integration",
+    "openapi:update": "UPDATE_OPENAPI=1 vitest run test/openapi.snapshot.test.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

@@ -30,20 +30,26 @@ onMounted(() => {
   if (!el.value) return;
   chart = echarts.init(el.value);
   apply();
-  observer = new ResizeObserver(() => chart?.resize());
+  observer = new ResizeObserver(() => {
+    chart?.resize();
+  });
   observer.observe(el.value);
 });
 
 watch(
   () => props.option,
-  () => apply(),
+  () => {
+    apply();
+  },
   { deep: true },
 );
 
 // 亮暗切换：重算 token 计算色并全量重绘
 watch(
   () => appStore.theme,
-  () => apply(),
+  () => {
+    apply();
+  },
 );
 
 watch(

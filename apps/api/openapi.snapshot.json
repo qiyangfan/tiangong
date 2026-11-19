@@ -1,0 +1,1068 @@
+{
+  "components": {
+    "schemas": {},
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "通用后台脚手架平台 API（统一 envelope：code=0 成功；错误含稳定错误码）",
+    "title": "天工 API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/auth/change-password": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改自己的密码（改密后全端下线）",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "账号密码登录",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "登出（吊销全部 refresh token）",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/menus": {
+      "get": {
+        "operationId": "AuthController_myMenus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "当前用户导航菜单树（按权限过滤）",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/permissions": {
+      "get": {
+        "operationId": "AuthController_myPermissions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "当前用户权限串集合（会话恢复后重建权限上下文）",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "operationId": "AuthController_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "个人中心",
+        "tags": ["auth"]
+      },
+      "put": {
+        "operationId": "AuthController_updateProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "更新个人资料",
+        "tags": ["auth"]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "刷新 access token（refresh 轮换）",
+        "tags": ["auth"]
+      }
+    },
+    "/dict-items": {
+      "post": {
+        "operationId": "DictionariesController_createItem",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增字典项",
+        "tags": ["dictionaries"]
+      }
+    },
+    "/dict-items/{id}": {
+      "delete": {
+        "operationId": "DictionariesController_removeItem",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除字典项",
+        "tags": ["dictionaries"]
+      },
+      "put": {
+        "operationId": "DictionariesController_updateItem",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改字典项",
+        "tags": ["dictionaries"]
+      }
+    },
+    "/dict-types": {
+      "get": {
+        "operationId": "DictionariesController_listTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "字典类型分页列表",
+        "tags": ["dictionaries"]
+      },
+      "post": {
+        "operationId": "DictionariesController_createType",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增字典类型",
+        "tags": ["dictionaries"]
+      }
+    },
+    "/dict-types/{id}": {
+      "delete": {
+        "operationId": "DictionariesController_removeType",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除字典类型（连带其项）",
+        "tags": ["dictionaries"]
+      },
+      "put": {
+        "operationId": "DictionariesController_updateType",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改字典类型",
+        "tags": ["dictionaries"]
+      }
+    },
+    "/dict-types/{key}/items": {
+      "get": {
+        "operationId": "DictionariesController_listItems",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "某类型下字典项列表",
+        "tags": ["dictionaries"]
+      }
+    },
+    "/dicts/{dictKey}/options": {
+      "get": {
+        "operationId": "DictionariesController_options",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dictKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "字典选项（useDict 消费，登录即可）",
+        "tags": ["dictionaries"]
+      }
+    },
+    "/files": {
+      "get": {
+        "operationId": "FilesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "附件分页列表",
+        "tags": ["files"]
+      },
+      "post": {
+        "operationId": "FilesController_upload",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "上传附件（multipart，字段名 file）",
+        "tags": ["files"]
+      }
+    },
+    "/files/{id}": {
+      "delete": {
+        "operationId": "FilesController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除附件（元数据 + 物理文件）",
+        "tags": ["files"]
+      }
+    },
+    "/files/{id}/download": {
+      "get": {
+        "operationId": "FilesController_download",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "授权下载附件（二进制流，非 envelope）",
+        "tags": ["files"]
+      }
+    },
+    "/gen-definitions": {
+      "get": {
+        "operationId": "GenDefinitionController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "生成定义列表（全量，定义数量少不分页）",
+        "tags": ["gen-definitions"]
+      },
+      "post": {
+        "operationId": "GenDefinitionController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增生成定义",
+        "tags": ["gen-definitions"]
+      }
+    },
+    "/gen-definitions/{id}": {
+      "delete": {
+        "operationId": "GenDefinitionController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除生成定义",
+        "tags": ["gen-definitions"]
+      },
+      "put": {
+        "operationId": "GenDefinitionController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改生成定义（模块名不可变）",
+        "tags": ["gen-definitions"]
+      }
+    },
+    "/gen-definitions/{id}/preview": {
+      "get": {
+        "operationId": "GenDefinitionController_previewById",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "已保存定义预览（与 CLI 落盘一致）",
+        "tags": ["gen-definitions"]
+      }
+    },
+    "/gen-definitions/preview": {
+      "post": {
+        "operationId": "GenDefinitionController_previewDraft",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "草稿预览（不落库）",
+        "tags": ["gen-definitions"]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "存活探针（进程是否在运行）",
+        "tags": ["health"]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "就绪探针（数据库连通）",
+        "tags": ["health"]
+      }
+    },
+    "/login-logs": {
+      "get": {
+        "operationId": "AuditQueryController_loginLogs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "登录日志检索",
+        "tags": ["audit"]
+      }
+    },
+    "/menus": {
+      "get": {
+        "operationId": "MenusController_tree",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "全量菜单树（管理）",
+        "tags": ["menus"]
+      },
+      "post": {
+        "operationId": "MenusController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增菜单",
+        "tags": ["menus"]
+      }
+    },
+    "/menus/{id}": {
+      "delete": {
+        "operationId": "MenusController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除菜单（须无子节点）",
+        "tags": ["menus"]
+      },
+      "put": {
+        "operationId": "MenusController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改菜单",
+        "tags": ["menus"]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "MetricsController_metrics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Prometheus 文本指标（Node 进程 + HTTP RED）",
+        "tags": ["metrics"]
+      }
+    },
+    "/oper-logs": {
+      "get": {
+        "operationId": "AuditQueryController_operLogs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "操作日志检索",
+        "tags": ["audit"]
+      }
+    },
+    "/permissions": {
+      "get": {
+        "operationId": "PermissionsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "权限点分组列表",
+        "tags": ["permissions"]
+      },
+      "post": {
+        "operationId": "PermissionsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增权限点",
+        "tags": ["permissions"]
+      }
+    },
+    "/permissions/{id}": {
+      "delete": {
+        "operationId": "PermissionsController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除权限点",
+        "tags": ["permissions"]
+      },
+      "put": {
+        "operationId": "PermissionsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改权限点",
+        "tags": ["permissions"]
+      }
+    },
+    "/roles": {
+      "get": {
+        "operationId": "RolesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "角色分页列表",
+        "tags": ["roles"]
+      },
+      "post": {
+        "operationId": "RolesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增角色",
+        "tags": ["roles"]
+      }
+    },
+    "/roles/{id}": {
+      "delete": {
+        "operationId": "RolesController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除角色",
+        "tags": ["roles"]
+      },
+      "get": {
+        "operationId": "RolesController_detail",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "角色详情（含权限点）",
+        "tags": ["roles"]
+      },
+      "put": {
+        "operationId": "RolesController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改角色（含权限绑定）",
+        "tags": ["roles"]
+      }
+    },
+    "/samples": {
+      "get": {
+        "operationId": "SampleController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "示例数据分页列表",
+        "tags": ["samples"]
+      },
+      "post": {
+        "operationId": "SampleController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增示例数据",
+        "tags": ["samples"]
+      }
+    },
+    "/samples/{id}": {
+      "delete": {
+        "operationId": "SampleController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除示例数据",
+        "tags": ["samples"]
+      },
+      "get": {
+        "operationId": "SampleController_detail",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "示例数据详情",
+        "tags": ["samples"]
+      },
+      "put": {
+        "operationId": "SampleController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改示例数据",
+        "tags": ["samples"]
+      }
+    },
+    "/settings": {
+      "get": {
+        "operationId": "SettingsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "系统参数列表（非机密）",
+        "tags": ["settings"]
+      },
+      "post": {
+        "operationId": "SettingsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增参数",
+        "tags": ["settings"]
+      }
+    },
+    "/settings/{id}": {
+      "delete": {
+        "operationId": "SettingsController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除参数（内置参数拒绝）",
+        "tags": ["settings"]
+      },
+      "put": {
+        "operationId": "SettingsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改参数值",
+        "tags": ["settings"]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "用户分页列表",
+        "tags": ["users"]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "新增用户",
+        "tags": ["users"]
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除用户",
+        "tags": ["users"]
+      },
+      "get": {
+        "operationId": "UsersController_detail",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "用户详情",
+        "tags": ["users"]
+      },
+      "put": {
+        "operationId": "UsersController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "修改用户（含角色分配）",
+        "tags": ["users"]
+      }
+    },
+    "/users/{id}/enabled": {
+      "put": {
+        "operationId": "UsersController_setEnabled",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "启停用户",
+        "tags": ["users"]
+      }
+    },
+    "/users/{id}/reset-password": {
+      "post": {
+        "operationId": "UsersController_resetPassword",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "重置用户密码（吊销其全部会话）",
+        "tags": ["users"]
+      }
+    }
+  },
+  "servers": [],
+  "tags": []
+}

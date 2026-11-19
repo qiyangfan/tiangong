@@ -98,7 +98,8 @@ export const useAuthStore = defineStore('auth', {
       }
       const router = useRouterInstance();
       for (const route of generateRoutes(this.menus)) {
-        router.addRoute(route);
+        // 业务路由挂在命名 layout 根路由下，layout 只实例化一次
+        router.addRoute('layout', route);
       }
       router.addRoute({ path: '/:pathMatch(.*)*', name: 'catch-all', redirect: '/404' });
       this.routesAdded = true;

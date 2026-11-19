@@ -2,12 +2,12 @@
 import { useRoute } from 'vue-router';
 import type { MenuNode } from '@tiangong/contracts';
 import { useAppStore } from '@/stores/app';
-import { useAuthStore } from '@/stores/auth';
 import MenuIcon from '@/components/MenuIcon.vue';
+
+defineProps<{ menus: MenuNode[] }>();
 
 const route = useRoute();
 const appStore = useAppStore();
-const auth = useAuthStore();
 
 /** 服务端已按权限过滤（F 节点不出现在导航树中），这里只做结构渲染。 */
 function navNodes(nodes: MenuNode[]): MenuNode[] {
@@ -32,7 +32,7 @@ function leafIndex(parentPath: string | null | undefined, node: MenuNode): strin
       :collapse-transition="false"
       router
     >
-      <template v-for="top in navNodes(auth.menus)" :key="top.id">
+      <template v-for="top in navNodes(menus)" :key="top.id">
         <!-- 顶级 C 菜单（如仪表盘）直接渲染为可点击项 -->
         <el-menu-item v-if="top.menuType === 'C'" :index="top.path ?? ''">
           <MenuIcon :name="top.icon" />

@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../security/public.decorator';
-import { PrismaService } from '../../prisma/prisma.service';
+import { HealthService } from './health.service';
 
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly health: HealthService) {}
 
   @Public()
   @Get('live')
@@ -19,7 +19,7 @@ export class HealthController {
   @Get('ready')
   @ApiOperation({ summary: '就绪探针（数据库连通）' })
   async ready(): Promise<{ status: string; checks: { database: string } }> {
-    await this.prisma.$queryRaw`SELECT 1`;
+    await this.health.checkDatabase();
     return { status: 'ok', checks: { database: 'up' } };
   }
 }

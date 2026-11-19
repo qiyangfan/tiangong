@@ -13,7 +13,9 @@ export class HttpMetricsMiddleware implements NestMiddleware {
       return;
     }
     const startedAtNanos = process.hrtime.bigint();
-    res.on('finish', () => this.metrics.observeRequest(req, res, startedAtNanos));
+    res.on('finish', () => {
+      this.metrics.observeRequest(req, res, startedAtNanos);
+    });
     next();
   }
 }

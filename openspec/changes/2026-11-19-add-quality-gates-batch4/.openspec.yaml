@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-19
+goal: 补齐质量门禁批次 4：运行时 a11y、架构分层、i18n 键一致性、OpenAPI 契约漂移、许可合规与 SBOM、容器加固与安全响应头，并真实启用 strictTypeChecked
+skip_specs: true

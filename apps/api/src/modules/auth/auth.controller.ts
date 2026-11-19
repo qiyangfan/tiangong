@@ -83,7 +83,7 @@ export class AuthController {
   ): Promise<RefreshResponse> {
     const raw =
       body.client === 'web'
-        ? (req.cookies?.[REFRESH_COOKIE] as string | undefined)
+        ? (req.cookies[REFRESH_COOKIE] as string | undefined)
         : body.refreshToken;
     if (!raw) {
       throw new AppError('AUTH_REFRESH_INVALID');
@@ -107,7 +107,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const raw = req.cookies?.[REFRESH_COOKIE] as string | undefined;
+    const raw = req.cookies[REFRESH_COOKIE] as string | undefined;
     await this.auth.logout(raw ?? null, user.id);
     res.clearCookie(REFRESH_COOKIE, { path: refreshCookieOptions.path });
   }

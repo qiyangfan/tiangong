@@ -5,7 +5,9 @@ import { adminAuth, nopermAuth, testHttp } from './context';
 
 const codeOf = (body: unknown): string => (body as { code: string }).code;
 
-const dataOf = <T>(body: unknown): T => (body as { data: T }).data;
+function dataOf<T>(body: unknown): T {
+  return (body as { data: T }).data;
+}
 
 interface LoginEnvelope {
   code: number;
@@ -14,7 +16,7 @@ interface LoginEnvelope {
 
 /** Set-Cookie 可能是字符串或数组，统一拼接后再匹配属性。 */
 function setCookieHeader(raw: string | string[] | undefined): string {
-  return Array.isArray(raw) ? raw.join('\n') : String(raw ?? '');
+  return Array.isArray(raw) ? raw.join('\n') : (raw ?? '');
 }
 
 /** refresh Cookie 必须 HttpOnly 且限定在 auth 路径。 */

@@ -2,7 +2,7 @@ import { defineConfig } from 'unocss';
 import { presetApplet, presetRemRpx, transformerApplet } from 'unocss-applet';
 import { tgTokens } from './src/theme';
 
-const isMp = process.env?.UNI_PLATFORM?.startsWith('mp-') ?? false;
+const isMp = process.env.UNI_PLATFORM?.startsWith('mp-') ?? false;
 
 /**
  * token 单源：色值自 src/theme.ts 引入；字号/圆角以 rem 表达

@@ -18,7 +18,9 @@ export function createApp() {
   Locale.use('en-US', enUS);
   watch(
     () => useAppStore().locale,
-    (locale) => Locale.use(locale === 'en' ? 'en-US' : 'zh-CN'),
+    (locale) => {
+      Locale.use(locale === 'en' ? 'en-US' : 'zh-CN');
+    },
     { immediate: true },
   );
   // Vue 层异常（渲染/setup/事件回调）兜底；uni 运行时错误由 App.vue 的 onError 收口

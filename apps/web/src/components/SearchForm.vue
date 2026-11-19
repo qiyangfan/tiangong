@@ -3,8 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { Search, RefreshLeft } from '@element-plus/icons-vue';
 
 defineEmits<{
-  (e: 'search'): void;
-  (e: 'reset'): void;
+  (e: 'search' | 'reset'): void;
 }>();
 
 const { t } = useI18n();

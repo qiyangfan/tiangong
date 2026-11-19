@@ -27,7 +27,9 @@ const { t } = useI18n();
 
 const visible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: (value) => {
+    emit('update:modelValue', value);
+  },
 });
 
 const confirmLabel = computed(() => props.confirmText ?? t('common.submit'));

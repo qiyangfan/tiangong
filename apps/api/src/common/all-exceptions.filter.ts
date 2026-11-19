@@ -61,7 +61,7 @@ function httpMessageText(body: unknown, fallback: string): string {
     typeof body === 'string'
       ? body
       : ((body as { message?: string | string[] }).message ?? fallback);
-  return Array.isArray(message) ? message.join('; ') : String(message);
+  return Array.isArray(message) ? message.join('; ') : message;
 }
 
 function classifyHttpException(exception: unknown): ErrorEnvelope | null {
@@ -77,7 +77,7 @@ function classifyHttpException(exception: unknown): ErrorEnvelope | null {
 }
 
 function classifyFileSizeError(exception: unknown): ErrorEnvelope | null {
-  if ((exception as { code?: string })?.code !== 'LIMIT_FILE_SIZE') {
+  if ((exception as { code?: string } | null)?.code !== 'LIMIT_FILE_SIZE') {
     return null;
   }
   const meta = errorMeta('FILE_TOO_LARGE');
@@ -85,7 +85,7 @@ function classifyFileSizeError(exception: unknown): ErrorEnvelope | null {
 }
 
 function classifyPrismaError(exception: unknown): ErrorEnvelope | null {
-  const prisma = exception as PrismaLikeError;
+  const prisma = exception as PrismaLikeError | null;
   const codeByPrismaCode: Readonly<Record<string, string>> = {
     P2002: 'CONFLICT',
     P2025: 'NOT_FOUND',
@@ -113,10 +113,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const { status, code, message } = this.classify(exception);
     if (status >= 500) {
-      this.logger.error(
-        `requestId=${requestId} code=${code} message=${String((exception as Error)?.message ?? exception)}`,
-        (exception as Error)?.stack,
-      );
+      const errorMessage = exception instanceof Error ? exception.message : String(exception);
+      const errorStack = exception instanceof Error ? exception.stack : undefined;
+      this.logger.error(`requestId=${requestId} code=${code} message=${errorMessage}`, errorStack);
     }
     res.status(status);
     res.json({ code, message, data: null, requestId });
