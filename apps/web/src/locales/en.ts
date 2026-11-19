@@ -99,8 +99,8 @@ const en: typeof zhCN = {
     oldPassword: 'Current Password',
     newPassword: 'New Password',
     confirmNewPassword: 'Confirm New Password',
-    passwordMismatch: 'New passwords do not match',
-    passwordChanged: 'Password changed, please sign in again',
+    mismatchNotice: 'New passwords do not match',
+    changedNotice: 'Password changed, please sign in again',
   },
   user: {
     title: 'Users',

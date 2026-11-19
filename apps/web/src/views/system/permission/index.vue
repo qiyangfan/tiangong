@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { FormInstance, FormRules } from 'element-plus';
+import type { FormInstance } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import type { PermissionGroup, PermissionItem } from '@tiangong/contracts';
@@ -15,6 +15,7 @@ import FormDialog from '@/components/FormDialog.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
 import SearchForm from '@/components/SearchForm.vue';
 import { confirmDelete } from '@/utils/confirm';
+import { buildPermissionRules } from './form';
 
 const { t } = useI18n();
 
@@ -58,31 +59,7 @@ const form = reactive({
   remark: '',
 });
 
-const rules: FormRules = {
-  resource: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('permission.resource') }),
-      trigger: 'blur',
-    },
-    { pattern: /^[a-z][a-z0-9-]{1,63}$/, message: 'lower kebab-case', trigger: 'blur' },
-  ],
-  action: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('permission.action') }),
-      trigger: 'blur',
-    },
-    { pattern: /^[a-z][a-z0-9-]{1,31}$/, message: 'lower kebab-case', trigger: 'blur' },
-  ],
-  name: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('permission.name') }),
-      trigger: 'blur',
-    },
-  ],
-};
+const rules = buildPermissionRules(t);
 
 function openCreate(resource?: string): void {
   dialog.editingId = null;
@@ -103,6 +80,26 @@ function openEdit(group: PermissionGroup, row: PermissionItem): void {
   dialog.visible = true;
 }
 
+/** 按编辑态分流创建/更新，成功后关弹窗、提示并刷新列表。 */
+async function save(): Promise<void> {
+  if (dialog.editingId === null) {
+    await apiCreatePermission({
+      resource: form.resource,
+      action: form.action,
+      name: form.name,
+      remark: form.remark === '' ? undefined : form.remark,
+    });
+  } else {
+    await apiUpdatePermission(dialog.editingId, {
+      name: form.name,
+      remark: form.remark === '' ? null : form.remark,
+    });
+  }
+  dialog.visible = false;
+  ElMessage.success(t('common.opSuccess'));
+  await getList();
+}
+
 async function submit(): Promise<void> {
   const ok = await formRef.value?.validate().catch(() => false);
   if (!ok) {
@@ -110,22 +107,7 @@ async function submit(): Promise<void> {
   }
   submitting.value = true;
   try {
-    if (dialog.editingId === null) {
-      await apiCreatePermission({
-        resource: form.resource,
-        action: form.action,
-        name: form.name,
-        remark: form.remark === '' ? undefined : form.remark,
-      });
-    } else {
-      await apiUpdatePermission(dialog.editingId, {
-        name: form.name,
-        remark: form.remark === '' ? null : form.remark,
-      });
-    }
-    dialog.visible = false;
-    ElMessage.success(t('common.opSuccess'));
-    await getList();
+    await save();
   } finally {
     submitting.value = false;
   }

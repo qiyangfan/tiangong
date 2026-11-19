@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, provide, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import type { RoleItem, UserItem } from '@tiangong/contracts';
-import { passwordSchema } from '@tiangong/contracts';
 import {
   apiCreateUser,
   apiDeleteUser,
@@ -21,12 +20,24 @@ import Pagination from '@/components/Pagination.vue';
 import RightToolbar from '@/components/RightToolbar.vue';
 import SearchForm from '@/components/SearchForm.vue';
 import { confirmDelete } from '@/utils/confirm';
-import { formatDateTime } from '@/utils/datetime';
+import { shouldStepBack } from '@/utils/paging';
+import UserFormFields from './UserFormFields.vue';
+import UserTable from './UserTable.vue';
+import {
+  buildResetRules,
+  buildUserRules,
+  createUserForm,
+  fillUserForm,
+  toCreateUser,
+  toUpdateUser,
+  userFormKey,
+} from './form';
+import type { UserDialogState } from './form';
 
 const { t } = useI18n();
 const auth = useAuthStore();
 
-// ---- 列表与查询（第 1/3/4 段） ----
+// ---- 列表与查询 ----
 const loading = ref(false);
 const rows = ref<UserItem[]>([]);
 const total = ref(0);
@@ -68,61 +79,15 @@ function onReset(): void {
   onSearch();
 }
 
-// ---- 弹窗表单（第 5 段） ----
-const dialog = reactive({ visible: false, editingId: null as number | null });
-const formRef = ref<FormInstance>();
+// ---- 弹窗表单 ----
+const dialog = reactive<UserDialogState>({ visible: false, editingId: null });
+const formRef = ref<{ validate: () => Promise<boolean> }>();
 const submitting = ref(false);
 const roleOptions = ref<RoleItem[]>([]);
-const form = reactive({
-  username: '',
-  nickname: '',
-  password: '',
-  email: '',
-  phone: '',
-  roleIds: [] as number[],
-  enabled: true,
-  remark: '',
-});
-
-const rules: FormRules = {
-  username: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('user.username') }),
-      trigger: 'blur',
-    },
-    {
-      pattern: /^[a-zA-Z0-9_]{3,30}$/,
-      message: '3-30 chars: letters, digits, underscore',
-      trigger: 'blur',
-    },
-  ],
-  nickname: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('user.nickname') }),
-      trigger: 'blur',
-    },
-  ],
-  password: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('user.password') }),
-      trigger: 'blur',
-    },
-    {
-      validator: (_rule, value: string, callback) => {
-        if (value !== '' && !passwordSchema.safeParse(value).success) {
-          callback(new Error('8+ chars with letters and digits'));
-        } else {
-          callback();
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  email: [{ type: 'email', message: () => t('user.invalidEmail'), trigger: 'blur' }],
-};
+const form = createUserForm();
+// 表单对象经 provide 下发：字段组件直接读写同一对象，免去 prop 回写样板
+provide(userFormKey, form);
+const rules: FormRules = buildUserRules(t);
 
 async function loadRoleOptions(): Promise<void> {
   const res = await apiListRoles({ page: 1, pageSize: 100 });
@@ -131,67 +96,37 @@ async function loadRoleOptions(): Promise<void> {
 
 function openCreate(): void {
   dialog.editingId = null;
-  Object.assign(form, {
-    username: '',
-    nickname: '',
-    password: '',
-    email: '',
-    phone: '',
-    roleIds: [],
-    enabled: true,
-    remark: '',
-  });
+  fillUserForm(form, null);
   dialog.visible = true;
   void loadRoleOptions();
 }
 
 function openEdit(row: UserItem): void {
   dialog.editingId = row.id;
-  Object.assign(form, {
-    username: row.username,
-    nickname: row.nickname,
-    password: '',
-    email: row.email ?? '',
-    phone: row.phone ?? '',
-    roleIds: row.roles.map((r) => r.id),
-    enabled: row.enabled,
-    remark: row.remark ?? '',
-  });
+  fillUserForm(form, row);
   dialog.visible = true;
   void loadRoleOptions();
 }
 
+/** 提交成功后的收尾：关闭弹窗、提示、刷新列表。 */
+async function afterSaved(): Promise<void> {
+  dialog.visible = false;
+  ElMessage.success(t('common.opSuccess'));
+  await getList();
+}
+
 async function submit(): Promise<void> {
-  const ok = await formRef.value?.validate().catch(() => false);
-  if (!ok) {
+  if (!(await formRef.value?.validate())) {
     return;
   }
   submitting.value = true;
   try {
     if (dialog.editingId === null) {
-      await apiCreateUser({
-        username: form.username,
-        nickname: form.nickname,
-        password: form.password,
-        email: form.email === '' ? undefined : form.email,
-        phone: form.phone === '' ? undefined : form.phone,
-        roleIds: form.roleIds,
-        enabled: form.enabled,
-        remark: form.remark === '' ? undefined : form.remark,
-      });
+      await apiCreateUser(toCreateUser(form));
     } else {
-      await apiUpdateUser(dialog.editingId, {
-        nickname: form.nickname,
-        email: form.email === '' ? null : form.email,
-        phone: form.phone === '' ? null : form.phone,
-        roleIds: form.roleIds,
-        enabled: form.enabled,
-        remark: form.remark === '' ? null : form.remark,
-      });
+      await apiUpdateUser(dialog.editingId, toUpdateUser(form));
     }
-    dialog.visible = false;
-    ElMessage.success(t('common.opSuccess'));
-    await getList();
+    await afterSaved();
   } finally {
     submitting.value = false;
   }
@@ -202,15 +137,13 @@ async function onDelete(row: UserItem): Promise<void> {
     ElMessage.warning(t('user.selfDeleteForbidden'));
     return;
   }
-  try {
-    await confirmDelete();
-  } catch {
+  if (!(await confirmDelete().catch(() => false))) {
     return;
   }
   await apiDeleteUser(row.id);
   ElMessage.success(t('common.opSuccess'));
   // 当前页删空时回退一页
-  if (rows.value.length === 1 && query.page > 1) {
+  if (shouldStepBack(query.page, rows.value.length)) {
     query.page -= 1;
   }
   await getList();
@@ -229,26 +162,7 @@ async function onToggleEnabled(row: UserItem, enabled: boolean): Promise<void> {
 
 const resetDialog = reactive({ visible: false, userId: 0, username: '', newPassword: '' });
 const resetFormRef = ref<FormInstance>();
-
-const resetRules: FormRules = {
-  newPassword: [
-    {
-      required: true,
-      message: () => t('common.pleaseInput', { field: t('user.newPassword') }),
-      trigger: 'blur',
-    },
-    {
-      validator: (_rule, value: string, callback) => {
-        if (!passwordSchema.safeParse(value).success) {
-          callback(new Error('8+ chars with letters and digits'));
-        } else {
-          callback();
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-};
+const resetRules: FormRules = buildResetRules(t);
 
 function openReset(row: UserItem): void {
   resetDialog.userId = row.id;
@@ -267,6 +181,12 @@ async function submitReset(): Promise<void> {
   ElMessage.success(t('user.resetSuccess'));
 }
 
+// 状态筛选项与页内表单同一取值口径（true/false，清除即不过滤）
+const enabledOptions = [
+  { labelKey: 'common.enabled', value: true },
+  { labelKey: 'common.disabled', value: false },
+];
+
 onMounted(() => {
   void getList();
 });
@@ -274,7 +194,7 @@ onMounted(() => {
 
 <template>
   <div class="tg-page">
-    <!-- 第 1 段：搜索表单 -->
+    <!-- 搜索区 -->
     <SearchForm v-show="showSearch" @search="onSearch" @reset="onReset">
       <el-form-item :label="t('common.keyword')">
         <el-input
@@ -292,14 +212,17 @@ onMounted(() => {
           style="width: 120px"
           :placeholder="t('common.all')"
         >
-          <el-option :label="t('common.enabled')" :value="true" />
-          <el-option :label="t('common.disabled')" :value="false" />
+          <el-option
+            v-for="opt in enabledOptions"
+            :key="String(opt.value)"
+            :label="t(opt.labelKey)"
+            :value="opt.value"
+          />
         </el-select>
       </el-form-item>
     </SearchForm>
 
     <el-card shadow="never" class="tg-table-card">
-      <!-- 第 2 段：按钮行 -->
       <div class="tg-toolbar">
         <div class="tg-toolbar__actions">
           <el-button
@@ -314,87 +237,15 @@ onMounted(() => {
         <RightToolbar v-model:show-search="showSearch" @refresh="getList" />
       </div>
 
-      <!-- 第 3 段：表格 -->
-      <el-table v-loading="loading" :data="rows" row-key="id">
-        <el-table-column
-          :label="t('user.username')"
-          prop="username"
-          min-width="110"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          :label="t('user.nickname')"
-          prop="nickname"
-          min-width="110"
-          show-overflow-tooltip
-        />
-        <el-table-column :label="t('user.roles')" min-width="160">
-          <template #default="{ row }">
-            <el-tag
-              v-for="r in row.roles"
-              :key="r.id"
-              size="small"
-              class="tg-user__role-tag"
-              disable-transitions
-            >
-              {{ r.name }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('common.status')" width="90" align="center">
-          <template #default="{ row }">
-            <el-switch
-              v-permission="'system:user:enable'"
-              :model-value="row.enabled"
-              :disabled="row.id === auth.user?.id"
-              @change="(v: boolean | string | number) => onToggleEnabled(row, Boolean(v))"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column
-          :label="t('user.email')"
-          prop="email"
-          min-width="150"
-          show-overflow-tooltip
-        />
-        <el-table-column :label="t('profile.lastLoginAt')" min-width="150">
-          <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.createdAt')" min-width="150">
-          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.actions')" width="220" fixed="right">
-          <template #default="{ row }">
-            <el-button
-              v-permission="'system:user:update'"
-              link
-              type="primary"
-              @click="openEdit(row)"
-              >{{ t('common.edit') }}</el-button
-            >
-            <el-button
-              v-permission="'system:user:reset-password'"
-              link
-              type="warning"
-              @click="openReset(row)"
-              >{{ t('user.resetPwd') }}</el-button
-            >
-            <el-button
-              v-permission="'system:user:delete'"
-              link
-              type="danger"
-              :disabled="row.id === auth.user?.id"
-              @click="onDelete(row)"
-              >{{ t('common.delete') }}</el-button
-            >
-          </template>
-        </el-table-column>
-        <template #empty>
-          <el-empty :description="t('common.noData')" :image-size="60" />
-        </template>
-      </el-table>
+      <UserTable
+        :rows="rows"
+        :loading="loading"
+        @edit="openEdit"
+        @reset-password="openReset"
+        @delete="onDelete"
+        @toggle-enabled="onToggleEnabled"
+      />
 
-      <!-- 第 4 段：分页 -->
       <Pagination
         v-model:page="query.page"
         v-model:page-size="query.pageSize"
@@ -403,53 +254,16 @@ onMounted(() => {
       />
     </el-card>
 
-    <!-- 第 5 段：弹窗表单 -->
-    <FormDialog
-      v-model="dialog.visible"
-      :title="dialog.editingId === null ? t('user.createTitle') : t('user.editTitle')"
-      width="520px"
+    <!-- 字段区拆为组件以控制单文件规模；ref 暴露 validate，提交前由本页调用 -->
+    <UserFormFields
+      ref="formRef"
+      v-model:visible="dialog.visible"
+      :rules="rules"
+      :editing-id="dialog.editingId"
+      :role-options="roleOptions"
       :loading="submitting"
       @submit="submit"
-    >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item :label="t('user.username')" prop="username">
-          <el-input
-            v-model.trim="form.username"
-            :disabled="dialog.editingId !== null"
-            maxlength="30"
-          />
-        </el-form-item>
-        <el-form-item :label="t('user.nickname')" prop="nickname">
-          <el-input v-model.trim="form.nickname" maxlength="30" />
-        </el-form-item>
-        <el-form-item v-if="dialog.editingId === null" :label="t('user.password')" prop="password">
-          <el-input v-model="form.password" type="password" show-password maxlength="72" />
-        </el-form-item>
-        <el-form-item :label="t('user.email')" prop="email">
-          <el-input v-model.trim="form.email" maxlength="100" />
-        </el-form-item>
-        <el-form-item :label="t('user.phone')" prop="phone">
-          <el-input v-model.trim="form.phone" maxlength="20" />
-        </el-form-item>
-        <el-form-item :label="t('user.roleLabel')">
-          <el-select v-model="form.roleIds" multiple style="width: 100%">
-            <el-option
-              v-for="r in roleOptions"
-              :key="r.id"
-              :label="r.name"
-              :value="r.id"
-              :disabled="!r.enabled"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="t('common.status')">
-          <el-switch v-model="form.enabled" />
-        </el-form-item>
-        <el-form-item :label="t('common.remark')">
-          <el-input v-model="form.remark" type="textarea" :rows="2" maxlength="500" />
-        </el-form-item>
-      </el-form>
-    </FormDialog>
+    />
 
     <FormDialog
       v-model="resetDialog.visible"
@@ -471,9 +285,3 @@ onMounted(() => {
     </FormDialog>
   </div>
 </template>
-
-<style scoped>
-.tg-user__role-tag {
-  margin-right: 4px;
-}
-</style>

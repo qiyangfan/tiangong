@@ -165,11 +165,14 @@ tiangong/
 13. **playwright install 官方源在本机停滞**：用 `PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright/` 下载；seed 幂等 upsert 的 `update: {}` 不覆盖既有 admin 密码——换测试密码需先清库或直接改库
 14. **微信 IDE 自动化桥对 virtualHost 上提树不可靠**（wot 接入后实测）：`page.$$` 无 wd-* tag 查询（仅 `view >>> <sel>` 深选择可达）、深层元素无 `.input()` 且 trigger 不达 uni v-model、size/offset/text 序列化残缺（text 对真节点可用，按 i18n 全文匹配）、页面 data 键被编译压缩（dialogVisible 等运行时态不可读）、合成点击几何不可信——**mp 侧 automator 只取三件：页面路径断言 + 截图 + console.error 收集；登录打字/弹层/语言/登出等交互环一律走 H5 playwright 补验**（`python3 -m http.server 5173` 服 `dist/build/h5`，源必须是 `http://localhost:5173`——api CORS 白名单仅此一条；选择器用 `uni-button.wd-button`/`.uni-tabbar__item`/`.wd-cell`，tabbar 项需 force:true）
 
+15. **`import/no-cycle` 对 TS 文件默认静默失效**：依赖图的有效扩展名只认声明过的项，须在 `settings['import/parsers']` 声明 `.ts/.tsx`（本项目已配，勿删）；补配后曾检出 5 处真实循环，已以 `router/navigator.ts` 惰性绑定 router 断环
+16. **contracts 的 `dist` 是 typecheck/test 的解析前提**：`pnpm install` 不构建 workspace 包（实测 install 后无 dist），CI 已把 `pnpm build` 前移到 typecheck/test 之前，根脚本另有 `pretypecheck`/`pretest` 兜底；只改 contracts 源码后须重跑这两个脚本（会自动重建）
+
 ## 8. 后续工作指引（质量门禁在途）
 
 建设阶段与七个变更（2026-11-07 五变更、2026-11-08 wot 组件层、2026-11-09 add-basic-metrics）均已收官归档；当前在途 `2026-11-19-add-secret-scanning`（跨仓质量门禁批次 1 / P0-1）。后续会话按需从以下入口进入：
 
-1. **质量门禁批次 1（在途）**：`2026-11-19-add-secret-scanning` 已提交推送，本地证据与容器等价复跑均通过（见 §7.1「在途变更」与 `docs/quality/DELIVERY_REPORT.md` 2026-11-19 验证记录）；剩余步骤 = 修复 GitHub 账单锁 → `security.yml` CI 实跑绿 → 分支保护把 `secrets` 设为 required → `openspec archive`。闭环后按 `../QUALITY-GATES-HANDOFF.md` §5 进入批次 2（P0-2 依赖漏洞）；本批未闭环不建下一批 change。
+1. **质量门禁（在途）**：`2026-11-19-add-secret-scanning` 已提交推送，本地证据与容器等价复跑均通过（见 §7.1「在途变更」与 `docs/quality/DELIVERY_REPORT.md` 2026-11-19 验证记录）；剩余步骤 = 修复 GitHub 账单锁 → `security.yml` CI 实跑绿 → 分支保护把 `secrets` 设为 required → `openspec archive`。同批结构类门禁 `2026-11-19-add-structural-gates`（ESLint 默认阈值复杂度/体积/循环依赖 + Prettier 格式门禁，CI 增 `format:check`）本地已全绿、未提交，分支保护按 owner 指示暂缓。两批闭环后按 `../QUALITY-GATES-HANDOFF.md` §5 进入下一批。
 2. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
 3. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
 4. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。

@@ -1,6 +1,35 @@
-import type { Router } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationRaw, Router } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { reportError } from '@/utils/global-error';
+
+type AuthStore = ReturnType<typeof useAuthStore>;
+
+/** 公共页分流：返回需要跳转的目标，放行时为 null。 */
+function publicRedirect(to: RouteLocationNormalized, auth: AuthStore): RouteLocationRaw | null {
+  return to.path === '/login' && auth.isLoggedIn ? { path: '/' } : null;
+}
+
+/** 未认证时转登录页并带回跳地址；根路径不携带 redirect。 */
+function toLogin(to: RouteLocationNormalized): RouteLocationRaw {
+  return {
+    path: '/login',
+    query: to.fullPath === '/' ? undefined : { redirect: to.fullPath },
+    replace: true,
+  };
+}
+
+/** 首次导航装载动态路由；菜单加载失败时中止导航留在原地。 */
+async function loadDynamicRoutes(auth: AuthStore): Promise<boolean> {
+  try {
+    await auth.ensureRoutes();
+    return true;
+  } catch (err) {
+    // 菜单加载失败多为瞬时故障：中止导航留在原地（URL 不变可重试）；
+    // 会话失效的跳转由 request 层终局 401 语义负责，此处不重复处理
+    reportError(err, 'router:ensureRoutes');
+    return false;
+  }
+}
 
 /**
  * 全局守卫（动态路由三步曲的调度方）：
@@ -15,32 +44,16 @@ export function setupGuard(router: Router): void {
     const restored = await auth.tryRestore();
 
     if (to.meta.public) {
-      if (to.path === '/login' && auth.isLoggedIn) {
-        return { path: '/' };
-      }
+      return publicRedirect(to, auth) ?? true;
+    }
+    if (!restored) {
+      return toLogin(to);
+    }
+    if (auth.routesAdded) {
       return true;
     }
-
-    if (!restored) {
-      return {
-        path: '/login',
-        query: to.fullPath === '/' ? undefined : { redirect: to.fullPath },
-        replace: true,
-      };
-    }
-
-    if (!auth.routesAdded) {
-      try {
-        await auth.ensureRoutes();
-      } catch (err) {
-        // 菜单加载失败多为瞬时故障：中止导航留在原地（URL 不变可重试）；
-        // 会话失效的跳转由 request 层终局 401 语义负责，此处不重复处理
-        reportError(err, 'router:ensureRoutes');
-        return false;
-      }
-      // addRoute 不影响本次导航匹配，replace 重放以命中新路由
-      return { ...to, replace: true };
-    }
-    return true;
+    // addRoute 不影响本次导航匹配，replace 重放以命中新路由；
+    // 仅首次装路由后重放，否则每次导航都会再重定向一次自身
+    return (await loadDynamicRoutes(auth)) ? { ...to, replace: true } : false;
   });
 }

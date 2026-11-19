@@ -13,5 +13,9 @@ export function reportError(err: unknown, source: string): void {
     return;
   }
   lastNotifiedAt = now;
-  uni.showToast({ title: i18n.global.t('common.unexpectedError'), icon: 'none' });
+  uni.showToast({
+    title: i18n.global.t('common.unexpectedError'),
+    icon: 'none',
+    fail: () => undefined,
+  });
 }

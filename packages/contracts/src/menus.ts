@@ -37,11 +37,12 @@ const menuNodeFields = {
 
 export const menuNodeSchema: z.ZodType<MenuNode> = z.object(menuNodeFields);
 
-/** 菜单管理列表返回全量树（带元信息）。 */
+/** 菜单管理列表返回全量树（带元信息，子节点同构）。 */
 export interface MenuNodeWithMeta extends MenuNode {
   createdAt: string;
   updatedAt: string;
   remark: string | null;
+  children: MenuNodeWithMeta[];
 }
 
 export const menuNodeWithMetaSchema: z.ZodType<MenuNodeWithMeta> = z.object({
@@ -49,13 +50,14 @@ export const menuNodeWithMetaSchema: z.ZodType<MenuNodeWithMeta> = z.object({
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   remark: z.string().nullable(),
+  children: z.array(z.lazy(() => menuNodeWithMetaSchema)),
 });
 
 /** 当前用户可见的导航树（服务端按角色权限过滤后下发）。 */
 export type UserMenus = MenuNode[];
 
-/** 全量菜单树（管理端）。 */
-export type MenuTree = MenuNode[];
+/** 全量菜单树（管理端，节点带元信息）。 */
+export type MenuTree = MenuNodeWithMeta[];
 
 export const createMenuRequestSchema = z.object({
   parentId: z.number().int().min(0).default(0),

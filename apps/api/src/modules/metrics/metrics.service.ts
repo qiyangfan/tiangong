@@ -3,6 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { type Request, type Response } from 'express';
 import { Counter, Histogram, collectDefaultMetrics, Registry } from 'prom-client';
 
+function routeTemplate(req: Request): string {
+  const route: unknown = req.route;
+  if (typeof route !== 'object' || route === null || !('path' in route)) {
+    return 'unmatched';
+  }
+  const { path } = route as { path?: unknown };
+  return typeof path === 'string' ? `${req.baseUrl}${path}` : 'unmatched';
+}
+
 /**
  * 基础运行指标（FUNCTION_MATRIX P0「系统基础运行指标」的 metrics 部分）：
  * 单例 Registry 承载 Node 进程默认指标（CPU/内存/GC/事件循环）与 HTTP RED 指标。
@@ -37,8 +46,7 @@ export class MetricsService {
 
   /** 记录一次已完成请求：res finish 后调用，耗时按单调时钟计算。 */
   observeRequest(req: Request, res: Response, startedAtNanos: bigint): void {
-    const route =
-      typeof req.route?.path === 'string' ? `${req.baseUrl}${req.route.path}` : 'unmatched';
+    const route = routeTemplate(req);
     const labels = { method: req.method, route };
     this.httpRequestsTotal.inc({ ...labels, status_code: String(res.statusCode) });
     this.httpRequestDuration.observe(

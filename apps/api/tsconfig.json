@@ -4,9 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node10",
     "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
+    "lib": ["ES2023"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declaration": false,
@@ -14,14 +12,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": false,
-    "types": [
-      "node",
-      "multer"
-    ]
+    "types": ["node", "multer"]
   },
-  "include": [
-    "src",
-    "test",
-    "prisma/seed.ts"
-  ]
+  "include": ["src", "test", "scripts", "prisma/seed.ts", "vitest.config.ts"]
 }

@@ -97,8 +97,8 @@ const zhCN = {
     oldPassword: '当前密码',
     newPassword: '新密码',
     confirmNewPassword: '确认新密码',
-    passwordMismatch: '两次输入的新密码不一致',
-    passwordChanged: '密码已修改，请重新登录',
+    mismatchNotice: '两次输入的新密码不一致',
+    changedNotice: '密码已修改，请重新登录',
   },
   user: {
     title: '用户管理',

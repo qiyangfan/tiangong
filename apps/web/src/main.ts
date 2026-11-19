@@ -3,7 +3,7 @@ import { createApp } from 'vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/dark/css-vars.css';
-import App from './App.vue';
+import RootApp from './App.vue';
 import { i18n } from './locales';
 import { router } from './router';
 import { setupPermissionDirective } from './directive/permission';
@@ -13,7 +13,7 @@ import { useAppStore } from './stores/app';
 import { useAuthStore } from './stores/auth';
 import './styles/index.css';
 
-const app = createApp(App);
+const app = createApp(RootApp);
 // 全局异常兜底先行注册：后续装配链路（store 恢复、守卫、挂载）的异常同样被收口
 setupGlobalErrorHandlers(app);
 app.use(createPinia());

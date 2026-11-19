@@ -3,6 +3,20 @@ import { API_BASE, E2E_ADMIN, E2E_NOPERM } from '../src/env';
 
 export type AuthHeaders = { Authorization: string };
 
+interface Envelope<T> {
+  data: T;
+}
+
+interface ItemPage<T> {
+  items: T[];
+}
+
+/** 成功 envelope 取 data：Playwright 的 json() 无类型，入口处收窄一次。 */
+async function readData<T>(res: { json(): Promise<unknown> }): Promise<T> {
+  const body = (await res.json()) as Envelope<T>;
+  return body.data;
+}
+
 /** API 层登录（fixture 准备用，不走 UI）。 */
 export async function apiLogin(
   request: APIRequestContext,
@@ -15,8 +29,36 @@ export async function apiLogin(
   if (res.status() !== 200) {
     throw new Error(`api login failed: ${res.status()} ${await res.text()}`);
   }
-  const body = await res.json();
-  return body.data.accessToken as string;
+  const data = await readData<{ accessToken: string }>(res);
+  return data.accessToken;
+}
+
+async function deleteE2EUsers(request: APIRequestContext, headers: AuthHeaders): Promise<void> {
+  const res = await request.get(`${API_BASE}/users?pageSize=100`, { headers });
+  const page = await readData<ItemPage<{ id: number; username: string }>>(res);
+  for (const item of page.items) {
+    if (item.username === E2E_NOPERM.username) {
+      await request.delete(`${API_BASE}/users/${item.id}`, { headers });
+    }
+  }
+}
+
+async function deleteE2ERoles(request: APIRequestContext, headers: AuthHeaders): Promise<void> {
+  const res = await request.get(`${API_BASE}/roles?pageSize=100`, { headers });
+  const page = await readData<ItemPage<{ id: number; roleKey: string }>>(res);
+  for (const item of page.items) {
+    if (item.roleKey === E2E_NOPERM.roleKey) {
+      await request.delete(`${API_BASE}/roles/${item.id}`, { headers });
+    }
+  }
+}
+
+async function deleteE2ESamples(request: APIRequestContext, headers: AuthHeaders): Promise<void> {
+  const res = await request.get(`${API_BASE}/samples?keyword=E2E-&pageSize=100`, { headers });
+  const page = await readData<ItemPage<{ id: number }>>(res);
+  for (const item of page.items) {
+    await request.delete(`${API_BASE}/samples/${item.id}`, { headers });
+  }
 }
 
 /** 清理上一轮残留的 e2e fixture（零权限用户/角色、样例记录），任意顺序可重跑。 */
@@ -25,25 +67,9 @@ export async function cleanupE2EFixtures(
   auth?: AuthHeaders,
 ): Promise<void> {
   const headers: AuthHeaders = auth ?? { Authorization: `Bearer ${await apiLogin(request)}` };
-
-  const users = await request.get(`${API_BASE}/users?pageSize=100`, { headers });
-  for (const item of (await users.json()).data.items as Array<{ id: number; username: string }>) {
-    if (item.username === E2E_NOPERM.username) {
-      await request.delete(`${API_BASE}/users/${item.id}`, { headers });
-    }
-  }
-
-  const roles = await request.get(`${API_BASE}/roles?pageSize=100`, { headers });
-  for (const item of (await roles.json()).data.items as Array<{ id: number; roleKey: string }>) {
-    if (item.roleKey === E2E_NOPERM.roleKey) {
-      await request.delete(`${API_BASE}/roles/${item.id}`, { headers });
-    }
-  }
-
-  const samples = await request.get(`${API_BASE}/samples?keyword=E2E-&pageSize=100`, { headers });
-  for (const item of (await samples.json()).data.items as Array<{ id: number }>) {
-    await request.delete(`${API_BASE}/samples/${item.id}`, { headers });
-  }
+  await deleteE2EUsers(request, headers);
+  await deleteE2ERoles(request, headers);
+  await deleteE2ESamples(request, headers);
 }
 
 /** UI 登录：定位器用结构性属性（autocomplete），不耦合文案。 */

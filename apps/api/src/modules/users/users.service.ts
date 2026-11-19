@@ -17,6 +17,12 @@ type UserWithRoles = User & {
   roles: Array<{ role: { id: number; roleKey: string; name: string } }>;
 };
 
+function withoutRoleIds(body: UpdateUserRequest): Omit<UpdateUserRequest, 'roleIds'> {
+  const copy: UpdateUserRequest = { ...body };
+  delete copy.roleIds;
+  return copy;
+}
+
 /** 用户管理：CRUD、启停、重置密码、角色分配；禁止自删/自停用。 */
 @Injectable()
 export class UsersService {
@@ -82,6 +88,28 @@ export class UsersService {
   }
 
   async update(id: number, body: UpdateUserRequest, userId: number): Promise<UserItem> {
+    await this.assertUpdateAllowed(id, body, userId);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (body.roleIds) {
+        await tx.userRole.deleteMany({ where: { userId: id } });
+        await tx.userRole.createMany({
+          data: body.roleIds.map((roleId) => ({ userId: id, roleId })),
+        });
+      }
+      return tx.user.update({
+        where: { id },
+        data: { ...withoutRoleIds(body), updatedBy: userId },
+        include: { roles: { include: { role: true } } },
+      });
+    });
+    return toItem(updated);
+  }
+
+  private async assertUpdateAllowed(
+    id: number,
+    body: UpdateUserRequest,
+    userId: number,
+  ): Promise<void> {
     const existing = await this.prisma.user.findUnique({ where: { id } });
     if (!existing) {
       throw new AppError('USER_NOT_FOUND');
@@ -95,21 +123,6 @@ export class UsersService {
     if (body.enabled === false && id === userId) {
       throw new AppError('CONFLICT', 'cannot disable yourself');
     }
-    const updated = await this.prisma.$transaction(async (tx) => {
-      if (body.roleIds) {
-        await tx.userRole.deleteMany({ where: { userId: id } });
-        await tx.userRole.createMany({
-          data: body.roleIds.map((roleId) => ({ userId: id, roleId })),
-        });
-      }
-      const { roleIds: _omit, ...data } = body;
-      return tx.user.update({
-        where: { id },
-        data: { ...data, updatedBy: userId },
-        include: { roles: { include: { role: true } } },
-      });
-    });
-    return toItem(updated);
   }
 
   async remove(id: number, userId: number): Promise<void> {

@@ -4,13 +4,8 @@ import { useI18n } from 'vue-i18n';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
-import type { SampleRecordItem } from '@tiangong/contracts';
-import {
-  apiCreateSample,
-  apiDeleteSample,
-  apiListSamples,
-  apiUpdateSample,
-} from '@/api/sample';
+import type { CreateSampleRequest, SampleRecordItem } from '@tiangong/contracts';
+import { apiCreateSample, apiDeleteSample, apiListSamples, apiUpdateSample } from '@/api/sample';
 import DictTag from '@/components/DictTag.vue';
 import FormDialog from '@/components/FormDialog.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -100,6 +95,30 @@ function openEdit(row: SampleRecordItem): void {
   dialog.visible = true;
 }
 
+/** 表单 → 契约载荷：空分类/备注转 undefined，金额按两位小数字符串传输。 */
+function toPayload(): CreateSampleRequest {
+  return {
+    name: form.name,
+    category: form.category === '' ? undefined : form.category,
+    amount: form.amount === undefined ? undefined : form.amount.toFixed(2),
+    enabled: form.enabled,
+    remark: form.remark === '' ? undefined : form.remark,
+  };
+}
+
+/** 按编辑态分流创建/更新，成功后关弹窗、提示并刷新列表。 */
+async function save(): Promise<void> {
+  const payload = toPayload();
+  if (dialog.editingId === null) {
+    await apiCreateSample(payload);
+  } else {
+    await apiUpdateSample(dialog.editingId, payload);
+  }
+  dialog.visible = false;
+  ElMessage.success(t('common.opSuccess'));
+  await getList();
+}
+
 async function submit(): Promise<void> {
   const ok = await formRef.value?.validate().catch(() => false);
   if (!ok) {
@@ -107,28 +126,7 @@ async function submit(): Promise<void> {
   }
   submitting.value = true;
   try {
-    // 金额按契约以两位小数字符串传输
-    const amount = form.amount === undefined ? undefined : form.amount.toFixed(2);
-    if (dialog.editingId === null) {
-      await apiCreateSample({
-        name: form.name,
-        category: form.category === '' ? undefined : form.category,
-        amount,
-        enabled: form.enabled,
-        remark: form.remark === '' ? undefined : form.remark,
-      });
-    } else {
-      await apiUpdateSample(dialog.editingId, {
-        name: form.name,
-        category: form.category === '' ? undefined : form.category,
-        amount,
-        enabled: form.enabled,
-        remark: form.remark === '' ? undefined : form.remark,
-      });
-    }
-    dialog.visible = false;
-    ElMessage.success(t('common.opSuccess'));
-    await getList();
+    await save();
   } finally {
     submitting.value = false;
   }
@@ -186,12 +184,7 @@ onMounted(() => {
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">
         <div class="tg-toolbar__actions">
-          <el-button
-            v-permission="'sample:create'"
-            type="primary"
-            :icon="Plus"
-            @click="openCreate"
-          >
+          <el-button v-permission="'sample:create'" type="primary" :icon="Plus" @click="openCreate">
             {{ t('common.add') }}
           </el-button>
         </div>
@@ -203,11 +196,7 @@ onMounted(() => {
         <el-table-column :label="t('dev.sample.name')" prop="name" min-width="160" />
         <el-table-column :label="t('dev.sample.category')" width="120" align="center">
           <template #default="{ row }">
-            <DictTag
-              v-if="row.category"
-              :options="categoryOptions"
-              :value="row.category"
-            />
+            <DictTag v-if="row.category" :options="categoryOptions" :value="row.category" />
             <span v-else>-</span>
           </template>
         </el-table-column>

@@ -41,7 +41,7 @@ export const useAuthStore = defineStore('auth', {
       clearSession();
       this.user = null;
       this.profile = null;
-      uni.reLaunch({ url: '/pages/login/index' });
+      uni.reLaunch({ url: '/pages/login/index', fail: () => undefined });
     },
   },
 });

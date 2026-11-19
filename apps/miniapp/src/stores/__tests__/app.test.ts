@@ -95,10 +95,8 @@ describe('导航标题/tabBar 同步', () => {
     store.syncChrome('mine');
 
     expect(navTitleCalls).toHaveLength(1);
-    expect(tabItemCalls).toEqual([
-      { index: 0, text: expect.any(String) },
-      { index: 1, text: expect.any(String) },
-    ]);
+    expect(tabItemCalls.map((item) => item.index)).toEqual([0, 1]);
+    expect(tabItemCalls.every((item) => item.text.length > 0)).toBe(true);
   });
 
   it('syncChrome 取当前语言：切换语言后标题随之变化（不锁具体文案值）', () => {

@@ -74,7 +74,7 @@ const pwdRules: FormRules = {
     {
       validator: (_rule, value: string, callback) => {
         if (value !== pwdForm.newPassword) {
-          callback(new Error(t('profile.passwordMismatch')));
+          callback(new Error(t('profile.mismatchNotice')));
         } else {
           callback();
         }
@@ -92,7 +92,7 @@ async function submitPassword(): Promise<void> {
   pwdSubmitting.value = true;
   try {
     await auth.changePassword(pwdForm.oldPassword, pwdForm.newPassword);
-    ElMessage.success(t('profile.passwordChanged'));
+    ElMessage.success(t('profile.changedNotice'));
   } finally {
     pwdSubmitting.value = false;
   }

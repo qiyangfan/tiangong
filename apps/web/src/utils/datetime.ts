@@ -20,3 +20,21 @@ export function formatDate(iso: string | null | undefined): string {
 export function formatCost(ms: number): string {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
+
+/** 字节数 → '512 B' / '1.5 KB' / '230 MB'（三位数以上不留小数）。 */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  // 第 i 轮除以 1024 落在 KB/MB/GB 档：1KB ≤ value < 1GB，故至少除一次
+  let value = bytes;
+  let unit = 'B';
+  for (const u of ['KB', 'MB', 'GB']) {
+    value /= 1024;
+    unit = u;
+    if (value < 1024) {
+      break;
+    }
+  }
+  return `${value.toFixed(value >= 100 ? 0 : 1)} ${unit}`;
+}

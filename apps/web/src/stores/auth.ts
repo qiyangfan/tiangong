@@ -12,7 +12,7 @@ import {
 } from '@/api/auth';
 import { i18n } from '@/locales';
 import { generateRoutes } from '@/router/generator';
-import { router } from '@/router';
+import { useRouterInstance } from '@/router/navigator';
 
 /** 会话与权限上下文：access token 仅驻内存（刷新页经 refresh Cookie 恢复）。 */
 export const useAuthStore = defineStore('auth', {
@@ -63,10 +63,14 @@ export const useAuthStore = defineStore('auth', {
         return false;
       }
       this.restoreAttempted = true;
-      const ok = await this.refreshAccessToken();
-      if (!ok) {
+      if (!(await this.refreshAccessToken())) {
         return false;
       }
+      return this.loadSessionContext();
+    },
+
+    /** token 就绪后并行拉取菜单/权限/资料；任一失败即视为恢复失败并清理会话。 */
+    async loadSessionContext(): Promise<boolean> {
       try {
         const [menus, perms, profile] = await Promise.all([
           apiGetMenus(),
@@ -92,6 +96,7 @@ export const useAuthStore = defineStore('auth', {
       if (this.menus.length === 0) {
         this.menus = await apiGetMenus();
       }
+      const router = useRouterInstance();
       for (const route of generateRoutes(this.menus)) {
         router.addRoute(route);
       }
@@ -104,7 +109,7 @@ export const useAuthStore = defineStore('auth', {
         await apiLogout({ client: 'web' });
       } finally {
         this.reset();
-        await router.push('/login');
+        await useRouterInstance().push('/login');
       }
     },
 
@@ -120,9 +125,11 @@ export const useAuthStore = defineStore('auth', {
       if (hadSession && !this.expiredNotified) {
         this.expiredNotified = true;
         const disabled = code === 'AUTH_ACCOUNT_DISABLED' || code === 'AUTH_UNAUTHENTICATED';
-        ElMessage.warning(i18n.global.t(disabled ? 'error.accountDisabled' : 'layout.sessionExpired'));
+        ElMessage.warning(
+          i18n.global.t(disabled ? 'error.accountDisabled' : 'layout.sessionExpired'),
+        );
       }
-      await router.push('/login');
+      await useRouterInstance().push('/login');
     },
 
     reset(): void {
@@ -148,7 +155,7 @@ export const useAuthStore = defineStore('auth', {
       await apiChangePassword({ oldPassword, newPassword });
       // 改密后服务端全端下线，本地会话一并作废
       this.reset();
-      await router.push('/login');
+      await useRouterInstance().push('/login');
     },
 
     async reloadProfile(): Promise<void> {

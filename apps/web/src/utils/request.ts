@@ -26,7 +26,15 @@ export interface TgError extends Error {
   status?: number;
 }
 
-function tgError(code: string, message: string, requestId?: string, status?: number): TgError {
+/** 错误载荷（错误码、文案、请求 id、HTTP 状态）集中以对象传递，避免长参数表。 */
+interface TgErrorInit {
+  code: string;
+  message: string;
+  requestId?: string;
+  status?: number;
+}
+
+function tgError({ code, message, requestId, status }: TgErrorInit): TgError {
   const err = new Error(message) as TgError;
   err.code = code;
   err.requestId = requestId;
@@ -35,11 +43,12 @@ function tgError(code: string, message: string, requestId?: string, status?: num
 }
 
 function isEnvelope(body: unknown): body is ApiSuccess<unknown> | ApiError {
-  if (typeof body !== 'object' || body === null || !('code' in body)) {
-    return false;
-  }
-  const code = (body as { code: unknown }).code;
-  return typeof code === 'number' || typeof code === 'string';
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'code' in body &&
+    (typeof body.code === 'number' || typeof body.code === 'string')
+  );
 }
 
 /** refresh Cookie 覆盖的路径（401 刷新重放对这些路径没有意义）。 */
@@ -61,10 +70,37 @@ function i18nT(key: string): string {
   return i18n.global.t(key);
 }
 
+/** 错误码命中已知表则用本地文案，否则回落服务端 message。 */
+function apiErrorText(code: string, message: string): string {
+  const key = KNOWN_ERRORS[code];
+  return key ? i18nT(key) : message || i18nT('error.serverError');
+}
+
 function showApiError(err: TgError): void {
-  const key = KNOWN_ERRORS[err.code];
-  const text = key ? i18nT(key) : err.message || i18nT('error.serverError');
-  ElMessage.error(text);
+  ElMessage.error(apiErrorText(err.code, err.message));
+}
+
+/**
+ * 信封判别：业务码取值来自契约 ERROR_CODES（code 恒为字符串），故按错误侧结构收窄。
+ * 仅本文件内的解包使用，不外泄为通用类型守卫。
+ */
+function asApiError(body: ApiSuccess<unknown> | ApiError): ApiError {
+  return body as ApiError;
+}
+
+/** 失败 envelope → 统一 TgError（成功 envelope 不带 message/requestId）。 */
+function fromFailure(response: AxiosResponse, body: ApiError): TgError {
+  return tgError({
+    code: body.code,
+    message: body.message,
+    requestId: body.requestId,
+    status: response.status,
+  });
+}
+
+/** 受保护路径的 HTTP 401：会话级事件（过期/无效/被停用统一按状态码判定）。 */
+function isSessionDead(config: TgRequestConfig | undefined, status: number | undefined): boolean {
+  return status === 401 && !!config && !isAuthPath(config.url);
 }
 
 const service: AxiosInstance = axios.create({
@@ -83,53 +119,81 @@ service.interceptors.request.use((config) => {
 // 401 单飞刷新：并发请求共享同一次 refresh，成功后各自重放一次（RuoYi 防抖语义）
 let refreshing: Promise<boolean> | null = null;
 
-service.interceptors.response.use(
-  (response) => {
-    // envelope 解包：{code:0,data} → data；非 envelope 响应透传
-    const body: unknown = response.data;
-    if (isEnvelope(body)) {
-      if (body.code === SUCCESS_CODE) {
-        response.data = (body as ApiSuccess<unknown>).data;
-        return response;
-      }
-      const e = body as ApiError;
-      throw tgError(e.code, e.message, e.requestId, response.status);
-    }
+/** 合并并发 401 到同一次 tokenBus.refresh()。 */
+function shareRefresh(): Promise<boolean> {
+  refreshing ??= tokenBus.refresh().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+/** 响应拦截成功侧：envelope 解包 {code:0,data} → data；非 envelope 响应透传。 */
+function unwrapEnvelope(response: AxiosResponse): AxiosResponse {
+  const body: unknown = response.data;
+  if (!isEnvelope(body)) {
     return response;
-  },
-  async (error: AxiosError) => {
-    const config = error.config as TgRequestConfig | undefined;
-    const status = error.response?.status;
-    const body = error.response?.data as ApiError | undefined;
-    const code = body && typeof body.code === 'string' ? body.code : `HTTP_${status ?? 0}`;
-    const message = body?.message ?? error.message;
-    // 受保护路径的 HTTP 401 是会话级事件（过期/无效/被停用统一按状态码判定）；
-    // auth 路径（登录/刷新/登出）的 401 是操作本身的预期结果，不得触发全局会话清理
-    const sessionDead = status === 401 && !!config && !isAuthPath(config.url);
+  }
+  if (body.code !== SUCCESS_CODE) {
+    throw fromFailure(response, asApiError(body));
+  }
+  response.data = body.data;
+  return response;
+}
 
-    if (sessionDead && !config.__retried) {
-      refreshing ??= tokenBus.refresh().finally(() => {
-        refreshing = null;
-      });
-      const ok = await refreshing;
-      if (ok) {
-        config.__retried = true;
-        return service.request(config);
-      }
-    }
-    const err = tgError(code, message, body?.requestId, status);
-    if (sessionDead) {
-      // 终局 401（刷新失败或重放仍被拒）：会话不可用，清理并引导重登；
-      // 终局码随事件上交供会话方区分提示（停用/过期），此处不再叠加错误提示
-      tokenBus.onSessionExpired(err.code);
-    }
+/** 错误载荷里的契约错误码：优先取 envelope 的字符串码，缺失则回落 HTTP_<status>。 */
+function errorCodeOf(body: ApiError | undefined, status: number | undefined): string {
+  return body && typeof body.code === 'string' ? body.code : `HTTP_${status ?? 0}`;
+}
 
-    if (!config?.silent && !sessionDead) {
-      showApiError(err);
-    }
-    throw err;
-  },
-);
+/** 终局 401 与可提示失败的分流：会话清理不再叠加错误提示。 */
+function settleTerminal(
+  err: TgError,
+  config: TgRequestConfig | undefined,
+  sessionDead: boolean,
+): void {
+  if (sessionDead) {
+    // 终局 401（刷新失败或重放仍被拒）：会话不可用，清理并引导重登；
+    // 终局码随事件上交供会话方区分提示（停用/过期），此处不再叠加错误提示
+    tokenBus.onSessionExpired(err.code);
+    return;
+  }
+  if (!config?.silent) {
+    showApiError(err);
+  }
+}
+
+/** 会话级 401 且尚未重放过时，刷新成功后带重放标记重新发起原请求；不可重放返回 null。 */
+async function replayAfterRefresh(config: TgRequestConfig): Promise<AxiosResponse | null> {
+  if (config.__retried || !(await shareRefresh())) {
+    return null;
+  }
+  // __retried 只在本层标记重放，避免刷新成功后再次进入刷新分支
+  config.__retried = true;
+  return service.request(config);
+}
+
+/** 响应拦截失败侧：刷新后重放一次；终局 401 交会话方清理，其余弹统一提示。 */
+async function handleResponseError(error: AxiosError): Promise<AxiosResponse> {
+  const config = error.config as TgRequestConfig | undefined;
+  const status = error.response?.status;
+  const body = error.response?.data as ApiError | undefined;
+  const sessionDead = isSessionDead(config, status);
+
+  const replay = config && sessionDead ? await replayAfterRefresh(config) : null;
+  if (replay) {
+    return replay;
+  }
+  const err = tgError({
+    code: errorCodeOf(body, status),
+    message: body?.message ?? error.message,
+    requestId: body?.requestId,
+    status,
+  });
+  settleTerminal(err, config, sessionDead);
+  throw err;
+}
+
+service.interceptors.response.use(unwrapEnvelope, handleResponseError);
 
 /**
  * 契约化请求层：泛型 T 是 envelope 解包后的 data。

@@ -17,11 +17,11 @@
 
 ## 测试影响与分层原则
 
-| 层 | 职责 | 本次内容 |
-| --- | --- | --- |
-| web 单元（vitest，node 环境） | 纯逻辑契约 | `global-error.ts`：errorHandler / unhandledrejection / error 三入口统一走 report，节流窗口内只弹一条提示（fake timers） |
-| miniapp 单元（vitest + uni 桩） | 纯逻辑契约 | `request.test.ts` 增 requestId 透传断言；复用在途变更的 uni 桩模式 |
-| 手动走查 | 组件树/平台运行时 | 浏览器 console 触发未捕获异常验证提示；微信开发者工具验证 onError 生效 |
+| 层                              | 职责              | 本次内容                                                                                                                |
+| ------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| web 单元（vitest，node 环境）   | 纯逻辑契约        | `global-error.ts`：errorHandler / unhandledrejection / error 三入口统一走 report，节流窗口内只弹一条提示（fake timers） |
+| miniapp 单元（vitest + uni 桩） | 纯逻辑契约        | `request.test.ts` 增 requestId 透传断言；复用在途变更的 uni 桩模式                                                      |
+| 手动走查                        | 组件树/平台运行时 | 浏览器 console 触发未捕获异常验证提示；微信开发者工具验证 onError 生效                                                  |
 
 - 不 mount 组件测 errorHandler（web 单测无 DOM 依赖的既定纪律）；`reportError` 设计为可独立
   断言的纯函数（入参 err + source，行为 = console.error + 节流 toast）。
@@ -30,9 +30,9 @@
 ## 关键设计
 
 1. **单点收口**：两端各一个 `reportError(err, source)`：`console.error` 原始异常（保留堆栈）
-   + 节流弹一次用户提示（web `ElMessage.error(i18n error.unexpected)`；miniapp
-   `uni.showToast`，文案常量，变更 `align-miniapp-ui` 落地文案单源时收编进 locales）。
-   节流窗口 3s，窗口内丢弃后续提示但全量 console——不吞堆栈、不刷屏。
+   - 节流弹一次用户提示（web `ElMessage.error(i18n error.unexpected)`；miniapp
+     `uni.showToast`，文案常量，变更 `align-miniapp-ui` 落地文案单源时收编进 locales）。
+     节流窗口 3s，窗口内丢弃后续提示但全量 console——不吞堆栈、不刷屏。
 2. **web 三入口**：`app.config.errorHandler`（Vue 渲染/生命周期/侦听器异常）、window
    `unhandledrejection`（Vue 之外的 Promise 拒绝，含守卫 abort）、window `error`（仅
    `ErrorEvent`，资源加载失败不报）、`router.onError`（导航链路异常）。

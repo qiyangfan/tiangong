@@ -26,6 +26,6 @@ export class EnvelopeInterceptor implements NestInterceptor {
     if (passthrough) {
       return next.handle();
     }
-    return next.handle().pipe(map((data) => ({ code: SUCCESS_CODE, data: data ?? null })));
+    return next.handle().pipe(map((data: unknown) => ({ code: SUCCESS_CODE, data: data ?? null })));
   }
 }

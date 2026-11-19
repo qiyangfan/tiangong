@@ -2,8 +2,12 @@
   <wd-config-provider :theme-vars="wotThemeVars">
     <view class="min-h-screen bg-page p-3 flex flex-col gap-3">
       <view class="rounded-card bg-surface py-5 px-4 flex flex-col gap-2">
-        <text class="text-title font-bold text-ink">{{ authStore.profile?.nickname ?? authStore.user?.nickname ?? '-' }}</text>
-        <text class="text-caption text-ink-3">{{ authStore.profile?.username ?? authStore.user?.username ?? '' }}</text>
+        <text class="text-title font-bold text-ink">{{
+          authStore.profile?.nickname ?? authStore.user?.nickname ?? '-'
+        }}</text>
+        <text class="text-caption text-ink-3">{{
+          authStore.profile?.username ?? authStore.user?.username ?? ''
+        }}</text>
       </view>
       <wd-cell-group border custom-class="rounded-card overflow-hidden">
         <wd-cell :title="t('mine.language')" clickable @click="onToggleLocale">
@@ -16,7 +20,9 @@
         />
         <wd-cell
           :title="t('mine.lastLoginAt')"
-          :value="authStore.profile?.lastLoginAt ? formatDateTime(authStore.profile.lastLoginAt) : '-'"
+          :value="
+            authStore.profile?.lastLoginAt ? formatDateTime(authStore.profile.lastLoginAt) : '-'
+          "
         />
       </wd-cell-group>
       <wd-button

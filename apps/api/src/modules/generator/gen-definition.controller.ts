@@ -25,16 +25,18 @@ export class GenDefinitionController {
   @Get()
   @RequirePermissions('gen:list')
   @ApiOperation({ summary: '生成定义列表（全量，定义数量少不分页）' })
-  async list(@Query(new ZodValidationPipe(genDefinitionListQuerySchema)) query: GenDefinitionListQuery) {
+  async list(
+    @Query(new ZodValidationPipe(genDefinitionListQuerySchema)) query: GenDefinitionListQuery,
+  ) {
     return this.gen.list(query);
   }
 
   @Post('preview')
   @RequirePermissions('gen:preview')
   @ApiOperation({ summary: '草稿预览（不落库）' })
-  async previewDraft(
+  previewDraft(
     @Body(new ZodValidationPipe(genDefinitionRequestSchema)) body: GenDefinitionRequest,
-  ): Promise<Array<{ path: string; content: string }>> {
+  ): Array<{ path: string; content: string }> {
     return this.gen.previewDraft(body);
   }
 

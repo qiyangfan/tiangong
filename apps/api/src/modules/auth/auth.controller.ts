@@ -32,6 +32,15 @@ const refreshCookieOptions = {
   path: '/api/v1/auth',
 };
 
+/** Web 端 refresh 只走 HttpOnly Cookie，响应体不携带 refreshToken。 */
+function withoutRefreshToken<T extends { refreshToken?: string }>(
+  value: T,
+): Omit<T, 'refreshToken'> {
+  const copy: T = { ...value };
+  delete copy.refreshToken;
+  return copy;
+}
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -57,8 +66,7 @@ export class AuthController {
         ...refreshCookieOptions,
         maxAge: 7 * 24 * 3600 * 1000,
       });
-      const { refreshToken: _omit, ...data } = result;
-      return data;
+      return withoutRefreshToken(result);
     }
     return result;
   }
@@ -86,8 +94,7 @@ export class AuthController {
         ...refreshCookieOptions,
         maxAge: 7 * 24 * 3600 * 1000,
       });
-      const { refreshToken: _omit, ...data } = result;
-      return data;
+      return withoutRefreshToken(result);
     }
     return result;
   }
@@ -115,7 +122,7 @@ export class AuthController {
   @Get('permissions')
   @ApiBearerAuth()
   @ApiOperation({ summary: '当前用户权限串集合（会话恢复后重建权限上下文）' })
-  async myPermissions(@CurrentUser() user: AuthenticatedUser): Promise<UserPermissions> {
+  myPermissions(@CurrentUser() user: AuthenticatedUser): UserPermissions {
     return { permissions: user.permissions };
   }
 

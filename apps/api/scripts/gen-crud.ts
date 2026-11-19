@@ -9,7 +9,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { GenFieldDef } from '@tiangong/contracts';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, type GenDefinition } from '@prisma/client';
 import { renderGenFiles } from '../src/modules/generator/render';
 import { GenOverwriteError, writeGeneratedFiles } from '../src/modules/generator/render/writer';
 
@@ -29,46 +29,71 @@ function findRepoRoot(): string {
   process.exit(1);
 }
 
-async function main(): Promise<void> {
+function parseName(): string {
   const name = process.argv[2];
   if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) {
     console.error('usage: pnpm gen:crud <module-name>  (module name must be kebab-case)');
     process.exit(1);
   }
+  return name;
+}
 
-  const prisma = new PrismaClient();
-  try {
-    const def = await prisma.genDefinition.findUnique({ where: { name } });
-    if (!def) {
-      console.error(`[gen:crud] definition "${name}" not found (manage via Web 开发工具 → 代码生成)`);
-      process.exit(1);
-    }
-    const files = renderGenFiles({
-      name: def.name,
-      displayName: def.displayName,
-      fields: def.fields as GenFieldDef[],
-    });
+async function loadDefinition(prisma: PrismaClient, name: string): Promise<GenDefinition> {
+  const def = await prisma.genDefinition.findUnique({ where: { name } });
+  if (!def) {
+    console.error(`[gen:crud] definition "${name}" not found (manage via Web 开发工具 → 代码生成)`);
+    process.exit(1);
+  }
+  return def;
+}
 
-    const written = await writeGeneratedFiles(findRepoRoot(), files);
-    console.log(`[gen:crud] ${def.displayName} (${def.name}) generated ${written.length} files:`);
-    for (const rel of written) {
-      console.log(`  + ${rel}`);
-    }
-    console.log(`
+function printSummary(def: GenDefinition, written: string[]): void {
+  console.log(`[gen:crud] ${def.displayName} (${def.name}) generated ${written.length} files:`);
+  for (const rel of written) {
+    console.log(`  + ${rel}`);
+  }
+}
+
+function printNextSteps(def: GenDefinition): void {
+  const moduleName = def.name.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase());
+  console.log(`
 [gen:crud] 生成完成。剩余集成步骤（涉及人工改动密集区，不自动改）：
   1. Prisma model：把 apps/api/prisma/gen/${def.name}.model.prisma 合并进 prisma/schema.prisma，
      然后 pnpm --filter @tiangong/api prisma:migrate
-  2. 注册模块：app.module.ts imports 加 ${def.name.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase())}Module
+  2. 注册模块：app.module.ts imports 加 ${moduleName}Module
   3. contracts 导出：packages/contracts/src/index.ts 加 export * from './${def.name}.js'
   4. 权限点/菜单：Web 权限管理新建 ${def.name}:list/detail/create/update/delete，菜单管理挂页面
      路由段 ${def.name}（component：${def.name}/index），角色授权
   5. 如字段有枚举/字典诉求：在字典管理建字典类型（生成页用内联选项亦可）`);
+}
+
+async function run(prisma: PrismaClient, name: string): Promise<void> {
+  const def = await loadDefinition(prisma, name);
+  const files = renderGenFiles({
+    name: def.name,
+    displayName: def.displayName,
+    fields: def.fields as GenFieldDef[],
+  });
+  const written = await writeGeneratedFiles(findRepoRoot(), files);
+  printSummary(def, written);
+  printNextSteps(def);
+}
+
+function rethrowUnlessOverwrite(err: unknown): never {
+  if (err instanceof GenOverwriteError) {
+    console.error(`[gen:crud] 拒绝落盘：${err.message}`);
+    process.exit(1);
+  }
+  throw err;
+}
+
+async function main(): Promise<void> {
+  const name = parseName();
+  const prisma = new PrismaClient();
+  try {
+    await run(prisma, name);
   } catch (err) {
-    if (err instanceof GenOverwriteError) {
-      console.error(`[gen:crud] 拒绝落盘：${err.message}`);
-      process.exit(1);
-    }
-    throw err;
+    rethrowUnlessOverwrite(err);
   } finally {
     await prisma.$disconnect();
   }

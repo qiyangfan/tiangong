@@ -8,7 +8,7 @@ export const clientSchema = z.enum(['web', 'miniapp']);
 export type Client = z.infer<typeof clientSchema>;
 
 /** ISO 8601 UTC 时间串（如 2026-11-07T08:00:00.000Z）。 */
-export const isoDateTimeSchema = z.string().datetime({ message: 'must be ISO 8601 UTC datetime' });
+export const isoDateTimeSchema = z.iso.datetime({ message: 'must be ISO 8601 UTC datetime' });
 export type IsoDateTime = z.infer<typeof isoDateTimeSchema>;
 
 /** 分页查询：page>=1，pageSize 1..100，默认 20（API_CONTRACT 契约）。 */
@@ -54,16 +54,15 @@ export const keywordSchema = z.string().trim().max(100).optional();
  * query string 语义解析：'true'/'false' 字符串正确映射，其余值视为未提供；
  * 不能用 z.coerce.boolean()——Boolean('false') === true 会让「停用」筛选永远失效。
  */
-export const enabledFilterSchema = z
-  .preprocess((v) => {
-    if (v === true || v === 'true') {
-      return true;
-    }
-    if (v === false || v === 'false') {
-      return false;
-    }
-    return undefined;
-  }, z.boolean().optional());
+export const enabledFilterSchema = z.preprocess((v) => {
+  if (v === true || v === 'true') {
+    return true;
+  }
+  if (v === false || v === 'false') {
+    return false;
+  }
+  return undefined;
+}, z.boolean().optional());
 
 /** 排序方向。 */
 export const sortDirectionSchema = z.enum(['asc', 'desc']);

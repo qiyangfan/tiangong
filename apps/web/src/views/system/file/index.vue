@@ -9,7 +9,8 @@ import RightToolbar from '@/components/RightToolbar.vue';
 import SearchForm from '@/components/SearchForm.vue';
 import Pagination from '@/components/Pagination.vue';
 import { confirmDelete } from '@/utils/confirm';
-import { formatDateTime } from '@/utils/datetime';
+import { formatDateTime, formatFileSize } from '@/utils/datetime';
+import { shouldStepBack } from '@/utils/paging';
 
 const { t } = useI18n();
 
@@ -48,23 +49,6 @@ function onReset(): void {
   onSearch();
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  const units = ['KB', 'MB', 'GB'];
-  let value = bytes;
-  let unit = 'B';
-  for (const u of units) {
-    if (value < 1024) {
-      break;
-    }
-    value /= 1024;
-    unit = u;
-  }
-  return `${value.toFixed(value >= 100 ? 0 : 1)} ${unit}`;
-}
-
 const uploading = ref(false);
 
 /** el-upload 自定义上传：走统一 request 层（带 token 与 envelope 解包）。 */
@@ -91,7 +75,7 @@ async function onDelete(row: FileItem): Promise<void> {
   }
   await apiDeleteFile(row.id);
   ElMessage.success(t('common.opSuccess'));
-  if (rows.value.length === 1 && query.page > 1) {
+  if (shouldStepBack(query.page, rows.value.length)) {
     query.page -= 1;
   }
   await getList();
@@ -128,11 +112,7 @@ onMounted(() => {
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">
         <div class="tg-toolbar__actions">
-          <el-upload
-            v-permission="'files:upload'"
-            :show-file-list="false"
-            :http-request="doUpload"
-          >
+          <el-upload v-permission="'files:upload'" :show-file-list="false" :http-request="doUpload">
             <el-button type="primary" :icon="Plus" :loading="uploading">
               {{ t('file.upload') }}
             </el-button>
@@ -143,11 +123,7 @@ onMounted(() => {
 
       <el-table v-loading="loading" :data="rows" row-key="id">
         <el-table-column label="ID" prop="id" width="80" />
-        <el-table-column
-          :label="t('file.originalName')"
-          min-width="200"
-          show-overflow-tooltip
-        >
+        <el-table-column :label="t('file.originalName')" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">{{ row.originalName }}</template>
         </el-table-column>
         <el-table-column :label="t('file.suffix')" prop="suffix" width="100" align="center">
@@ -157,7 +133,7 @@ onMounted(() => {
           </template>
         </el-table-column>
         <el-table-column :label="t('file.size')" width="110" align="right">
-          <template #default="{ row }">{{ formatSize(row.sizeBytes) }}</template>
+          <template #default="{ row }">{{ formatFileSize(row.sizeBytes) }}</template>
         </el-table-column>
         <el-table-column :label="t('common.createdAt')" min-width="160">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
@@ -167,13 +143,9 @@ onMounted(() => {
             <el-button link type="primary" @click="onDownload(row)">
               {{ t('file.download') }}
             </el-button>
-            <el-button
-              v-permission="'files:delete'"
-              link
-              type="danger"
-              @click="onDelete(row)"
-              >{{ t('common.delete') }}</el-button
-            >
+            <el-button v-permission="'files:delete'" link type="danger" @click="onDelete(row)">{{
+              t('common.delete')
+            }}</el-button>
           </template>
         </el-table-column>
         <template #empty>
@@ -181,7 +153,12 @@ onMounted(() => {
         </template>
       </el-table>
 
-      <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="getList" />
+      <Pagination
+        v-model:page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        @change="getList"
+      />
     </el-card>
   </div>
 </template>

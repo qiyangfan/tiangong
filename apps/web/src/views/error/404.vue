@@ -8,11 +8,7 @@ const router = useRouter();
 
 <template>
   <div class="tg-404">
-    <el-result
-      icon="info"
-      :title="t('error.notFoundTitle')"
-      :sub-title="t('error.notFoundDesc')"
-    >
+    <el-result icon="info" :title="t('error.notFoundTitle')" :sub-title="t('error.notFoundDesc')">
       <template #extra>
         <el-button type="primary" @click="router.push('/')">{{ t('error.backHome') }}</el-button>
       </template>

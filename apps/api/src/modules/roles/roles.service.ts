@@ -12,6 +12,12 @@ import { AppError } from '../../common/app-error';
 import { pageBounds, pageResult } from '../../common/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
 
+function withoutPermissionIds(body: UpdateRoleRequest): Omit<UpdateRoleRequest, 'permissionIds'> {
+  const copy: UpdateRoleRequest = { ...body };
+  delete copy.permissionIds;
+  return copy;
+}
+
 /** 角色管理：RBAC 角色 CRUD 与权限点绑定；内置角色保护。 */
 @Injectable()
 export class RolesService {
@@ -72,15 +78,8 @@ export class RolesService {
     if (!existing) {
       throw new AppError('ROLE_NOT_FOUND');
     }
-    if (existing.builtin && body.roleKey !== undefined && body.roleKey !== existing.roleKey) {
-      throw new AppError('ROLE_BUILTIN_UNASSIGNABLE', 'built-in role key is immutable');
-    }
-    if (body.roleKey && body.roleKey !== existing.roleKey) {
-      const taken = await this.prisma.role.findUnique({ where: { roleKey: body.roleKey } });
-      if (taken) {
-        throw new AppError('ROLE_KEY_TAKEN');
-      }
-    }
+    this.assertKeyMutable(existing, body);
+    await this.assertRoleKeyFree(existing, body);
     if (body.permissionIds) {
       await this.assertPermissionsExist(body.permissionIds);
     }
@@ -91,10 +90,34 @@ export class RolesService {
           data: body.permissionIds.map((permissionId) => ({ roleId: id, permissionId })),
         });
       }
-      const { permissionIds: _omit, ...data } = body;
-      return tx.role.update({ where: { id }, data: { ...data, updatedBy: userId } });
+      return tx.role.update({
+        where: { id },
+        data: { ...withoutPermissionIds(body), updatedBy: userId },
+      });
     });
     return toItem(updated);
+  }
+
+  private assertKeyMutable(
+    existing: { builtin: boolean; roleKey: string },
+    body: UpdateRoleRequest,
+  ): void {
+    if (existing.builtin && body.roleKey !== undefined && body.roleKey !== existing.roleKey) {
+      throw new AppError('ROLE_BUILTIN_UNASSIGNABLE', 'built-in role key is immutable');
+    }
+  }
+
+  private async assertRoleKeyFree(
+    existing: { roleKey: string },
+    body: UpdateRoleRequest,
+  ): Promise<void> {
+    if (!body.roleKey || body.roleKey === existing.roleKey) {
+      return;
+    }
+    const taken = await this.prisma.role.findUnique({ where: { roleKey: body.roleKey } });
+    if (taken) {
+      throw new AppError('ROLE_KEY_TAKEN');
+    }
   }
 
   async remove(id: number): Promise<void> {

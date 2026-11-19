@@ -34,9 +34,8 @@ export function setupGlobalErrorHandlers(app: App): void {
     reportError(event.reason, 'unhandledrejection');
   });
   window.addEventListener('error', (event) => {
-    const errEvent = event as ErrorEvent;
-    if (typeof errEvent.message === 'string' && errEvent.message !== '') {
-      reportError(errEvent.error ?? errEvent.message, 'window.error');
+    if (typeof event.message === 'string' && event.message !== '') {
+      reportError(event.error ?? event.message, 'window.error');
     }
   });
 }

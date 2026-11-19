@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-19
+goal: 落地跨仓质量门禁 P0-2：ESLint 结构类规则（复杂度/嵌套/行长/循环依赖/类型逃逸）+ Prettier 格式门禁，清零存量违规，不改产品行为
+skip_specs: true

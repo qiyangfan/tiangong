@@ -70,7 +70,7 @@ export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
 /** 更新个人资料。 */
 export const updateProfileRequestSchema = z.object({
   nickname: z.string().min(1).max(30).optional(),
-  email: z.string().email().max(100).optional(),
+  email: z.email().max(100).optional(),
 });
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
 

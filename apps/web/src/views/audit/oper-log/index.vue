@@ -86,12 +86,7 @@ onMounted(() => {
           style="width: 140px"
           :placeholder="t('common.all')"
         >
-          <el-option
-            v-for="o in sys_oper_type"
-            :key="o.value"
-            :label="o.label"
-            :value="o.value"
-          />
+          <el-option v-for="o in sys_oper_type" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
       <el-form-item :label="t('operLog.status')">

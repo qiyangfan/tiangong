@@ -32,7 +32,13 @@
       <view v-if="hasMore" class="mt-3 text-center text-primary text-body" @click="loadMore">
         {{ t('sample.loadMore') }}
       </view>
-      <wd-button block size="large" :round="false" custom-class="mt-4 rounded-control" @click="openCreate">
+      <wd-button
+        block
+        size="large"
+        :round="false"
+        custom-class="mt-4 rounded-control"
+        @click="openCreate"
+      >
         {{ t('sample.create') }}
       </wd-button>
 
@@ -61,14 +67,32 @@
             <wd-switch v-model="form.enabled" />
           </view>
           <view class="flex items-center gap-2">
-            <wd-button v-if="editingId !== null" plain type="error" :round="false" custom-class="rounded-control" @click="onDelete">
+            <wd-button
+              v-if="editingId !== null"
+              plain
+              type="error"
+              :round="false"
+              custom-class="rounded-control"
+              @click="onDelete"
+            >
               {{ t('common.delete') }}
             </wd-button>
             <view class="flex-1" />
-            <wd-button plain type="info" :round="false" custom-class="rounded-control" @click="dialogVisible = false">
+            <wd-button
+              plain
+              type="info"
+              :round="false"
+              custom-class="rounded-control"
+              @click="dialogVisible = false"
+            >
               {{ t('common.cancel') }}
             </wd-button>
-            <wd-button :loading="submitting" :round="false" custom-class="rounded-control" @click="onSubmit">
+            <wd-button
+              :loading="submitting"
+              :round="false"
+              custom-class="rounded-control"
+              @click="onSubmit"
+            >
               {{ t('common.save') }}
             </wd-button>
           </view>
@@ -153,34 +177,46 @@ function formatAmount(raw: string): string | undefined {
   return value.toFixed(2);
 }
 
+/** 按编辑态分流创建/更新；amount 已由 formatAmount 规范化。 */
+function persist(name: string, amount: string | undefined, enabled: boolean): Promise<unknown> {
+  if (editingId.value === null) {
+    return apiCreateSample({ name, amount, enabled });
+  }
+  return apiUpdateSample(editingId.value, { name, amount, enabled });
+}
+
+/** 名称必填校验：返回 trim 后的名称，非法时提示并返回 null。 */
+function validateName(): string | null {
+  const name = form.value.name.trim();
+  if (name === '') {
+    uni.showToast({ title: t('sample.nameRequired'), icon: 'none' });
+    return null;
+  }
+  return name;
+}
+
+/** 提交成功路径：落库、关闭弹窗、提示并刷新首屏。 */
+async function saveForm(name: string): Promise<void> {
+  const amount = formatAmount(form.value.amountText.trim());
+  await persist(name, amount, form.value.enabled);
+  dialogVisible.value = false;
+  uni.showToast({ title: t('common.opSuccess'), icon: 'success' });
+  await loadFirst();
+}
+
 async function onSubmit(): Promise<void> {
   if (submitting.value) {
     return;
   }
-  if (form.value.name.trim() === '') {
-    uni.showToast({ title: t('sample.nameRequired'), icon: 'none' });
+  const name = validateName();
+  if (name === null) {
     return;
   }
   submitting.value = true;
   try {
-    const amount = formatAmount(form.value.amountText.trim());
-    if (editingId.value === null) {
-      await apiCreateSample({ name: form.value.name.trim(), amount, enabled: form.value.enabled });
-    } else {
-      await apiUpdateSample(editingId.value, {
-        name: form.value.name.trim(),
-        amount,
-        enabled: form.value.enabled,
-      });
-    }
-    dialogVisible.value = false;
-    uni.showToast({ title: t('common.opSuccess'), icon: 'success' });
-    await loadFirst();
-  } catch (err) {
-    if (!(err instanceof Error && err.message === 'invalid amount')) {
-      // 请求类错误的提示由 request 层统一 toast，此处仅吞本地校验错误
-    }
+    await saveForm(name);
   } finally {
+    // 失败（本地校验抛错 / 请求类错误）的提示分别由 formatAmount 与 request 层负责，此处只复位提交态
     submitting.value = false;
   }
 }

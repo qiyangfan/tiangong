@@ -20,6 +20,13 @@
     "lib": ["esnext", "dom"],
     "types": ["@dcloudio/types", "vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "uno.config.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["src/uni_modules"]
 }

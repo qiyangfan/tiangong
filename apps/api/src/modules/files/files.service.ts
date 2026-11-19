@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import {
@@ -9,28 +8,13 @@ import {
   type UploadResponse,
 } from '@tiangong/contracts';
 import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../../common/app-error';
 import { pageBounds, pageResult } from '../../common/pagination';
 import type { StorageService } from '../../common/storage/storage.service';
 import { STORAGE_SERVICE } from '../../common/storage/storage.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { SettingsService } from '../settings/settings.service';
-
-const EXT_MIME: Record<string, string[]> = {
-  jpg: ['image/jpeg'],
-  jpeg: ['image/jpeg'],
-  png: ['image/png'],
-  gif: ['image/gif'],
-  pdf: ['application/pdf'],
-  doc: ['application/msword'],
-  docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-  xls: ['application/vnd.ms-excel'],
-  xlsx: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-  zip: ['application/zip', 'application/x-zip-compressed'],
-  txt: ['text/plain'],
-};
+import { FilePolicyService } from './file-policy.service';
 
 const FILE_OBJECT_SELECT = {
   id: true,
@@ -46,66 +30,63 @@ const FILE_OBJECT_SELECT = {
 
 type FileObjectRow = Prisma.FileObjectGetPayload<{ select: typeof FILE_OBJECT_SELECT }>;
 
+function requireUpload(file: Express.Multer.File | undefined): Express.Multer.File {
+  if (!file || file.size === 0) {
+    throw new AppError('VALIDATION_ERROR', 'file is required');
+  }
+  return file;
+}
+
+/** originalName 只做展示与还原名：取 basename，杜绝任何路径分量进存储路径。 */
+function normalizeOriginalName(originalName: string | undefined): string {
+  // busboy 对 quoted filename 按 latin1 解码，此处修复 UTF-8 文件名的 mojibake
+  // （浏览器经 filename* 已正确解码，纯 ASCII 名称 round-trip 不变）
+  const raw = path.basename(originalName ?? '').trim();
+  const name =
+    /[^\x20-\x7e]/.test(raw) && !Buffer.from(raw, 'latin1').toString('utf8').includes('\uFFFD')
+      ? Buffer.from(raw, 'latin1').toString('utf8').normalize('NFC')
+      : raw;
+  if (name.length === 0 || name.length > 255) {
+    throw new AppError('VALIDATION_ERROR', 'original file name is required');
+  }
+  return name;
+}
+
+function buildStorageKey(suffix: string): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const partition = `${now.getFullYear()}/${month}/${day}`;
+  const ext = suffix ? `.${suffix}` : '';
+  return `${partition}/${randomBytes(16).toString('hex')}${ext}`;
+}
+
+function toUploadResponse(row: FileObjectRow): UploadResponse {
+  return {
+    id: row.id,
+    url: `/api/v1/files/${row.id}/download`,
+    originalName: row.originalName,
+    suffix: row.suffix,
+    sizeBytes: row.sizeBytes,
+  };
+}
+
 /** 通用附件：策略校验（大小/扩展名/类型一致性）→ 随机 key 落盘 → 元数据入库。 */
 @Injectable()
 export class FilesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly settings: SettingsService,
-    private readonly config: ConfigService,
+    private readonly policy: FilePolicyService,
     @Inject(STORAGE_SERVICE) private readonly storage: StorageService,
   ) {}
 
   async upload(file: Express.Multer.File | undefined, userId: number): Promise<UploadResponse> {
-    if (!file || file.size === 0) {
-      throw new AppError('VALIDATION_ERROR', 'file is required');
-    }
-    // originalName 只做展示与还原名：取 basename，杜绝任何路径分量进存储路径；
-    // busboy 对 quoted filename 按 latin1 解码，此处修复 UTF-8 文件名的 mojibake
-    // （浏览器经 filename* 已正确解码，纯 ASCII 名称 round-trip 不变）
-    const raw = path.basename(file.originalname ?? '').trim();
-    const originalName =
-      /[^\x20-\x7e]/.test(raw) && !Buffer.from(raw, 'latin1').toString('utf8').includes('\uFFFD')
-        ? Buffer.from(raw, 'latin1').toString('utf8').normalize('NFC')
-        : raw;
-    if (originalName.length === 0 || originalName.length > 255) {
-      throw new AppError('VALIDATION_ERROR', 'original file name is required');
-    }
-    const suffix = path.extname(originalName).slice(1).toLowerCase();
-    const allowed = await this.allowedExtensions();
-    if (!allowed.has(suffix)) {
-      throw new AppError('FILE_TYPE_REJECTED');
-    }
-    this.assertMimeConsistent(suffix, file.mimetype);
-    const maxBytes = await this.maxBytes();
-    if (file.size > maxBytes) {
-      throw new AppError('FILE_TOO_LARGE');
-    }
-
-    const now = new Date();
-    const partition = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-    const storageKey = `${partition}/${randomBytes(16).toString('hex')}${suffix ? `.${suffix}` : ''}`;
-    await this.storage.save(storageKey, file.buffer);
-
-    const row = await this.prisma.fileObject.create({
-      data: {
-        storageKey,
-        originalName,
-        suffix,
-        mimeType: file.mimetype || '',
-        sizeBytes: file.size,
-        checksumSha256: createHash('sha256').update(file.buffer).digest('hex'),
-        createdBy: userId,
-      },
-      select: FILE_OBJECT_SELECT,
-    });
-    return {
-      id: row.id,
-      url: `/api/v1/files/${row.id}/download`,
-      originalName: row.originalName,
-      suffix: row.suffix,
-      sizeBytes: row.sizeBytes,
-    };
+    const checked = requireUpload(file);
+    const target = await this.validateUpload(checked);
+    const storageKey = buildStorageKey(target.suffix);
+    await this.storage.save(storageKey, checked.buffer);
+    const row = await this.insertRow({ target, storageKey, file: checked, userId });
+    return toUploadResponse(row);
   }
 
   async list(query: FileListQuery): Promise<PageResult<FileItem>> {
@@ -141,39 +122,42 @@ export class FilesService {
     await this.storage.remove(row.storageKey);
   }
 
-  /** 生效上限 = min(系统参数 sys.file.maxSizeMb, 环境硬顶 MAX_UPLOAD_MB)。 */
-  private async maxBytes(): Promise<number> {
-    const hardCapMb = this.config.get<number>('MAX_UPLOAD_MB') ?? 20;
-    const configured = await this.settings.getValue('sys.file.maxSizeMb');
-    const configuredMb = configured !== null && Number.isInteger(Number(configured)) && Number(configured) > 0
-      ? Number(configured)
-      : hardCapMb;
-    return Math.min(configuredMb, hardCapMb) * 1024 * 1024;
+  private async validateUpload(
+    file: Express.Multer.File,
+  ): Promise<{ originalName: string; suffix: string }> {
+    const originalName = normalizeOriginalName(file.originalname);
+    const suffix = path.extname(originalName).slice(1).toLowerCase();
+    const allowed = await this.policy.allowedExtensions();
+    if (!allowed.has(suffix)) {
+      throw new AppError('FILE_TYPE_REJECTED');
+    }
+    this.policy.assertMimeConsistent(suffix, file.mimetype);
+    const maxBytes = await this.policy.maxBytes();
+    if (file.size > maxBytes) {
+      throw new AppError('FILE_TOO_LARGE');
+    }
+    return { originalName, suffix };
   }
 
-  private async allowedExtensions(): Promise<Set<string>> {
-    const raw = (await this.settings.getValue('sys.file.allowedExt')) ?? '';
-    return new Set(
-      raw
-        .split(',')
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean),
-    );
-  }
-
-  /** 声明 Content-Type 与扩展名冲突时拒绝；octet-stream/空视为未声明放行（白名单以扩展名为准）。 */
-  private assertMimeConsistent(suffix: string, mimetype: string | undefined): void {
-    if (!mimetype) {
-      return;
-    }
-    const normalized = mimetype.toLowerCase();
-    if (normalized === 'application/octet-stream') {
-      return;
-    }
-    const known = EXT_MIME[suffix];
-    if (known && !known.includes(normalized)) {
-      throw new AppError('FILE_TYPE_REJECTED', `content type does not match .${suffix} file`);
-    }
+  private async insertRow(input: {
+    target: { originalName: string; suffix: string };
+    storageKey: string;
+    file: Express.Multer.File;
+    userId: number;
+  }): Promise<FileObjectRow> {
+    const { target, storageKey, file, userId } = input;
+    return this.prisma.fileObject.create({
+      data: {
+        storageKey,
+        originalName: target.originalName,
+        suffix: target.suffix,
+        mimeType: file.mimetype || '',
+        sizeBytes: file.size,
+        checksumSha256: createHash('sha256').update(file.buffer).digest('hex'),
+        createdBy: userId,
+      },
+      select: FILE_OBJECT_SELECT,
+    });
   }
 }
 

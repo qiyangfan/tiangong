@@ -62,7 +62,7 @@ vi.mock('axios', async (importOriginal) => {
 import { http } from '@/utils/request';
 import { bindTokenBus } from '@/utils/token-bus';
 
-const refreshFn = vi.fn(async () => true);
+const refreshFn = vi.fn(() => Promise.resolve(true));
 const expiredFn = vi.fn();
 
 function queue401(count: number): void {
@@ -92,6 +92,12 @@ describe('envelope 解包与业务错误', () => {
       requestId: 'r-2',
     });
   });
+
+  it('非 envelope 响应原样透传（附件下载等二进制路径不参与解包）', async () => {
+    const blob = new Blob(['payload']);
+    script.queue.push({ status: 200, data: blob });
+    await expect(http.get('/files/1/download', { responseType: 'blob' })).resolves.toBe(blob);
+  });
 });
 
 describe('401 单飞刷新契约', () => {
@@ -103,11 +109,7 @@ describe('401 单飞刷新契约', () => {
       { status: 200, data: { code: 0, data: 'c' } },
     );
 
-    const results = await Promise.all([
-      http.get('/users'),
-      http.get('/users'),
-      http.get('/users'),
-    ]);
+    const results = await Promise.all([http.get('/users'), http.get('/users'), http.get('/users')]);
 
     expect(results).toEqual(['a', 'b', 'c']);
     expect(refreshFn).toHaveBeenCalledTimes(1);
@@ -135,7 +137,9 @@ describe('401 单飞刷新契约', () => {
     expect(expiredFn).toHaveBeenCalledWith('AUTH_UNAUTHENTICATED');
     expect(elMessageError).not.toHaveBeenCalled();
   });
+});
 
+describe('401 终局与会话清理', () => {
   it('终局码区分文案依据：过期码原样上交，由会话方归类', async () => {
     script.queue.push({ status: 401, data: { code: 'AUTH_TOKEN_EXPIRED', message: 'expired' } });
     refreshFn.mockResolvedValue(false);

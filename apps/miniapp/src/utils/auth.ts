@@ -33,7 +33,7 @@ export function getRefreshToken(): string {
 }
 
 export function getStoredUser(): StoredUser | null {
-  return (uni.getStorageSync(USER_KEY) as StoredUser | undefined) ?? null;
+  return uni.getStorageSync<StoredUser | undefined>(USER_KEY) ?? null;
 }
 
 export function storeSession(accessToken: string, refreshToken: string, user: StoredUser): void {

@@ -46,10 +46,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm format:check
+      # contracts 的类型产物是 typecheck/test 的解析前提，先构建（拓扑保证 contracts 先行）
+      - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm --filter @tiangong/api test:integration
-      - run: pnpm build
       - run: pnpm --filter @tiangong/e2e exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - name: 上传 e2e 失败报告

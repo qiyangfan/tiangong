@@ -43,7 +43,13 @@ export class GeneratorService {
     }
     this.assertFieldsConsistent(body.fields);
     const row = await this.prisma.genDefinition.create({
-      data: { name: body.name, displayName: body.displayName, fields: body.fields, remark: body.remark, createdBy: userId },
+      data: {
+        name: body.name,
+        displayName: body.displayName,
+        fields: body.fields,
+        remark: body.remark,
+        createdBy: userId,
+      },
     });
     return toItem(row);
   }

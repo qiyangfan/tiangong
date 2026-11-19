@@ -53,16 +53,21 @@ const canOper = checkPermi('audit:oper:list');
 const canLogin = checkPermi('audit:login:list');
 
 // 只存聚合结果；option 用 computed 依赖 theme/locale 构建——主题或语言切换时
-// 重新取 chartThemeColors() 计算色，BaseChart 监听 option 变化即自动重绘
+// 重新取计算色，BaseChart 监听 option 变化即自动重绘
 const operStats = ref<{ name: string; value: number }[]>([]);
 const loginStats = ref<{ ok: number; fail: number } | null>(null);
 // 加载态驱动卡片 v-loading（与表格先例一致）；数据空或失败渲染 el-empty
 const operLoading = ref(true);
 const loginLoading = ref(true);
 
+// 主题切换经 html.dark 改变 CSS 计算值：computed 读取 theme 建立响应式依赖，
+// 亮暗切换时取到新档计算色
+const chartColors = computed(() => {
+  const theme = appStore.theme;
+  return { theme, ...chartThemeColors() };
+});
+
 const operOption = computed<ChartOption | null>(() => {
-  // 显式登记 theme 依赖：切换亮暗时重算，chartThemeColors() 取到的是新档计算值
-  void appStore.theme;
   if (operStats.value.length === 0) {
     return null;
   }
@@ -74,7 +79,7 @@ const operOption = computed<ChartOption | null>(() => {
         type: 'pie',
         radius: ['42%', '68%'],
         center: ['50%', '44%'],
-        label: { color: chartThemeColors().textPrimary, formatter: '{b}: {c}' },
+        label: { color: chartColors.value.textPrimary, formatter: '{b}: {c}' },
         data: operStats.value,
       },
     ],
@@ -82,26 +87,24 @@ const operOption = computed<ChartOption | null>(() => {
 });
 
 const loginOption = computed<ChartOption | null>(() => {
-  // 同上：登记 theme 依赖
-  void appStore.theme;
+  const { palette, textSecondary, border } = chartColors.value;
   if (!loginStats.value) {
     return null;
   }
-  const palette = chartThemeColors().palette;
   return {
     tooltip: { trigger: 'item' },
     grid: { left: 16, right: 16, top: 24, bottom: 8, containLabel: true },
     xAxis: {
       type: 'category',
       data: [t('dashboard.chartLoginOk'), t('dashboard.chartLoginFail')],
-      axisLabel: { color: chartThemeColors().textSecondary },
-      axisLine: { lineStyle: { color: chartThemeColors().border } },
+      axisLabel: { color: textSecondary },
+      axisLine: { lineStyle: { color: border } },
     },
     yAxis: {
       type: 'value',
       minInterval: 1,
-      axisLabel: { color: chartThemeColors().textSecondary },
-      splitLine: { lineStyle: { color: chartThemeColors().border } },
+      axisLabel: { color: textSecondary },
+      splitLine: { lineStyle: { color: border } },
     },
     series: [
       {
@@ -198,11 +201,7 @@ function go(path: string): void {
           </template>
           <div v-loading="operLoading" class="min-h-[320px]">
             <BaseChart v-if="operOption" :option="operOption" />
-            <el-empty
-              v-else-if="!operLoading"
-              :description="t('common.noData')"
-              :image-size="60"
-            />
+            <el-empty v-else-if="!operLoading" :description="t('common.noData')" :image-size="60" />
           </div>
         </el-card>
       </el-col>

@@ -80,7 +80,7 @@ describe('会话态 store', () => {
     expect(store.user?.username).toBe('bob');
   });
 
-  it('restoreUser 从存储恢复身份；空存储回落 null', () => {
+  it('restoreUser 从存储恢复身份', () => {
     const store = useAuthStore();
     expect(store.isLoggedIn).toBe(false);
 
@@ -89,14 +89,20 @@ describe('会话态 store', () => {
 
     expect(store.user?.username).toBe('alice');
     expect(store.isLoggedIn).toBe(true);
-
-    const fresh = useAuthStore();
-    storage.clear();
-    fresh.restoreUser();
-    expect(fresh.user).toBeNull();
-    expect(fresh.isLoggedIn).toBe(false);
   });
 
+  it('restoreUser 空存储回落 null', () => {
+    const store = useAuthStore();
+    storage.clear();
+
+    store.restoreUser();
+
+    expect(store.user).toBeNull();
+    expect(store.isLoggedIn).toBe(false);
+  });
+});
+
+describe('会话态 store · profile 与登出', () => {
   it('refreshProfile 拉取并落 store', async () => {
     const store = useAuthStore();
     script.push({ statusCode: 200, body: { code: 0, data: profileAlice } });

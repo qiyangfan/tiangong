@@ -4,6 +4,12 @@ import { i18n } from '@/locales';
 export type ThemeMode = 'light' | 'dark';
 export type LocaleCode = 'zh-CN' | 'en';
 
+interface AppState {
+  theme: ThemeMode;
+  locale: LocaleCode;
+  sidebarCollapsed: boolean;
+}
+
 const THEME_KEY = 'tg_theme';
 const LOCALE_KEY = 'tg_locale';
 
@@ -26,9 +32,9 @@ function applyThemeClass(mode: ThemeMode): void {
 
 /** 全局外观状态：主题（暗色一级公民）与语言；侧栏折叠。 */
 export const useAppStore = defineStore('app', {
-  state: () => ({
-    theme: 'light' as ThemeMode,
-    locale: 'zh-CN' as LocaleCode,
+  state: (): AppState => ({
+    theme: 'light',
+    locale: 'zh-CN',
     sidebarCollapsed: false,
   }),
   actions: {

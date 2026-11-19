@@ -37,23 +37,34 @@ export interface ChartThemeColors {
 // 隐藏元素承载 var() 求值：color 属性非布局依赖，display:none 下 computed 值同样可用
 let probe: HTMLSpanElement | null = null;
 
-function resolveVar(name: string): string {
+/** color(srgb …) 的四个分量：r/g/b 为 0~1 浮点，alpha 可省略。 */
+const SRGB_COLOR = /^color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)$/;
+
+function ensureProbe(): HTMLSpanElement {
   if (!probe) {
     probe = document.createElement('span');
     probe.style.display = 'none';
     document.documentElement.appendChild(probe);
   }
-  probe.style.color = `var(${name})`;
-  const resolved = getComputedStyle(probe).color;
+  return probe;
+}
+
+function toChannel(raw: string | undefined): number {
+  return Math.round(parseFloat(raw ?? '0') * 255);
+}
+
+function resolveVar(name: string): string {
+  const el = ensureProbe();
+  el.style.color = `var(${name})`;
+  const resolved = getComputedStyle(el).color;
   // 现代浏览器把 color-mix 结果序列化为 color(srgb …)，zrender 只认 rgb()/hsl()——归一化
-  const m = resolved.match(
-    /^color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)$/,
-  );
-  if (!m) return resolved;
-  const ch = (raw: string | undefined): number => Math.round(parseFloat(raw ?? '0') * 255);
-  const r = ch(m[1]);
-  const g = ch(m[2]);
-  const b = ch(m[3]);
+  const m = SRGB_COLOR.exec(resolved);
+  if (!m) {
+    return resolved;
+  }
+  const r = toChannel(m[1]);
+  const g = toChannel(m[2]);
+  const b = toChannel(m[3]);
   return m[4] ? `rgba(${r}, ${g}, ${b}, ${m[4]})` : `rgb(${r}, ${g}, ${b})`;
 }
 

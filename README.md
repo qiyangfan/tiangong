@@ -34,16 +34,16 @@ pnpm dev:web   # 另开终端
 
 ## 常用命令
 
-| 命令 | 说明 |
-| --- | --- |
-| `pnpm lint` / `pnpm typecheck` | 全仓 lint（eslint9 flat）/ 类型检查（TS strict） |
-| `pnpm test` | 单元测试（vitest；api 单测走 unplugin-swc） |
-| `pnpm --filter @tiangong/api test:integration` | 真库集成 26 例（自动对 tiangong_test migrate + seed） |
-| `pnpm test:e2e` | 浏览器端到端（Playwright 自动起 api+web，指向 tiangong_test） |
-| `pnpm build` | 全仓构建（contracts → api/web） |
-| `pnpm --filter @tiangong/miniapp build:mp-weixin` | 小程序产物（dist/build/mp-weixin） |
-| `pnpm gen:crud <module-name>` | 代码生成器 CLI（先在 Web「开发工具 → 代码生成」建定义） |
-| `pnpm db:migrate` / `pnpm db:seed` | Prisma 迁移 / 幂等种子 |
+| 命令                                              | 说明                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------- |
+| `pnpm lint` / `pnpm typecheck`                    | 全仓 lint（eslint9 flat）/ 类型检查（TS strict）              |
+| `pnpm test`                                       | 单元测试（vitest；api 单测走 unplugin-swc）                   |
+| `pnpm --filter @tiangong/api test:integration`    | 真库集成 26 例（自动对 tiangong_test migrate + seed）         |
+| `pnpm test:e2e`                                   | 浏览器端到端（Playwright 自动起 api+web，指向 tiangong_test） |
+| `pnpm build`                                      | 全仓构建（contracts → api/web）                               |
+| `pnpm --filter @tiangong/miniapp build:mp-weixin` | 小程序产物（dist/build/mp-weixin）                            |
+| `pnpm gen:crud <module-name>`                     | 代码生成器 CLI（先在 Web「开发工具 → 代码生成」建定义）       |
+| `pnpm db:migrate` / `pnpm db:seed`                | Prisma 迁移 / 幂等种子                                        |
 
 ## 全栈部署
 

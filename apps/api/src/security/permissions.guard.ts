@@ -13,23 +13,31 @@ export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const required = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_METADATA, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (!required || required.length === 0) {
+    const required = this.requiredPermissions(context);
+    if (required.length === 0) {
       return true;
     }
     const req = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
-    const user = req.user;
+    return this.isAllowed(req.user, required);
+  }
+
+  private requiredPermissions(context: ExecutionContext): string[] {
+    return (
+      this.reflector.getAllAndOverride<string[]>(PERMISSIONS_METADATA, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ?? []
+    );
+  }
+
+  private isAllowed(user: AuthenticatedUser | undefined, required: string[]): boolean {
     if (!user) {
       return false;
     }
     if (user.permissions.includes(SUPER_WILDCARD)) {
       return true;
     }
-    const ok = required.every((p) => user.permissions.includes(p));
-    if (!ok) {
+    if (!required.every((p) => user.permissions.includes(p))) {
       throw new AppError('AUTH_FORBIDDEN');
     }
     return true;

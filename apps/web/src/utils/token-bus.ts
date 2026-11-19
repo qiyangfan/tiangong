@@ -15,7 +15,7 @@ export interface TokenBus {
 
 export const tokenBus: TokenBus = {
   getToken: () => null,
-  refresh: async () => false,
+  refresh: () => Promise.resolve(false),
   onSessionExpired: () => {},
 };
 

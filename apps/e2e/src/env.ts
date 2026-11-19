@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -20,10 +21,14 @@ export const E2E_ADMIN = { username: 'admin', password: 'TestAdmin1pw' } as cons
 /** 零权限 fixture（用后即删；键名与集成套件的 noperm 区分）。 */
 export const E2E_NOPERM = {
   username: 'e2e_noperm',
-  password: 'E2eNoperm1pw',
   roleName: 'e2e 零权限角色',
   roleKey: 'e2e_noperm_role',
 } as const;
+
+/** 每轮随机口令：建 fixture 与登录共用同一次返回值，避免固定测试凭据。 */
+export function randomTestPassword(): string {
+  return `E2e${randomBytes(9).toString('hex')}9`;
+}
 
 /** api dev 进程环境：强制指向 tiangong_test 与固定测试密钥，进程 env 优先于任何 .env 文件。 */
 export function apiServerEnv(): Record<string, string> {

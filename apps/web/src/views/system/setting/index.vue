@@ -93,6 +93,27 @@ function openEdit(row: SettingItem): void {
   dialog.visible = true;
 }
 
+/** 按编辑态分流创建/更新，成功后关弹窗、提示并刷新列表。 */
+async function save(): Promise<void> {
+  if (dialog.editingId === null) {
+    await apiCreateSetting({
+      name: form.name,
+      settingKey: form.settingKey,
+      value: form.value,
+      remark: form.remark === '' ? undefined : form.remark,
+    });
+  } else {
+    await apiUpdateSetting(dialog.editingId, {
+      name: form.name,
+      value: form.value,
+      remark: form.remark === '' ? null : form.remark,
+    });
+  }
+  dialog.visible = false;
+  ElMessage.success(t('common.opSuccess'));
+  await getList();
+}
+
 async function submit(): Promise<void> {
   const ok = await formRef.value?.validate().catch(() => false);
   if (!ok) {
@@ -100,23 +121,7 @@ async function submit(): Promise<void> {
   }
   submitting.value = true;
   try {
-    if (dialog.editingId === null) {
-      await apiCreateSetting({
-        name: form.name,
-        settingKey: form.settingKey,
-        value: form.value,
-        remark: form.remark === '' ? undefined : form.remark,
-      });
-    } else {
-      await apiUpdateSetting(dialog.editingId, {
-        name: form.name,
-        value: form.value,
-        remark: form.remark === '' ? null : form.remark,
-      });
-    }
-    dialog.visible = false;
-    ElMessage.success(t('common.opSuccess'));
-    await getList();
+    await save();
   } finally {
     submitting.value = false;
   }

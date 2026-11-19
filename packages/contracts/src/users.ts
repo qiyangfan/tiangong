@@ -41,10 +41,10 @@ export const createUserRequestSchema = z.object({
     .string()
     .min(3, 'username must be at least 3 characters')
     .max(30)
-    .regex(/^[a-zA-Z0-9_]+$/, 'username allows letters, digits and underscore only'),
+    .regex(/^\w+$/, 'username allows letters, digits and underscore only'),
   nickname: z.string().min(1).max(30),
   password: passwordSchema,
-  email: z.string().email().max(100).optional(),
+  email: z.email().max(100).optional(),
   phone: z.string().max(20).optional(),
   roleIds: z.array(z.number().int().positive()).default([]),
   enabled: z.boolean().default(true),
@@ -54,7 +54,7 @@ export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 
 export const updateUserRequestSchema = z.object({
   nickname: z.string().min(1).max(30).optional(),
-  email: z.string().email().max(100).nullable().optional(),
+  email: z.email().max(100).nullable().optional(),
   phone: z.string().max(20).nullable().optional(),
   roleIds: z.array(z.number().int().positive()).optional(),
   enabled: z.boolean().optional(),

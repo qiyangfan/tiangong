@@ -16,11 +16,14 @@ export default defineConfig({
   test: {
     include: ['src/**/__tests__/**/*.test.ts', 'test/**/*.test.ts'],
     environment: 'node',
-    setupFiles: ['test/setup/reflect.ts'],
+    setupFiles: ['test/setup/env.ts', 'test/setup/reflect.ts'],
     // 集成测试需要起 Nest 应用与真实数据库，放宽容错超时
     testTimeout: 30_000,
     hookTimeout: 120_000,
     pool: 'forks',
     poolOptions: { forks: { singleFork: true } },
+    // 集成上下文在模块收集阶段注册 beforeAll/afterAll，必须按文件重放模块：
+    // 共享模块注册表会让钩子只归属首个文件，其 afterAll 提前关闭应用
+    isolate: true,
   },
 });

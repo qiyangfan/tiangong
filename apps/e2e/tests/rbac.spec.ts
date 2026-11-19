@@ -1,8 +1,15 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
-import { API_BASE, E2E_NOPERM } from '../src/env';
+import { API_BASE, E2E_NOPERM, randomTestPassword } from '../src/env';
 import { apiLogin, cleanupE2EFixtures, loginViaUi, type AuthHeaders } from './helpers';
 
-async function createNopermFixture(request: APIRequestContext, headers: AuthHeaders): Promise<void> {
+/** 本轮零权限用户口令：beforeAll 生成，建用户与 UI 登录共用。 */
+let nopermPassword = '';
+
+async function createNopermFixture(
+  request: APIRequestContext,
+  headers: AuthHeaders,
+  password: string,
+): Promise<void> {
   const roleRes = await request.post(`${API_BASE}/roles`, {
     data: { name: E2E_NOPERM.roleName, roleKey: E2E_NOPERM.roleKey, permissionIds: [] },
     headers,
@@ -10,13 +17,13 @@ async function createNopermFixture(request: APIRequestContext, headers: AuthHead
   if (roleRes.status() !== 201) {
     throw new Error(`create role failed: ${roleRes.status()} ${await roleRes.text()}`);
   }
-  const roleId = ((await roleRes.json()).data as { id: number }).id;
+  const roleId = ((await roleRes.json()) as { data: { id: number } }).data.id;
 
   const userRes = await request.post(`${API_BASE}/users`, {
     data: {
       username: E2E_NOPERM.username,
       nickname: 'e2e 零权限用户',
-      password: E2E_NOPERM.password,
+      password,
       roleIds: [roleId],
     },
     headers,
@@ -28,10 +35,11 @@ async function createNopermFixture(request: APIRequestContext, headers: AuthHead
 
 test.describe('RBAC UI 过滤', () => {
   test.beforeAll(async ({ playwright }) => {
+    nopermPassword = randomTestPassword();
     const ctx = await playwright.request.newContext();
     const headers: AuthHeaders = { Authorization: `Bearer ${await apiLogin(ctx)}` };
     await cleanupE2EFixtures(ctx, headers);
-    await createNopermFixture(ctx, headers);
+    await createNopermFixture(ctx, headers, nopermPassword);
     await ctx.dispose();
   });
 
@@ -42,7 +50,7 @@ test.describe('RBAC UI 过滤', () => {
   });
 
   test('零权限用户：菜单被服务端过滤，未注册路由落 404', async ({ page }) => {
-    await loginViaUi(page, E2E_NOPERM.username, E2E_NOPERM.password);
+    await loginViaUi(page, E2E_NOPERM.username, nopermPassword);
     await expect(page).toHaveURL(/\/dashboard$/);
     // 导航树是服务端权限过滤结果：零权限即空树（仪表盘无权限点，对所有人可见）
     await expect(page.locator('.tg-sidebar__menu')).not.toContainText('用户管理');
