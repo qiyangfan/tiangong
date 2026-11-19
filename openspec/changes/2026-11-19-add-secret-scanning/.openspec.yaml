@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-19
+goal: 落地跨仓质量门禁 P0-1：gitleaks 机密扫描（CI 阻断 + 提交前钩子），不改产品行为
+skip_specs: true

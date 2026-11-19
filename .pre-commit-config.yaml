@@ -1,0 +1,7 @@
+# 提交前钩子：gitleaks 只扫暂存变更；CI（.github/workflows/security.yml）为全量执法点。
+# 启用：brew install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks

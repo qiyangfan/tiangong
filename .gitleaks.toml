@@ -1,0 +1,13 @@
+# 机密扫描策略：默认规则集 + 路径级 allowlist（禁止按规则名全局放行）。
+# 新增豁免必须在 PR 中写明原因、负责人与到期日；误报优先改成假值。
+title = "tiangong secrets policy"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "仅允许测试夹具与文档中的假值，逐条写原因"
+paths = [
+  '''(^|/)tests?/fixtures/''',
+  '''(^|/)docs/.*\.(md|png|jpg)$''',
+]

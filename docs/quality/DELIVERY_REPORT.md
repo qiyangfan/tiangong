@@ -1,4 +1,4 @@
-# 天工脚手架交付报告（2026-11-09）
+# 天工脚手架交付报告（2026-11-19）
 
 > 现状快照：只写当前形态、验证证据与遗留项；过程与变更历史看 git log。
 > 交接权威文件是 `docs/BUILD_PLAN.md`（§7 状态表 / §7.1 必读事实 / §8 执行指令）。
@@ -38,6 +38,8 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变
 
 归档前完成一轮全树评审循环（文档契约与实现对齐、delta 结构修复、死配置清理），见验证记录。
 
+在途变更：`2026-11-19-add-secret-scanning`（跨仓质量门禁批次 1 / P0-1，gitleaks 机密扫描）——文件与本地验证已完成，待 owner 授权提交推送、CI 实跑与分支保护 required，见验证记录 2026-11-19 条。
+
 ## FUNCTION_MATRIX P0 逐项对照
 
 | P0 能力            | 交付形态                                                                                                                      | 验证证据                                                                                           |
@@ -65,6 +67,8 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变
 
 ## 验证记录（2026-11-07）
 
+- **2026-11-19 质量门禁批次 1 / P0-1 Secret scanning（在途，待授权提交推送）**：新增 `.gitleaks.toml`（extend 默认规则集 + 路径级 allowlist `tests?/fixtures`、docs 的 md/png/jpg）、`.pre-commit-config.yaml`（gitleaks v8.30.1）、`.github/workflows/security.yml`（`secrets` job：checkout@v7 + `fetch-depth: 0` + gitleaks 8.30.1 全量历史扫描，独立于 `ci.yml` 无路径过滤），并按 handoff §5.0 将 `ci.yml` 的 `actions/checkout@v5` 对齐 `@v7`。验证：干净树 `gitleaks detect --source . --redact --verbose --exit-code 1` exit 0（22 commits scanned / no leaks found）；负向验收——实测 `gitleaks detect` 仅扫 git 历史，未跟踪探针 exit 0（假绿），故在 scratch 仓用同款配置**提交**探针后 exit 1（命中 `aws-access-token`；探针须用 base32 合规合成 key，handoff 模板 `AKIAIOSFODNN7EXAMPLE` 被 8.30 默认规则忽略），移除违规提交后恢复 exit 0；提交前钩子同款命令 `gitleaks git --pre-commit --redact --staged --verbose --exit-code 1` 暂存探针 exit 1、撤销后 exit 0（索引无残留）；`uvx pre-commit validate-config` exit 0；`actionlint`（ci.yml + security.yml）exit 0；`openspec validate --strict` 通过；既有门禁 `pnpm lint && pnpm typecheck && pnpm test && pnpm build` exit 0（单测 72）。遗留：分支保护 required 与 CI 实跑待 Actions 解锁 + owner 推送；集成/e2e 未重跑（纯 workflow/工具配置改动，无源码触碰）。
+
 - **add-basic-metrics（2026-11-08 实施，2026-11-09 owner 指令归档）**：`GET /api/v1/metrics`（Prometheus 文本 = prom-client 默认进程指标 + HTTP RED 中间件；route 标签仅路由模板，查询串/路径参数不入标签；`METRICS_ENABLED=false` 关端点且停记 HTTP 指标）——FUNCTION_MATRIX P0「基础 metrics」字面缺口补齐。验证：集成 28/28（新增 2 例：未认证公开可达含 `process_cpu_seconds_total` 与 `http_requests_total` 指标族、查询串不入指标）；全量门禁 lint/typecheck(4 包)/单测 72/build + e2e 5/5 全绿；`openspec validate add-basic-metrics` valid、`--all` 11 基线全过。同轮 FUNCTION_MATRIX 补「登录人机验证」取舍行（X：不预建，失败锁定+限流已覆盖）消除矩阵悬案。归档（2026-11-09 owner 指令）：移入 `archive/2026-11-09-*`，「基础运行指标」（ADDED）合入 platform-api 基线并抛光（场景「验收」后缀、Purpose 与头部证据计数 28），validate 10/10
 - `pnpm lint`、`pnpm typecheck`（contracts/api/web/miniapp/e2e）、`pnpm test`（67）、`pnpm build`：全绿
 - **微信开发者工具模拟器真实走查（2026-11-08 补录）**：小程序测试号 appid 经 `MP_WEIXIN_APPID` 环境变量注入产物（manifest 内恒为 touristappid 占位，见 `apps/miniapp/scripts/patch-mp-appid.mjs`）后重建，`cli auto --auto-port 9420` 启用自动化，miniprogram-automator 驱动模拟器三页走查——登录（账号密码打真 3000 dev api，登录成功）→ 示例数据（真实请求返回空列表，空态正确）→ 我的（profile 渲染、最近登录时间=本次走查时刻、语言切换项渲染、tabBar 选中态正确），`console.error`=0。期间验证终局 401 防抖改动随产物实机运行无异
@@ -81,7 +85,7 @@ BUILD_PLAN §7 全部 6 个阶段（Stage 0-6）已过门禁；2026-11-07 五变
 
 ## NOT VERIFIED（如实标注）
 
-- **GitHub Actions 实跑**：远端 qiyangfan/tiangong（私有）已建立，但 CI 连续 startup_failure（0 秒即拦，账号级 Actions 配额/绑卡问题——判别实验 public 仓同款 workflow 正常启动，非 workflow 缺陷）；解锁后 push 任意提交即自动全链验证，实跑维持 NOT VERIFIED
+- **GitHub Actions 实跑**：远端 qiyangfan/tiangong（私有）已建立，但 CI 连续 startup_failure（0 秒即拦，账号级 Actions 配额/绑卡问题——判别实验 public 仓同款 workflow 正常启动，非 workflow 缺陷）；解锁后 push 任意提交即自动全链验证，实跑维持 NOT VERIFIED。同因，批次 1 新增的 `security.yml / secrets` job 未实跑，GitHub 分支保护 required check 未设置。
 - **微信小程序真机运行**：开发者工具模拟器走查已通过（2026-11-08，见验证记录）；真机预览未执行
 - **生产部署**：compose 验证为本地演示口径；生产 secrets/域名/HTTPS 未演练
 
