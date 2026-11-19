@@ -1,0 +1,15 @@
+{
+  // 结构类规则保持默认阈值；MD013（行宽）关闭：文档含长表格/代码块，
+  // 行宽由 Prettier 排版负责，markdownlint 只管结构。
+  "config": {
+    "MD013": false,
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "**/node_modules/**",
+    "apps/miniapp/src/uni_modules/**",
+    "apps/miniapp/unpackage/**",
+    // 已归档变更保持提交时原貌，不再回改
+    "openspec/changes/archive/**",
+  ],
+}

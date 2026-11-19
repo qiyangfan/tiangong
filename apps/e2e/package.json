@@ -6,11 +6,33 @@
   "type": "module",
   "scripts": {
     "test:e2e": "playwright test",
+    "test:e2e:coverage": "rm -rf .nyc_output && E2E_COVERAGE=1 playwright test && nyc report && nyc check-coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "nyc": {
+    "cwd": "../web",
+    "include": [
+      "src/**/*.ts",
+      "src/**/*.vue"
+    ],
+    "extension": [
+      ".ts",
+      ".vue"
+    ],
+    "reporter": [
+      "text-summary"
+    ],
+    "temp-dir": "../e2e/.nyc_output",
+    "check-coverage": false,
+    "statements": 78,
+    "branches": 50,
+    "functions": 70,
+    "lines": 78
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
     "@types/node": "^24.10.1",
+    "nyc": "^18.0.0",
     "typescript": "^5.9.3"
   }
 }

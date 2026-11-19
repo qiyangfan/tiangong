@@ -50,6 +50,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
+      - name: 安装 shellcheck
+        # actionlint 检测到 shellcheck 才会分析 run: 块里的内联 shell，未装时整块静默跳过
+        run: |
+          VERSION=0.11.0
+          curl -sSfL "https://github.com/koalaman/shellcheck/releases/download/v${VERSION}/shellcheck-v${VERSION}.linux.x86_64.tar.xz" \
+            | tar -xJ -C /tmp
+          install /tmp/shellcheck-v${VERSION}/shellcheck /usr/local/bin/shellcheck
       - name: actionlint
         run: |
           VERSION=1.7.12

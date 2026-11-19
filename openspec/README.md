@@ -8,4 +8,4 @@
 - `openspec/changes/<change>/tasks.md`：执行清单
 - `openspec/changes/<change>/specs/`：ADDED/MODIFIED/REMOVED 规范差量
 
-建议：先按 M0-M4 创建 baseline implementation change，逐步交付；各模块验证后再把目标规范正式转为当前 truth。流程参见 https://github.com/Fission-AI/OpenSpec 。
+建议：先按 M0-M4 创建 baseline implementation change，逐步交付；各模块验证后再把目标规范正式转为当前 truth。流程参见 <https://github.com/Fission-AI/OpenSpec> 。

@@ -1,0 +1,4 @@
+# Dockerfile 静态检查（hadolint 2.15）。失败阈值取 warning：DL 系列信息级提示不阻断。
+failure-threshold: warning
+trustedRegistries:
+  - docker.io

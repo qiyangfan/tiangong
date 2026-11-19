@@ -2,7 +2,9 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
 import sonarjs from 'eslint-plugin-sonarjs';
+import vueA11y from 'eslint-plugin-vuejs-accessibility';
 import importPlugin from 'eslint-plugin-import';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
@@ -24,15 +26,21 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
-  // 类型感知规则只挂 TS：.vue 仍由 vue-eslint-parser + vue-tsc 覆盖
-  ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: ['**/*.ts'] })),
+  // 类型感知规则覆盖 ts 与 .vue script 块：vue-eslint-parser 把 script 交给
+  // tseslint.parser，projectService 负责按文件就近解析 tsconfig
+  ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: ['**/*.{ts,vue}'] })),
   {
-    files: ['**/*.ts'],
+    files: ['**/*.{ts,vue}'],
     languageOptions: {
-      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ['.vue'],
+      },
     },
   },
   sonarjs.configs.recommended,
+  ...vueA11y.configs['flat/recommended'],
   {
     files: ['**/*.{ts,vue}'],
     plugins: { import: importPlugin },
@@ -43,7 +51,11 @@ export default tseslint.config(
       // 依赖图只认声明过的扩展名：不声明 .ts 时 no-cycle 对 TS 文件静默失效
       'import/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx'] },
       'import/resolver': {
-        typescript: { project: ['apps/*/tsconfig.json', 'packages/*/tsconfig.json'] },
+        // monorepo 多 tsconfig 属预期形态，屏蔽解析器的多工程警告
+        typescript: {
+          project: ['apps/*/tsconfig.json', 'packages/*/tsconfig.json'],
+          noWarnOnMultipleProjects: true,
+        },
         node: { extensions: ['.js', '.mjs', '.ts', '.vue'] },
       },
     },
@@ -55,6 +67,9 @@ export default tseslint.config(
   {
     files: ['**/*.vue'],
     languageOptions: {
+      // recommendedTypeChecked 自带的 tseslint.parser 会抢占 .vue 入口解析，
+      // 这里显式还原 vue 解析器，script 块内再交给 tseslint.parser
+      parser: vueParser,
       parserOptions: { parser: tseslint.parser },
     },
     // 未定义全局（DOM API 等）由 vue-tsc 类型检查兜底；TS 文件经 typescript-eslint

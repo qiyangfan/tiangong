@@ -77,10 +77,10 @@ async function onLogin(): Promise<void> {
       username: res.user.username,
       nickname: res.user.nickname,
     });
-    uni.reLaunch({ url: '/pages/sample/index' });
+    void uni.reLaunch({ url: '/pages/sample/index' });
   } catch (err) {
     const e = err as { message?: string };
-    uni.showToast({ title: e.message || t('login.loginFailed'), icon: 'none' });
+    void uni.showToast({ title: e.message || t('login.loginFailed'), icon: 'none' });
   } finally {
     loading.value = false;
   }

@@ -1,4 +1,5 @@
-import { expect, test, type APIRequestContext } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { API_BASE, E2E_NOPERM, randomTestPassword } from '../src/env';
 import { apiLogin, cleanupE2EFixtures, loginViaUi, type AuthHeaders } from './helpers';
 

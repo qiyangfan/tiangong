@@ -20,4 +20,4 @@ RuoYi 提供的是覆盖面参照，而不是每一项技术实现约束。产�
 
 ## 参考
 
-https://github.com/yangzongzhuan/RuoYi-Vue
+<https://github.com/yangzongzhuan/RuoYi-Vue>

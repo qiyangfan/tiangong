@@ -17,5 +17,8 @@ apps/miniapp/unpackage/
 test-results/
 playwright-report/
 
+# e2e 覆盖率中间产物（nyc 合并前）
+.nyc_output/
+
 # ZCode 会话产物（AI 工具状态不入库）
 .zcode/

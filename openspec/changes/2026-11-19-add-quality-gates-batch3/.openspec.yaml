@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-19
+goal: 补齐质量门禁批次 3：.vue 类型感知规则、a11y、markdownlint、Prisma schema 门禁、Dockerfile lint 与非 root、镜像 CVE 扫描、actionlint+shellcheck、e2e 覆盖率插桩，不改变产品行为
+skip_specs: true

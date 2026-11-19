@@ -6,11 +6,14 @@
 
 ## 现状（2026-11-19 更新）
 
-- `.github/workflows/ci.yml`：lint / lint:style / dup:check / knip 报告 / format:check / build（含小程序 h5 + mp-weixin）/
-  typecheck / test:coverage（含阈值）/ 真库集成 / e2e / 镜像 `docker compose build`（独立 job），MySQL 8.4 service。
+- `.github/workflows/ci.yml`：Prisma schema 三项门禁（validate / format 幂等 / migrations 漂移）→
+  lint（含 `.vue` 脚本块类型感知规则与 a11y）/ lint:style / lint:md / dup:check / knip 报告 / format:check /
+  build（含小程序 h5 + mp-weixin）/ typecheck / test:coverage（含阈值）/ e2e 覆盖率插桩（nyc 阈值）/
+  镜像 job（hadolint → `docker compose build` → trivy HIGH/CRITICAL 扫描），MySQL 8.4 service。
   Actions 实跑仍被账号账单锁阻塞（`The job was not started because your account is locked due to a billing issue`，
   见 `docs/quality/DELIVERY_REPORT.md` NOT VERIFIED）。
 - `.github/workflows/security.yml`：`secrets`（gitleaks 全量历史）、`dependencies`（`pnpm audit --prod --audit-level=high`，
-  豁免逐条裁决在 `pnpm-workspace.yaml` 的 `auditConfig`）、`workflows`（actionlint 1.7.12）。
+  豁免逐条裁决在 `pnpm-workspace.yaml` 的 `auditConfig`）、`workflows`（shellcheck 0.11.0 + actionlint 1.7.12，
+  run 块内联 shell 一并分析）。
 - 依赖更新：`.github/dependabot.yml`（npm + github-actions，周更；uni 工具链排除批量升级）。
 - 仍待排期：P0-3 CodeQL、P0-4 SBOM+license（需账单修复后建批次）、分支保护 required check。

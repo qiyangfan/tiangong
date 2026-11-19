@@ -31,7 +31,10 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       // vite 代理 /api 指向本套 e2e api 实例（进程 env 优先于 .env.development）
-      env: { VITE_DEV_PROXY_TARGET: API_URL },
+      env: {
+        VITE_DEV_PROXY_TARGET: API_URL,
+        VITE_COVERAGE: process.env['E2E_COVERAGE'] ?? '',
+      },
     },
   ],
 });

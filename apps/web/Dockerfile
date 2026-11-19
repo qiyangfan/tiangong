@@ -9,7 +9,13 @@ RUN pnpm install --frozen-lockfile \
     && pnpm --filter @tiangong/contracts build \
     && pnpm --filter @tiangong/web build
 
-FROM nginx:1.27-alpine AS runtime
+# unprivileged 变体：以非 root 监听 8080（对应 deploy/nginx/nginx.conf 与 compose 端口映射）
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
+# 基线镜像打包的 apk 组件滞后于 alpine 仓库（zlib/libexpat/curl 等有安全补丁）；
+# 构建期升到仓库当前版本。镜像默认 uid 101，升级后显式还原非 root。
+USER 0:0
+RUN apk upgrade --no-cache
+USER 101:101
 COPY deploy/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080

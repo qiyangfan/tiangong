@@ -1,3 +1,5 @@
+# PR 说明
+
 ## 变更目的与范围
 
 ## OpenSpec change / ADR 链接

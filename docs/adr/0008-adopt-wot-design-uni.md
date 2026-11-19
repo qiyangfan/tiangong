@@ -145,8 +145,8 @@ owner 问：「wot 某种意义上断更了？vite 锁死 5.2.8 的话，不就�
 ## 参考
 
 - wot v1 快速上手/自定义主题/国际化/常见问题（master 分支文档 = v1.14 终版）：
-  https://github.com/Moonofweisheng/wot-design-uni
-- wot v2 线与迁移文档：https://wot-ui.cn（`@wot-ui/ui` 2.4.0，migration-v2）
+  <https://github.com/Moonofweisheng/wot-design-uni>
+- wot v2 线与迁移文档：<https://wot-ui.cn>（`@wot-ui/ui` 2.4.0，migration-v2）
 - uni mp chunkFileNames 推导：`@dcloudio/uni-mp-vite/dist/plugin/build.js`
   `createChunkFileNames`；rollup 拒绝规则：`isPathFragment`（rollup.js）
 - pnpm 传递依赖阶梯：pinia@4.1.0 deps `nostics`；`@vue/devtools-kit` →

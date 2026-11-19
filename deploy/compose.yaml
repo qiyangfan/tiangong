@@ -44,7 +44,8 @@ services:
       context: ..
       dockerfile: apps/web/Dockerfile
     ports:
-      - '8080:80'
+      # 宿主机端口不变；容器内为 unprivileged nginx 的 8080
+      - '8080:8080'
     depends_on:
       api:
         condition: service_healthy

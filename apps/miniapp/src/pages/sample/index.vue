@@ -171,7 +171,7 @@ function formatAmount(raw: string): string | undefined {
   }
   const value = Number(raw);
   if (!Number.isFinite(value) || value < 0) {
-    uni.showToast({ title: t('sample.invalidAmount'), icon: 'none' });
+    void uni.showToast({ title: t('sample.invalidAmount'), icon: 'none' });
     throw new Error('invalid amount');
   }
   return value.toFixed(2);
@@ -189,7 +189,7 @@ function persist(name: string, amount: string | undefined, enabled: boolean): Pr
 function validateName(): string | null {
   const name = form.value.name.trim();
   if (name === '') {
-    uni.showToast({ title: t('sample.nameRequired'), icon: 'none' });
+    void uni.showToast({ title: t('sample.nameRequired'), icon: 'none' });
     return null;
   }
   return name;
@@ -200,7 +200,7 @@ async function saveForm(name: string): Promise<void> {
   const amount = formatAmount(form.value.amountText.trim());
   await persist(name, amount, form.value.enabled);
   dialogVisible.value = false;
-  uni.showToast({ title: t('common.opSuccess'), icon: 'success' });
+  void uni.showToast({ title: t('common.opSuccess'), icon: 'success' });
   await loadFirst();
 }
 
@@ -237,7 +237,7 @@ async function onDelete(): Promise<void> {
   }
   await apiDeleteSample(editingId.value);
   dialogVisible.value = false;
-  uni.showToast({ title: t('common.opSuccess'), icon: 'success' });
+  void uni.showToast({ title: t('common.opSuccess'), icon: 'success' });
   await loadFirst();
 }
 </script>

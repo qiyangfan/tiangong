@@ -58,7 +58,7 @@ JWT_ACCESS_SECRET=<≥32字符> ADMIN_INITIAL_PASSWORD=<初始密码> \
 
 ## 目录结构
 
-```
+```text
 apps/
   api/        NestJS（路由 /api/v1；common 全局件 / security 守卫 / modules 业务模块）
   web/        Vue3 + Vite + Element Plus + Tailwind v4（token 单源 styles/index.css）
@@ -80,6 +80,6 @@ openspec/     能力 spec（已实现基线）
 
 ## 参考资料
 
-- RuoYi 官方仓库（能力参考）：https://github.com/yangzongzhuan/RuoYi-Vue
-- RuoYi 官方文档：https://doc.ruoyi.vip/
-- OpenSpec 官方：https://github.com/Fission-AI/OpenSpec
+- RuoYi 官方仓库（能力参考）：<https://github.com/yangzongzhuan/RuoYi-Vue>
+- RuoYi 官方文档：<https://doc.ruoyi.vip/>
+- OpenSpec 官方：<https://github.com/Fission-AI/OpenSpec>

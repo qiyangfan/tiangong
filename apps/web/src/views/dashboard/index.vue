@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import { Odometer, User, Avatar, Menu, Collection, Document } from '@element-plus/icons-vue';
 import type { BusinessType } from '@tiangong/contracts';
 import { checkPermi } from '@/composables/usePermission';
@@ -13,7 +12,6 @@ import BaseChart from '@/components/BaseChart.vue';
 import { type ChartOption, chartThemeColors } from '@/utils/echarts';
 
 const { t } = useI18n();
-const router = useRouter();
 const appStore = useAppStore();
 const auth = useAuthStore();
 
@@ -160,12 +158,7 @@ onMounted(() => {
   if (canOper) void loadOperChart();
   if (canLogin) void loadLoginChart();
 });
-
-function go(path: string): void {
-  void router.push(path);
-}
 </script>
-
 <template>
   <div class="tg-page">
     <!-- 问候横幅：品牌淡底纯色（UI_STYLEGUIDE 门面基准，禁渐变/玻璃） -->
@@ -230,15 +223,15 @@ function go(path: string): void {
         <span class="tg-card-title">{{ t('dashboard.quickLinks') }}</span>
       </template>
       <div class="flex flex-wrap gap-3">
-        <div
+        <router-link
           v-for="link in links"
           :key="link.path"
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--el-border-color-light)] px-4 py-2 text-[var(--el-text-color-regular)] transition-colors hover:border-[var(--el-color-primary)] hover:text-[var(--el-color-primary)]"
-          @click="go(link.path)"
+          :to="link.path"
+          class="flex items-center gap-2 rounded-lg border border-[var(--el-border-color-light)] px-4 py-2 text-[var(--el-text-color-regular)] transition-colors hover:border-[var(--el-color-primary)] hover:text-[var(--el-color-primary)]"
         >
           <el-icon :size="16"><component :is="link.icon" /></el-icon>
           <span>{{ link.label }}</span>
-        </div>
+        </router-link>
         <el-empty v-if="links.length === 0" :description="t('common.noData')" :image-size="60" />
       </div>
     </el-card>
