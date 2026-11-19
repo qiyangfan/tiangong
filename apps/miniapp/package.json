@@ -2,6 +2,7 @@
   "name": "@tiangong/miniapp",
   "version": "0.1.0",
   "scripts": {
+    "build": "pnpm build:h5 && pnpm build:mp-weixin",
     "dev:custom": "uni -p",
     "dev:h5": "uni",
     "dev:h5:ssr": "uni --ssr",
@@ -36,7 +37,8 @@
     "build:quickapp-webview-union": "uni build -p quickapp-webview-union",
     "typecheck": "vue-tsc --noEmit",
     "type-check": "vue-tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-5030420261029002",
@@ -68,6 +70,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-5030420261029002",
     "@dcloudio/uni-stacktracey": "3.0.0-5030420261029002",
     "@dcloudio/vite-plugin-uni": "3.0.0-5030420261029002",
+    "@vitest/coverage-v8": "^3.2.7",
     "@vue/runtime-core": "^3.4.21",
     "sass": "1.78.0",
     "typescript": "^5.9.3",

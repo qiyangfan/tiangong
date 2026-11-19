@@ -14,6 +14,18 @@ permissions:
   contents: read
 
 jobs:
+  images:
+    # 镜像构建独立成 job 并行跑：只验证 Dockerfile 与构建上下文可用，不起容器
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # compose 解析期做变量插值，必填项缺失会在 build 前直接报错
+      JWT_ACCESS_SECRET: ci_image_build_secret_at_least_32_chars
+    steps:
+      - uses: actions/checkout@v7
+      - name: 构建镜像
+        run: docker compose -f deploy/compose.yaml build
+
   quality:
     # 26.04 标签在当前账号不可用（启动期 startup_failure，0 jobs 物化）；钉 24.04 LTS 确定可用
     runs-on: ubuntu-24.04
@@ -46,12 +58,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm lint:style
+      # 重复率基线 3.62%（2026-11-19），阈值 4% 防回退
+      - run: pnpm dup:check
+      # 死代码/未用导出：工具对 Vue SFC、动态注册等有已知误报，只报告不阻断
+      - name: 未用依赖与导出报告
+        continue-on-error: true
+        run: pnpm lint:dead
       - run: pnpm format:check
       # contracts 的类型产物是 typecheck/test 的解析前提，先构建（拓扑保证 contracts 先行）
       - run: pnpm build
       - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm --filter @tiangong/api test:integration
+      # 覆盖率口径：api 含单元 + 集成（下方不再单跑集成），其余包为单测
+      - run: pnpm test:coverage
       - run: pnpm --filter @tiangong/e2e exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - name: 上传 e2e 失败报告

@@ -1,0 +1,22 @@
+version: 2
+# 依赖更新走 PR：与 pnpm audit 的「已知漏洞」互补——audit 只看已披露问题，
+# dependabot 负责让版本持续前移，避免积压成大版本跳跃
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+        exclude-patterns:
+          # uni 工具链钉精确版本，批量升级会破坏双端构建，需人工逐版本验证
+          - '@dcloudio/*'
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

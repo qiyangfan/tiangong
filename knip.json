@@ -1,0 +1,19 @@
+{
+  "ignoreWorkspaces": ["apps/miniapp"],
+  "ignore": ["**/dist/**", "apps/api/prisma/migrations/**"],
+  "ignoreDependencies": ["pino-pretty"],
+  "workspaces": {
+    "apps/api": {
+      "entry": ["src/main.ts", "prisma/seed.ts", "scripts/gen-crud.ts", "test/**/*.ts"]
+    },
+    "apps/web": {
+      "entry": ["index.html", "src/main.ts"]
+    },
+    "apps/e2e": {
+      "entry": ["playwright.config.ts", "global-setup.ts", "tests/**/*.spec.ts"]
+    },
+    "packages/contracts": {
+      "entry": ["src/index.ts"]
+    }
+  }
+}

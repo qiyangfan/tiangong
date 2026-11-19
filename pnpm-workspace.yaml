@@ -2,6 +2,35 @@ packages:
   - apps/*
   - packages/*
 
+# 传递依赖安全修复（2026-11-19 审计）。uni 工具链钉精确版本，升级后以 miniapp
+# 双端构建 + 单测验收；vite/@vue/server-renderer 的版本与 uni/vue 运行时绑定，
+# 强行跨小版本会破坏构建，见 auditConfig.ignoreGhsas 的逐条理由。
+overrides:
+  multer: ^2.5.0
+  deepmerge-ts: ^8.0.0
+  adm-zip: ^0.6.1
+  postcss: ^8.5.18
+  source-map-js: ^1.2.2
+  jpeg-js: ^0.4.4
+  # 版本限定：web 的 vite 8 / vue-i18n 11 不能被卷进来
+  'vite@>=5.0.0 <5.4.9': ^5.4.9
+  # 精确 9.1.11：9.14.x 不再导出 uni 内置 vue-i18n 运行时依赖的 handleFlatJson
+  '@intlify/core-base@9.1.9': 9.1.11
+  '@intlify/message-resolver@9.1.10': 9.1.11
+  '@intlify/message-resolver@9.1.9': ^9.1.11
+  '@vue/server-renderer@3.4.21': ^3.5.42
+  '@dcloudio/uni-mp-baidu>ws': ^8.21.0
+  '@dcloudio/uni-mp-weixin>ws': ^8.21.0
+
+# 逐条裁决后的残留（其余由 overrides 修掉）：
+# - GHSA-587h-7wmj-h5pm：vite 需 ≥6.4.4，uni 工具链钉 5.x，升级等 uni 官方发版
+# - GHSA-83rm-6c8r-g728：@intlify 原型污染，上游未发布修复版本；本仓 i18n 消息为
+#   静态资源文件，不接受外部输入，暴露面不成立
+auditConfig:
+  ignoreGhsas:
+    - GHSA-587h-7wmj-h5pm
+    - GHSA-83rm-6c8r-g728
+
 # pnpm ≥10 默认拦截依赖构建脚本；以下依赖需要 postinstall（Prisma 引擎生成等）
 allowBuilds:
   core-js: true

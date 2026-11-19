@@ -25,5 +25,13 @@ export default defineConfig({
     // 集成上下文在模块收集阶段注册 beforeAll/afterAll，必须按文件重放模块：
     // 共享模块注册表会让钩子只归属首个文件，其 afterAll 提前关闭应用
     isolate: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary'],
+      include: ['src/**/*.ts'],
+      exclude: ['**/*.d.ts'],
+      // 阈值取 2026-11-19 实测基线（全量单测 + 集成：72.2/83.1/70.8）略下方
+      thresholds: { statements: 70, branches: 80, functions: 68, lines: 70 },
+    },
   },
 });

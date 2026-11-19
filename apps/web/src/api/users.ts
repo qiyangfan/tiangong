@@ -22,10 +22,6 @@ export function apiListUsers(query: UserListQuery): Promise<PageResult<UserItem>
   return http.get('/users', { params: toParams(query) });
 }
 
-export function apiGetUser(id: number): Promise<UserItem> {
-  return http.get(`/users/${id}`);
-}
-
 export function apiCreateUser(data: CreateUserRequest): Promise<UserItem> {
   return http.post('/users', data);
 }

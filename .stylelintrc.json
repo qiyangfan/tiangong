@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "color-no-hex": true,
+    "declaration-block-no-duplicate-properties": true,
+    "no-duplicate-selectors": true,
+    "block-no-empty": true,
+    "property-no-unknown": true,
+    "selector-pseudo-element-no-unknown": true
+  },
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    },
+    {
+      "files": ["**/*.scss"],
+      "customSyntax": "postcss-scss"
+    },
+    {
+      "comment": "token 单源文件：十六进制色值只允许出现在这里，其余样式一律引用变量",
+      "files": ["apps/web/src/styles/index.css", "apps/miniapp/src/uni.scss"],
+      "rules": {
+        "color-no-hex": null
+      }
+    }
+  ],
+  "ignoreFiles": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/unpackage/**",
+    "apps/miniapp/src/uni_modules/**"
+  ]
+}

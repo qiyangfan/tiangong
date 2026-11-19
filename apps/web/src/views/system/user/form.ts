@@ -4,7 +4,7 @@
  */
 import { reactive, type InjectionKey } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { FormInstance, FormRules } from 'element-plus';
+import type { FormRules } from 'element-plus';
 import { passwordSchema } from '@tiangong/contracts';
 import type { UserItem } from '@tiangong/contracts';
 
@@ -143,11 +143,6 @@ export function toUpdateUser(form: UserForm): UpdateUserBody {
     enabled: form.enabled,
     remark: form.remark === '' ? null : form.remark,
   };
-}
-
-/** 校验弹窗表单；false 表示未通过，调用方直接返回即可。 */
-export async function validateUserForm(formRef: FormInstance | undefined): Promise<boolean> {
-  return (await formRef?.validate().catch(() => false)) === true;
 }
 
 /** 重置密码弹窗规则（明文口令强度与新建同口径）。 */

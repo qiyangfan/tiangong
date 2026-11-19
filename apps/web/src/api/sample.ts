@@ -21,10 +21,6 @@ export function apiListSamples(query: SampleRecordQuery): Promise<PageResult<Sam
   return http.get('/samples', { params: toParams(query) });
 }
 
-export function apiGetSample(id: number): Promise<SampleRecordItem> {
-  return http.get(`/samples/${id}`);
-}
-
 export function apiCreateSample(data: CreateSampleRequest): Promise<SampleRecordItem> {
   return http.post('/samples', data);
 }
