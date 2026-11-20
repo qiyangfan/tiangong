@@ -120,14 +120,22 @@ async function onPreviewDraft(): Promise<void> {
         <el-table :data="form.fields" size="small" class="w-full">
           <el-table-column :label="t('dev.gen.fieldName')" min-width="130">
             <template #default="{ $index }">
-              <el-form-item :rules="fieldRules.name" :prop="`fields.${$index}.name`" class="mb-0">
+              <el-form-item
+                :rules="fieldRules['name']"
+                :prop="`fields.${$index}.name`"
+                class="mb-0"
+              >
                 <el-input v-model.trim="form.fields[$index]!.name" placeholder="userName" />
               </el-form-item>
             </template>
           </el-table-column>
           <el-table-column :label="t('dev.gen.label')" min-width="120">
             <template #default="{ $index }">
-              <el-form-item :rules="fieldRules.label" :prop="`fields.${$index}.label`" class="mb-0">
+              <el-form-item
+                :rules="fieldRules['label']"
+                :prop="`fields.${$index}.label`"
+                class="mb-0"
+              >
                 <el-input v-model.trim="form.fields[$index]!.label" />
               </el-form-item>
             </template>

@@ -20,7 +20,7 @@ interface TgRequestConfig extends AxiosRequestConfig {
 }
 
 /** 统一请求错误：携带契约错误码，调用方按需分支处理。 */
-export interface TgError extends Error {
+interface TgError extends Error {
   code: string;
   requestId?: string;
   status?: number;
@@ -37,8 +37,12 @@ interface TgErrorInit {
 function tgError({ code, message, requestId, status }: TgErrorInit): TgError {
   const err = new Error(message) as TgError;
   err.code = code;
-  err.requestId = requestId;
-  err.status = status;
+  if (requestId !== undefined) {
+    err.requestId = requestId;
+  }
+  if (status !== undefined) {
+    err.status = status;
+  }
   return err;
 }
 
@@ -186,8 +190,8 @@ async function handleResponseError(error: AxiosError): Promise<AxiosResponse> {
   const err = tgError({
     code: errorCodeOf(body, status),
     message: body?.message ?? error.message,
-    requestId: body?.requestId,
-    status,
+    ...(body?.requestId === undefined ? {} : { requestId: body.requestId }),
+    ...(status === undefined ? {} : { status }),
   });
   settleTerminal(err, config, sessionDead);
   throw err;

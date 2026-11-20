@@ -92,3 +92,77 @@ export async function logoutViaUi(page: Page): Promise<void> {
   await page.locator('.el-message-box').getByRole('button', { name: '确定' }).click();
   await page.waitForURL('**/login');
 }
+
+/** 内容类 e2e fixture 前缀：套件开跑前统一回收上一轮残留。 */
+export const E2E_CONTENT_PREFIX = 'E2E-';
+
+interface NamedRow {
+  id: number;
+  name: string;
+}
+
+interface MenuNodeLike {
+  id: number;
+  name: string;
+  children: MenuNodeLike[];
+}
+
+interface CleanupTarget<T> {
+  /** 列表接口（含 keyword 过滤） */
+  listUrl: string;
+  /** 删除接口基路径 */
+  deleteBase: string;
+  matched: (row: T) => boolean;
+}
+
+/** 拉取列表并删除命中行；兼容分页对象与数组两种列表形态。 */
+async function deleteMatching<T extends { id: number }>(
+  request: APIRequestContext,
+  headers: AuthHeaders,
+  target: CleanupTarget<T>,
+): Promise<void> {
+  const res = await request.get(target.listUrl, { headers });
+  const data = await readData<T[] | ItemPage<T>>(res);
+  const rows = Array.isArray(data) ? data : data.items;
+  for (const row of rows) {
+    if (target.matched(row)) {
+      await request.delete(`${target.deleteBase}/${row.id}`, { headers });
+    }
+  }
+}
+
+/** 删除所有以 E2E- 开头的角色/字典类型/参数/菜单/生成定义（顺序：先叶子后目录）。 */
+export async function cleanupE2EContent(
+  request: APIRequestContext,
+  auth?: AuthHeaders,
+): Promise<void> {
+  const headers: AuthHeaders = auth ?? { Authorization: `Bearer ${await apiLogin(request)}` };
+  const prefixed = (row: NamedRow): boolean => row.name.startsWith(E2E_CONTENT_PREFIX);
+  const keyword = E2E_CONTENT_PREFIX;
+
+  await deleteMatching(request, headers, {
+    listUrl: `${API_BASE}/roles?keyword=${keyword}&pageSize=100`,
+    deleteBase: `${API_BASE}/roles`,
+    matched: prefixed,
+  });
+  await deleteMatching(request, headers, {
+    listUrl: `${API_BASE}/dict-types?keyword=${keyword}&pageSize=100`,
+    deleteBase: `${API_BASE}/dict-types`,
+    matched: prefixed,
+  });
+  await deleteMatching(request, headers, {
+    listUrl: `${API_BASE}/settings?keyword=${keyword}`,
+    deleteBase: `${API_BASE}/settings`,
+    matched: prefixed,
+  });
+  await deleteMatching(request, headers, {
+    listUrl: `${API_BASE}/gen-definitions?keyword=e2e-`,
+    deleteBase: `${API_BASE}/gen-definitions`,
+    matched: (row: NamedRow) => row.name.startsWith('e2e-'),
+  });
+  await deleteMatching(request, headers, {
+    listUrl: `${API_BASE}/menus`,
+    deleteBase: `${API_BASE}/menus`,
+    matched: (row: MenuNodeLike) => row.name.startsWith(keyword) && row.children.length === 0,
+  });
+}

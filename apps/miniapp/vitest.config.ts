@@ -15,8 +15,8 @@ export default defineConfig({
       reporter: ['text-summary'],
       include: ['src/**/*.ts'],
       exclude: ['**/*.d.ts', 'src/uni_modules/**'],
-      // 阈值取 2026-11-19 实测基线（80.8/91.8/84.6）略下方
-      thresholds: { statements: 78, branches: 88, functions: 80, lines: 78 },
+      // 阈值取 2026-11-20 实测基线（81.5/90.8/82.7/81.5）略下方
+      thresholds: { statements: 80, branches: 89, functions: 81, lines: 80 },
     },
   },
 });

@@ -13,7 +13,7 @@ function publicRedirect(to: RouteLocationNormalized, auth: AuthStore): RouteLoca
 function toLogin(to: RouteLocationNormalized): RouteLocationRaw {
   return {
     path: '/login',
-    query: to.fullPath === '/' ? undefined : { redirect: to.fullPath },
+    ...(to.fullPath === '/' ? {} : { query: { redirect: to.fullPath } }),
     replace: true,
   };
 }
@@ -43,7 +43,7 @@ export function setupGuard(router: Router): void {
     // 也必须先恢复再分流，否则会被留在登录页。tryRestore 内部防重入，无 Cookie 只探测一次。
     const restored = await auth.tryRestore();
 
-    if (to.meta.public) {
+    if (to.meta['public']) {
       return publicRedirect(to, auth) ?? true;
     }
     if (!restored) {

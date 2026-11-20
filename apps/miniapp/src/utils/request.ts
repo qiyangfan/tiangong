@@ -12,7 +12,7 @@ import {
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 /** API 基地址：编译期由 VITE_API_BASE_URL 注入（真机需 https 且配域名白名单）。 */
-const API_BASE = String(import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1');
+const API_BASE = String(import.meta.env['VITE_API_BASE_URL'] ?? 'http://localhost:3000/api/v1');
 
 const SESSION_EXPIRED_STATUS = 401;
 
@@ -31,11 +31,16 @@ interface TgErrorInit {
   status?: number;
 }
 
+/** 可选字段仅在调用方给出时写入：exactOptionalPropertyTypes 下显式赋 undefined 不合法。 */
 function tgError({ code, message, requestId, status }: TgErrorInit): TgError {
   const err = new Error(message) as TgError;
   err.code = code;
-  err.requestId = requestId;
-  err.status = status;
+  if (requestId !== undefined) {
+    err.requestId = requestId;
+  }
+  if (status !== undefined) {
+    err.status = status;
+  }
   return err;
 }
 
@@ -92,11 +97,12 @@ function unwrapBody(body: unknown, status: number): unknown {
 function rawRequest<T>({ method, url, data }: RequestInit): Promise<T> {
   const accessToken = getAccessToken();
   return new Promise((resolve, reject) => {
-    // 回调式 API 返回 RequestTask 非 Promise；data 收窄到 uni 允许的载荷类型
+    // 回调式 API 返回 RequestTask 非 Promise；data 收窄到 uni 允许的载荷类型。
+    // GET/DELETE 一律不带 data 键（按请求参数拼在 url 或走 method 语义）
     uni.request({
       url: `${API_BASE}${url}`,
       method,
-      data: data as string | Record<string, unknown> | ArrayBuffer | undefined,
+      ...(data === undefined ? {} : { data: data as string | Record<string, unknown> | ArrayBuffer }),
       timeout: 15000,
       header: {
         'Content-Type': 'application/json',
@@ -217,17 +223,22 @@ async function send<T>(init: SendInit): Promise<T> {
   }
 }
 
+/** 只把调用方显式给出的选项并入请求：exactOptionalPropertyTypes 下不得写 undefined。 */
+function withOptions(init: RequestInit, options?: RequestOptions): SendInit {
+  return options?.silent === undefined ? init : { ...init, silent: options.silent };
+}
+
 export const http = {
   get<T>(url: string, options?: RequestOptions): Promise<T> {
-    return send<T>({ method: 'GET', url, silent: options?.silent });
+    return send<T>(withOptions({ method: 'GET', url }, options));
   },
   post<T>(url: string, data?: unknown, options?: RequestOptions): Promise<T> {
-    return send<T>({ method: 'POST', url, data, silent: options?.silent });
+    return send<T>(withOptions({ method: 'POST', url, data }, options));
   },
   put<T>(url: string, data?: unknown, options?: RequestOptions): Promise<T> {
-    return send<T>({ method: 'PUT', url, data, silent: options?.silent });
+    return send<T>(withOptions({ method: 'PUT', url, data }, options));
   },
   delete<T = void>(url: string, options?: RequestOptions): Promise<T> {
-    return send<T>({ method: 'DELETE', url, silent: options?.silent });
+    return send<T>(withOptions({ method: 'DELETE', url }, options));
   },
 };

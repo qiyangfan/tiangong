@@ -3,6 +3,7 @@ import { hash } from '@node-rs/argon2';
 import { PrismaClient } from '@prisma/client';
 import {
   AUDIT_ROLE_KEY,
+  CONTRACT_PROBE,
   EXECUTABLE_DEF,
   NOPERM,
   NOPERM_CREDENTIALS,
@@ -51,14 +52,21 @@ async function removeNopermFixture(prisma: Db): Promise<void> {
 /** 按外键顺序删除本套件创建的确定性实体（保证整套件可重复运行）。 */
 export async function cleanupFixtures(prisma: Db): Promise<void> {
   await removeNopermFixture(prisma);
-  await prisma.role.deleteMany({ where: { roleKey: { in: [NOPERM.roleKey, AUDIT_ROLE_KEY] } } });
+  await prisma.role.deleteMany({
+    where: { roleKey: { in: [NOPERM.roleKey, AUDIT_ROLE_KEY, CONTRACT_PROBE.roleKey] } },
+  });
   await prisma.fileObject.deleteMany({});
   await prisma.sampleRecord.deleteMany({
     where: {
       OR: [{ name: { startsWith: SAMPLE_SEED } }, { name: { startsWith: SAMPLE_UX_SEED } }],
     },
   });
-  await prisma.genDefinition.deleteMany({ where: { name: EXECUTABLE_DEF.name } });
+  await prisma.genDefinition.deleteMany({
+    where: { name: { in: [EXECUTABLE_DEF.name, CONTRACT_PROBE.genName] } },
+  });
+  await prisma.dictItem.deleteMany({ where: { dictKey: CONTRACT_PROBE.dictKey } });
+  await prisma.dictType.deleteMany({ where: { dictKey: CONTRACT_PROBE.dictKey } });
+  await prisma.setting.deleteMany({ where: { settingKey: CONTRACT_PROBE.settingKey } });
   rmSync(STORAGE_DIR, { recursive: true, force: true });
   // admin 的失败计数跨轮次累计会触发锁定，每次运行前复位
   await prisma.user.update({

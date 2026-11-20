@@ -6,7 +6,7 @@ import {
   pageQuerySchema,
 } from './common.js';
 
-export const roleItemSchema = z.object({
+export const roleItemSchema = z.strictObject({
   id: z.number().int(),
   name: z.string(),
   roleKey: z.string(),

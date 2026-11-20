@@ -9,6 +9,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { GenDefinition } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { PrismaService } from '../../prisma/prisma.service';
 import { renderGenFiles } from './render';
 
@@ -19,14 +20,16 @@ export class GeneratorService {
 
   async list(query: GenDefinitionListQuery): Promise<GenDefinitionItem[]> {
     const rows = await this.prisma.genDefinition.findMany({
-      where: query.keyword
+      ...(query.keyword
         ? {
-            OR: [
-              { name: { contains: query.keyword } },
-              { displayName: { contains: query.keyword } },
-            ],
+            where: {
+              OR: [
+                { name: { contains: query.keyword } },
+                { displayName: { contains: query.keyword } },
+              ],
+            },
           }
-        : undefined,
+        : {}),
       orderBy: { id: 'asc' },
     });
     return rows.map(toItem);
@@ -43,13 +46,13 @@ export class GeneratorService {
     }
     this.assertFieldsConsistent(body.fields);
     const row = await this.prisma.genDefinition.create({
-      data: {
+      data: defined({
         name: body.name,
         displayName: body.displayName,
         fields: body.fields,
         remark: body.remark,
         createdBy: userId,
-      },
+      }),
     });
     return toItem(row);
   }
@@ -65,7 +68,7 @@ export class GeneratorService {
     }
     const row = await this.prisma.genDefinition.update({
       where: { id },
-      data: { ...body, updatedBy: userId },
+      data: defined({ ...body, updatedBy: userId }),
     });
     return toItem(row);
   }

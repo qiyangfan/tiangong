@@ -7,14 +7,14 @@ import {
 } from './common.js';
 import { passwordSchema } from './auth.js';
 
-const roleBriefSchema = z.object({
+const roleBriefSchema = z.strictObject({
   id: z.number().int(),
   roleKey: z.string(),
   name: z.string(),
 });
 export type RoleBrief = z.infer<typeof roleBriefSchema>;
 
-export const userItemSchema = z.object({
+export const userItemSchema = z.strictObject({
   id: z.number().int(),
   username: z.string(),
   nickname: z.string(),

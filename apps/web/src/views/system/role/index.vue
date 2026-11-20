@@ -17,6 +17,7 @@ import AssignDialog from './AssignDialog.vue';
 import RoleFormDialog from './RoleFormDialog.vue';
 import {
   buildRoleRules,
+  canDeleteRole,
   createRoleForm,
   ENABLED_FILTER_OPTIONS,
   fillRoleForm,
@@ -150,11 +151,13 @@ async function submit(): Promise<void> {
 }
 
 async function onDelete(row: RoleItem): Promise<void> {
-  if (row.builtin) {
-    ElMessage.warning(t('role.builtinDeleteForbidden'));
+  if (!canDeleteRole(t, row)) {
     return;
   }
-  if (!(await confirmDelete().catch(() => false))) {
+  const confirmed = await confirmDelete()
+    .then(() => true)
+    .catch(() => false);
+  if (!confirmed) {
     return;
   }
   await apiDeleteRole(row.id);

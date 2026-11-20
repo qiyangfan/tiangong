@@ -9,9 +9,10 @@ export default defineConfig({
   // 单 worker 顺序执行：对单一 seeded 库保持确定性
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
-  timeout: 30_000,
-  expect: { timeout: 10_000 },
+  retries: process.env['CI'] ? 1 : 0,
+  // 首次访问按需编译视图，冷缓存下页面就绪可能超过 30s
+  timeout: 90_000,
+  expect: { timeout: 15_000 },
   use: {
     baseURL: WEB_URL,
     trace: 'retain-on-failure',
@@ -21,14 +22,14 @@ export default defineConfig({
     {
       command: 'pnpm --filter @tiangong/api dev',
       url: `${API_URL}/api/v1/health/live`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !process.env['CI'],
       timeout: 120_000,
       env: apiServerEnv(),
     },
     {
       command: 'pnpm --filter @tiangong/web exec vite --port 5174 --strictPort',
       url: WEB_URL,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !process.env['CI'],
       timeout: 60_000,
       // vite 代理 /api 指向本套 e2e api 实例（进程 env 优先于 .env.development）
       env: {

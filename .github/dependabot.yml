@@ -10,6 +10,9 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+        exclude-patterns:
+          # uni 工具链（含 devDependencies 的 cli/automator）钉精确版本，批量升级会破坏双端构建
+          - '@dcloudio/*'
       production-dependencies:
         dependency-type: production
         exclude-patterns:

@@ -94,4 +94,12 @@ describe('setupGlobalErrorHandlers', () => {
 
     expect(elMessageError).toHaveBeenCalledTimes(1);
   });
+
+  it('window.error 无 error 对象时回落 message 上报', () => {
+    setup();
+
+    listeners.get('error')?.({ message: 'boom' });
+
+    expect(elMessageError).toHaveBeenCalledTimes(1);
+  });
 });

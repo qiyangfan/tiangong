@@ -61,6 +61,14 @@ export const EXECUTABLE_DEF: GenDefinitionRequest = {
 
 export const GEN_DEFINITION_NAME = EXECUTABLE_DEF.name;
 
+/** 响应契约巡检的一次性探针键：cleanup 统一回收，保证失败后重跑幂等。 */
+export const CONTRACT_PROBE = {
+  dictKey: 'it_contract_probe',
+  settingKey: 'it.contract.probe',
+  genName: 'it-contract-probe',
+  roleKey: 'it_contract_role',
+} as const;
+
 /** SampleRecord 生命周期用例的自有数据前缀，cleanup 按此前缀批量回收。 */
 export const SAMPLE_SEED = 'it-';
 

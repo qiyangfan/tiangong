@@ -4,7 +4,7 @@
  */
 import { reactive, type InjectionKey } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { FormRules } from 'element-plus';
+import { ElMessage, type FormRules } from 'element-plus';
 import type { CreateRoleRequest, RoleItem, UpdateRoleRequest } from '@tiangong/contracts';
 
 type Translate = ReturnType<typeof useI18n>['t'];
@@ -99,3 +99,12 @@ export const ENABLED_FILTER_OPTIONS = [
   { labelKey: 'common.enabled', value: true },
   { labelKey: 'common.disabled', value: false },
 ];
+
+/** 内置角色不可删除：判定与统一提示同处，页面只做分支。 */
+export function canDeleteRole(t: Translate, row: RoleItem): boolean {
+  if (!row.builtin) {
+    return true;
+  }
+  ElMessage.warning(t('role.builtinDeleteForbidden'));
+  return false;
+}

@@ -49,7 +49,7 @@ export function menuTypeTag(type: MenuNodeWithMeta['menuType']): 'primary' | 'su
 }
 
 /** 上级菜单选择树：根节点 id=0，名称带类型后缀便于区分。 */
-export function buildTreeSelectData(t: Translate, nodes: MenuNode[]): TreeSelectNode[] {
+function buildTreeSelectData(t: Translate, nodes: MenuNode[]): TreeSelectNode[] {
   return nodes.map((n) => ({
     id: n.id,
     name: `${n.name}（${menuTypeText(t, n.menuType)}）`,

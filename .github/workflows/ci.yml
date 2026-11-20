@@ -21,6 +21,8 @@ jobs:
     env:
       # compose 解析期做变量插值，必填项缺失会在 build 前直接报错
       JWT_ACCESS_SECRET: ci_image_build_secret_at_least_32_chars
+      # 显式哑值：避免 seed 走「未设置 → 随机生成并打印口令」分支把凭据写进日志
+      ADMIN_INITIAL_PASSWORD: ci_image_build_admin_pw
     steps:
       - uses: actions/checkout@v7
       - name: 安装 hadolint
@@ -102,13 +104,13 @@ jobs:
       - run: pnpm lint:md
       # 重复率基线 3.62%（2026-11-19），阈值 4% 防回退
       - run: pnpm dup:check
-      # 死代码/未用导出：工具对 Vue SFC、动态注册等有已知误报，只报告不阻断
-      - name: 未用依赖与导出报告
-        continue-on-error: true
-        run: pnpm lint:dead
+      # 死代码/未用依赖与导出：knip 已清零，按阻断执行；miniapp 因 uni 自动导入暂排除
+      - run: pnpm lint:dead
       - run: pnpm format:check
       # contracts 的类型产物是 typecheck/test 的解析前提，先构建（拓扑保证 contracts 先行）
       - run: pnpm build
+      # 产物体积预算：web gzip 总量 + 微信小程序主包原始字节（主包硬限 2MB）
+      - run: pnpm size:check
       - run: pnpm typecheck
       # 覆盖率口径：api 含单元 + 集成（下方不再单跑集成），其余包为单测
       - run: pnpm test:coverage

@@ -31,7 +31,7 @@ async function onLogin(): Promise<void> {
   submitting.value = true;
   try {
     await auth.login({ username: form.username, password: form.password, client: 'web' });
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+    const redirect = typeof route.query['redirect'] === 'string' ? route.query['redirect'] : '/';
     await router.push(redirect);
   } finally {
     submitting.value = false;

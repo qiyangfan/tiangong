@@ -16,9 +16,9 @@ const { t } = useI18n();
  */
 const crumbs = computed<CrumbItem[]>(() =>
   route.matched
-    .filter((r) => r.meta.title)
+    .filter((r) => r.meta['title'])
     .map((r) => {
-      const title = String(r.meta.title);
+      const title = String(r.meta['title']);
       return {
         path: r.path,
         text: title.includes('.') ? t(title) : title,

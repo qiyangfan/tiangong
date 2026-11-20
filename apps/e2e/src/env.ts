@@ -6,15 +6,15 @@ import path from 'node:path';
  * e2e 运行参数单源：config / global-setup / tests 共用。
  * 端口与日常 dev（3000/5173）隔离，避免 reuseExistingServer 误连开发服务。
  */
-export const API_PORT = 3001;
-export const WEB_PORT = 5174;
+const API_PORT = 3001;
+const WEB_PORT = 5174;
 export const API_URL = `http://localhost:${API_PORT}`;
 export const WEB_URL = `http://localhost:${WEB_PORT}`;
 export const API_BASE = `${API_URL}/api/v1`;
 
 /** e2e 数据源：与集成测试同一约定（TEST_DATABASE_URL 覆盖，默认本地共享栈 tiangong_test）。 */
 export const TEST_DB_URL =
-  process.env.TEST_DATABASE_URL ?? 'mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong_test';
+  process.env['TEST_DATABASE_URL'] ?? 'mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong_test';
 
 export const E2E_ADMIN = { username: 'admin', password: 'TestAdmin1pw' } as const;
 
@@ -46,5 +46,8 @@ export function apiServerEnv(): Record<string, string> {
     ADMIN_INITIAL_PASSWORD: E2E_ADMIN.password,
     JWT_ACCESS_SECRET: 'e2e_access_secret_at_least_32_chars_long!!',
     STORAGE_DIR: path.join(tmpdir(), 'tiangong-e2e-storage'),
+    // 套件内多次登录（UI + fixture）会撞上默认 10 次/分限流，仅 e2e 进程放宽
+    AUTH_LOGIN_LIMIT: '1000',
+    AUTH_REFRESH_LIMIT: '1000',
   };
 }

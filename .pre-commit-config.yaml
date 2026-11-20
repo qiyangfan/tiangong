@@ -2,6 +2,7 @@
 # 启用：brew install pre-commit && pre-commit install
 repos:
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.1
+    # 钉提交 SHA（v8.30.1）而非可变 tag，防上游标签被移动
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e
     hooks:
       - id: gitleaks

@@ -7,6 +7,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Permission } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /** 权限点管理：resource:action 登记（供角色绑定）。 */
@@ -16,15 +17,17 @@ export class PermissionsService {
 
   async listGrouped(keyword?: string): Promise<PermissionGroup[]> {
     const rows = await this.prisma.permission.findMany({
-      where: keyword
+      ...(keyword
         ? {
-            OR: [
-              { resource: { contains: keyword } },
-              { action: { contains: keyword } },
-              { name: { contains: keyword } },
-            ],
+            where: {
+              OR: [
+                { resource: { contains: keyword } },
+                { action: { contains: keyword } },
+                { name: { contains: keyword } },
+              ],
+            },
           }
-        : undefined,
+        : {}),
       orderBy: [{ resource: 'asc' }, { action: 'asc' }],
     });
     const groups = new Map<string, PermissionGroup>();
@@ -47,7 +50,7 @@ export class PermissionsService {
     if (exists) {
       throw new AppError('PERMISSION_TAKEN');
     }
-    const row = await this.prisma.permission.create({ data: body });
+    const row = await this.prisma.permission.create({ data: defined(body) });
     return toItem(row);
   }
 
@@ -56,7 +59,7 @@ export class PermissionsService {
     if (!existing) {
       throw new AppError('PERMISSION_NOT_FOUND');
     }
-    const row = await this.prisma.permission.update({ where: { id }, data: body });
+    const row = await this.prisma.permission.update({ where: { id }, data: defined(body) });
     return toItem(row);
   }
 

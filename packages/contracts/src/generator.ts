@@ -37,7 +37,7 @@ export const genFieldDefSchema = z.object({
 export type GenFieldDef = z.infer<typeof genFieldDefSchema>;
 
 /** 代码生成元数据定义（存库；渲染为确定性模板产物）。 */
-export const genDefinitionItemSchema = z.object({
+export const genDefinitionItemSchema = z.strictObject({
   id: z.number().int(),
   name: z.string(),
   displayName: z.string(),
@@ -76,7 +76,7 @@ export const genDefinitionUpdateSchema = genDefinitionRequestSchema.partial();
 export type GenDefinitionUpdate = z.infer<typeof genDefinitionUpdateSchema>;
 
 /** 预览产物：相对仓库根的文件路径 + 完整内容。 */
-export const genPreviewFileSchema = z.object({
+export const genPreviewFileSchema = z.strictObject({
   path: z.string(),
   content: z.string(),
 });

@@ -16,7 +16,7 @@ export const operStatusSchema = z.enum(['ok', 'error']);
 export type OperStatus = z.infer<typeof operStatusSchema>;
 
 /** 操作审计（@Audit 装饰器采集，参数与结果已截断脱敏）。 */
-export const operLogItemSchema = z.object({
+export const operLogItemSchema = z.strictObject({
   id: z.number().int(),
   title: z.string(),
   businessType: businessTypeSchema,
@@ -46,7 +46,7 @@ export const operLogQuerySchema = pageQuerySchema.extend({
 export type OperLogQuery = z.infer<typeof operLogQuerySchema>;
 
 /** 登录审计。 */
-export const loginLogItemSchema = z.object({
+export const loginLogItemSchema = z.strictObject({
   id: z.number().int(),
   username: z.string(),
   userId: z.number().int().nullable(),

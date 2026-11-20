@@ -126,11 +126,11 @@ export function toCreateUser(form: UserForm): CreateUserBody {
     username: form.username,
     nickname: form.nickname,
     password: form.password,
-    email: form.email === '' ? undefined : form.email,
-    phone: form.phone === '' ? undefined : form.phone,
+    ...(form.email === '' ? {} : { email: form.email }),
+    ...(form.phone === '' ? {} : { phone: form.phone }),
     roleIds: form.roleIds,
     enabled: form.enabled,
-    remark: form.remark === '' ? undefined : form.remark,
+    ...(form.remark === '' ? {} : { remark: form.remark }),
   };
 }
 

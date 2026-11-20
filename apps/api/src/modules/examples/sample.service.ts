@@ -8,6 +8,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { pageBounds, pageResult } from '../../common/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -43,14 +44,14 @@ export class SampleService {
 
   async create(body: CreateSampleRequest, userId: number): Promise<SampleRecordItem> {
     const row = await this.prisma.sampleRecord.create({
-      data: {
+      data: defined({
         name: body.name,
         category: body.category,
         amount: body.amount ? new Prisma.Decimal(body.amount) : null,
         enabled: body.enabled,
         remark: body.remark,
         createdBy: userId,
-      },
+      }),
     });
     return toItem(row);
   }
@@ -59,11 +60,11 @@ export class SampleService {
     await this.assertExists(id);
     const row = await this.prisma.sampleRecord.update({
       where: { id },
-      data: {
+      data: defined({
         ...body,
         ...(body.amount === undefined ? {} : { amount: new Prisma.Decimal(body.amount) }),
         updatedBy: userId,
-      },
+      }),
     });
     return toItem(row);
   }

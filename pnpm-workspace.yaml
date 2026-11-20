@@ -21,6 +21,12 @@ overrides:
   '@vue/server-renderer@3.4.21': ^3.5.42
   '@dcloudio/uni-mp-baidu>ws': ^8.21.0
   '@dcloudio/uni-mp-weixin>ws': ^8.21.0
+  # uni 工具链内嵌 express 4 的补丁级漏洞（审计 2026-11-19，均限 dev 链路）
+  'body-parser@1.20.3': 1.20.9
+  'path-to-regexp@0.1.10': 0.1.13
+  '@dcloudio/uni-automator>ws': ^8.21.0
+  # miniapp 的 uni 工具链钉 vite 5，只能留 vitest 3；tinypool 升到 2.1.2 修 RCE 通告
+  'vitest@^3.0.0>tinypool': 2.1.2
 
 # 逐条裁决后的残留（其余由 overrides 修掉）：
 # - GHSA-587h-7wmj-h5pm：vite 需 ≥6.4.4，uni 工具链钉 5.x，升级等 uni 官方发版

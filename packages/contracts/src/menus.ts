@@ -35,7 +35,7 @@ const menuNodeFields = {
   children: z.array(z.lazy(() => menuNodeSchema)),
 };
 
-export const menuNodeSchema: z.ZodType<MenuNode> = z.object(menuNodeFields);
+export const menuNodeSchema: z.ZodType<MenuNode> = z.strictObject(menuNodeFields);
 
 /** 菜单管理列表返回全量树（带元信息，子节点同构）。 */
 export interface MenuNodeWithMeta extends MenuNode {
@@ -45,7 +45,7 @@ export interface MenuNodeWithMeta extends MenuNode {
   children: MenuNodeWithMeta[];
 }
 
-export const menuNodeWithMetaSchema: z.ZodType<MenuNodeWithMeta> = z.object({
+export const menuNodeWithMetaSchema: z.ZodType<MenuNodeWithMeta> = z.strictObject({
   ...menuNodeFields,
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,

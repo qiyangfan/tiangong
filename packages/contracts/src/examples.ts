@@ -11,7 +11,7 @@ import {
  * SampleRecord：可复用的通用 CRUD 示范实体（字段刻意业务无关）。
  * 代码生成器以它为参照模板；Web 与小程序读写同一份数据完成跨端闭环。
  */
-export const sampleRecordItemSchema = z.object({
+export const sampleRecordItemSchema = z.strictObject({
   id: z.number().int(),
   name: z.string(),
   category: z.string().nullable(),

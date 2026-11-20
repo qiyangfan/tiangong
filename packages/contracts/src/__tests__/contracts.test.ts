@@ -10,6 +10,11 @@ import {
   decimalStringSchema,
   createUserRequestSchema,
   createRoleRequestSchema,
+  genDefinitionRequestSchema,
+  menuNodeWithMetaSchema,
+  userItemSchema,
+  roleDetailSchema,
+  dictOptionSchema,
 } from '../index.js';
 
 describe('pageQuerySchema（分页契约）', () => {
@@ -162,5 +167,107 @@ describe('通用类型', () => {
     };
     expect(menuNodeSchema.safeParse(tree).success).toBe(true);
     expect(menuNodeSchema.safeParse({ ...tree, menuType: 'X' }).success).toBe(false);
+  });
+});
+
+describe('生成器定义契约', () => {
+  const base = {
+    name: 'user-profile',
+    displayName: '用户资料',
+    fields: [
+      {
+        name: 'title',
+        label: '标题',
+        type: 'string',
+        required: true,
+        enumOptions: [],
+        inList: true,
+        inForm: true,
+        searchable: false,
+      },
+    ],
+  };
+
+  it('合法定义通过；元数据文案禁引号/反斜杠/换行与注释终止序列', () => {
+    expect(genDefinitionRequestSchema.safeParse(base).success).toBe(true);
+    const badLabel = { ...base, fields: [{ ...base.fields[0], label: "it's" }] };
+    expect(genDefinitionRequestSchema.safeParse(badLabel).success).toBe(false);
+    expect(
+      genDefinitionRequestSchema.safeParse({ ...base, displayName: '注释*/终止' }).success,
+    ).toBe(false);
+  });
+});
+
+describe('菜单树（管理端）契约', () => {
+  it('带元信息节点含子节点时递归解析通过', () => {
+    const leaf = {
+      id: 2,
+      parentId: 1,
+      name: '用户管理',
+      menuType: 'C',
+      path: 'user',
+      component: 'system/user/index',
+      perms: null,
+      icon: null,
+      sort: 1,
+      visible: true,
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      remark: null,
+      children: [],
+    };
+    const root = { ...leaf, id: 1, parentId: 0, name: '系统管理', menuType: 'M', children: [leaf] };
+    expect(menuNodeWithMetaSchema.safeParse(root).success).toBe(true);
+    expect(menuNodeWithMetaSchema.safeParse({ ...root, createdAt: 'not-a-date' }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe('响应契约严格性', () => {
+  const user = {
+    id: 1,
+    username: 'admin',
+    nickname: '管理员',
+    email: null,
+    phone: null,
+    enabled: true,
+    remark: null,
+    roles: [],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    lastLoginAt: null,
+  };
+
+  it('拒绝未声明字段，防止数据库内部字段随响应泄露', () => {
+    expect(userItemSchema.safeParse(user).success).toBe(true);
+    expect(userItemSchema.safeParse({ ...user, passwordHash: 'leak' }).success).toBe(false);
+  });
+
+  it('角色详情经 extend 后仍保持严格模式', () => {
+    const role = {
+      id: 1,
+      name: '角色',
+      roleKey: 'role',
+      sort: 0,
+      enabled: true,
+      builtin: false,
+      remark: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      permissions: ['system:user:list'],
+    };
+    expect(roleDetailSchema.safeParse(role).success).toBe(true);
+    expect(roleDetailSchema.safeParse({ ...role, extra: 1 }).success).toBe(false);
+  });
+
+  it('选项与菜单节点同样拒绝未声明字段', () => {
+    expect(dictOptionSchema.safeParse({ label: '男', value: '0', tagType: null }).success).toBe(
+      true,
+    );
+    expect(
+      dictOptionSchema.safeParse({ label: '男', value: '0', tagType: null, extra: 1 }).success,
+    ).toBe(false);
   });
 });

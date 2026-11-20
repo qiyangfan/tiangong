@@ -132,12 +132,22 @@ async function submit(): Promise<void> {
   }
 }
 
+function deletable(row: UserItem): boolean {
+  if (row.id !== auth.user?.id) {
+    return true;
+  }
+  ElMessage.warning(t('user.selfDeleteForbidden'));
+  return false;
+}
+
 async function onDelete(row: UserItem): Promise<void> {
-  if (row.id === auth.user?.id) {
-    ElMessage.warning(t('user.selfDeleteForbidden'));
+  if (!deletable(row)) {
     return;
   }
-  if (!(await confirmDelete().catch(() => false))) {
+  const confirmed = await confirmDelete()
+    .then(() => true)
+    .catch(() => false);
+  if (!confirmed) {
     return;
   }
   await apiDeleteUser(row.id);

@@ -2,6 +2,7 @@ import { hash } from '@node-rs/argon2';
 import { PrismaClient } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
 import { DICTS, MENUS, PERMISSIONS, SETTINGS, type MenuSeed } from './seed-data';
+import { defined } from '../src/common/defined';
 
 const prisma = new PrismaClient();
 
@@ -26,7 +27,7 @@ async function upsertMenu(m: MenuSeed, parentId: number): Promise<number> {
   const row = await prisma.menu.upsert({
     where: { id: await findMenuId(m.name, parentId) },
     update: {},
-    create: {
+    create: defined({
       parentId,
       name: m.name,
       menuType: m.menuType,
@@ -35,7 +36,7 @@ async function upsertMenu(m: MenuSeed, parentId: number): Promise<number> {
       perms: m.perms,
       icon: m.icon,
       sort: m.sort,
-    },
+    }),
   });
   return row.id;
 }
@@ -83,20 +84,20 @@ async function seedDictItems(dict: (typeof DICTS)[number]): Promise<void> {
   for (const item of dict.items) {
     await prisma.dictItem.upsert({
       where: { dictKey_value: { dictKey: dict.dictKey, value: item.value } },
-      update: {
+      update: defined({
         label: item.label,
         tagType: item.tagType,
         sort: item.sort,
         isDefault: item.isDefault ?? false,
-      },
-      create: {
+      }),
+      create: defined({
         dictKey: dict.dictKey,
         label: item.label,
         value: item.value,
         tagType: item.tagType,
         sort: item.sort,
         isDefault: item.isDefault ?? false,
-      },
+      }),
     });
   }
 }

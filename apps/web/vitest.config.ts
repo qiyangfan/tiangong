@@ -12,9 +12,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary'],
       include: ['src/utils/**/*.ts'],
-      exclude: ['**/*.d.ts'],
-      // 阈值取 2026-11-19 实测基线（63.0/91.0/76.5）略下方
-      thresholds: { statements: 60, branches: 88, functions: 72, lines: 60 },
+      // echarts 为三方库装配、confirm 为 ElMessageBox 界面壳，二者行为由 e2e 覆盖
+      exclude: ['**/*.d.ts', 'src/utils/echarts.ts', 'src/utils/confirm.ts'],
+      // 阈值取 2026-11-20 实测（100/95.94/100/100）略下方
+      thresholds: { statements: 98, branches: 92, functions: 96, lines: 98 },
     },
   },
   resolve: {

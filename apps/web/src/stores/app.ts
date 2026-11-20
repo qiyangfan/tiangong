@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { i18n } from '@/locales';
 
-export type ThemeMode = 'light' | 'dark';
-export type LocaleCode = 'zh-CN' | 'en';
+type ThemeMode = 'light' | 'dark';
+type LocaleCode = 'zh-CN' | 'en';
 
 interface AppState {
   theme: ThemeMode;

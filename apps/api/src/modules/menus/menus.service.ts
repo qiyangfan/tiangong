@@ -8,6 +8,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Menu } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { PrismaService } from '../../prisma/prisma.service';
 
 type MenuRow = Menu;
@@ -79,7 +80,7 @@ export class MenusService {
 
   async create(body: CreateMenuRequest, userId: number): Promise<MenuNodeWithMeta> {
     await this.assertParentOk(body.parentId, null);
-    const row = await this.prisma.menu.create({ data: { ...body, createdBy: userId } });
+    const row = await this.prisma.menu.create({ data: defined({ ...body, createdBy: userId }) });
     return this.withMeta(row);
   }
 
@@ -93,7 +94,7 @@ export class MenusService {
     }
     const row = await this.prisma.menu.update({
       where: { id },
-      data: { ...body, updatedBy: userId },
+      data: defined({ ...body, updatedBy: userId }),
     });
     return this.withMeta(row);
   }

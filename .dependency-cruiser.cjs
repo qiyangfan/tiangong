@@ -4,7 +4,7 @@ module.exports = {
     {
       name: 'no-circular',
       severity: 'error',
-      comment: '静态初始化环一律不允许；懒加载边属于运行时解耦，不计入环检测',
+      comment: '静态初始化与动态 import 环一律不允许（dependency-cruiser 两种情况都计入）',
       from: {},
       to: { circular: true },
     },

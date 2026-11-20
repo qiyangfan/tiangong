@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { isoDateTimeSchema, keywordSchema } from './common.js';
 
 /** 非机密运行参数。禁止存放任何密钥/密码类内容（服务端校验拒绝）。 */
-export const settingItemSchema = z.object({
+export const settingItemSchema = z.strictObject({
   id: z.number().int(),
   name: z.string(),
   settingKey: z.string(),

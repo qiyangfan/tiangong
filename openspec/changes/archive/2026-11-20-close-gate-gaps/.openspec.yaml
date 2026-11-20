@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-20
+goal: 关闭门禁盘点中剩余 4 项本地可推进缺口：env 配置契约测试、详情接口响应契约、构建体积预算、license 检查动态 workspace 推导
+skip_specs: true

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCost, formatDate, formatDateTime } from '../datetime';
+import { formatCost, formatDate, formatDateTime, formatFileSize } from '../datetime';
 
 /** 以同一 Date 对象构造期望值，断言与宿主时区无关。 */
 function localStamp(iso: string): string {
@@ -38,5 +38,15 @@ describe('formatCost', () => {
     expect(formatCost(1000)).toBe('1.0 s');
     expect(formatCost(1234)).toBe('1.2 s');
     expect(formatCost(1500)).toBe('1.5 s');
+  });
+});
+
+describe('formatFileSize', () => {
+  it('按 1024 进位并在三位数以上取整', () => {
+    expect(formatFileSize(0)).toBe('0 B');
+    expect(formatFileSize(512)).toBe('512 B');
+    expect(formatFileSize(1536)).toBe('1.5 KB');
+    expect(formatFileSize(230 * 1024 * 1024)).toBe('230 MB');
+    expect(formatFileSize(3 * 1024 ** 3)).toBe('3.0 GB');
   });
 });

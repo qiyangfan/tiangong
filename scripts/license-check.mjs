@@ -1,4 +1,6 @@
 // 生产依赖许可证白名单（分发合规）。逐 workspace 取 --prod 清单，devDependencies 不在分发范围。
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const allowed = new Set([
@@ -37,7 +39,21 @@ function isAllowed(expression) {
   return atoms.length > 0 && atoms.every((atom) => allowed.has(atom));
 }
 
-const workspaces = ['@tiangong/api', '@tiangong/web', '@tiangong/miniapp', '@tiangong/contracts'];
+/** 与 pnpm-workspace.yaml 的 apps/*、packages/* 对齐：新增 workspace 自动纳入检查。 */
+function workspaceNames() {
+  const names = [];
+  for (const root of ['apps', 'packages']) {
+    for (const entry of readdirSync(root, { withFileTypes: true })) {
+      const pkgPath = join(root, entry.name, 'package.json');
+      if (!entry.isDirectory() || !existsSync(pkgPath)) continue;
+      const { name } = JSON.parse(readFileSync(pkgPath, 'utf8'));
+      if (typeof name === 'string' && name !== '') names.push(name);
+    }
+  }
+  return names.sort();
+}
+
+const workspaces = workspaceNames();
 const pnpmCli = process.env['npm_execpath'];
 if (pnpmCli === undefined) {
   console.error('license:check 需经 pnpm 脚本运行（npm_execpath 缺失）');

@@ -9,6 +9,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { pageBounds, pageResult } from '../../common/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -60,7 +61,7 @@ export class RolesService {
     }
     await this.assertPermissionsExist(body.permissionIds);
     const role = await this.prisma.role.create({
-      data: {
+      data: defined({
         name: body.name,
         roleKey: body.roleKey,
         sort: body.sort,
@@ -68,7 +69,7 @@ export class RolesService {
         remark: body.remark,
         createdBy: userId,
         permissions: { create: body.permissionIds.map((permissionId) => ({ permissionId })) },
-      },
+      }),
     });
     return toItem(role);
   }
@@ -92,7 +93,7 @@ export class RolesService {
       }
       return tx.role.update({
         where: { id },
-        data: { ...withoutPermissionIds(body), updatedBy: userId },
+        data: defined({ ...withoutPermissionIds(body), updatedBy: userId }),
       });
     });
     return toItem(updated);

@@ -120,7 +120,10 @@ async function submit(): Promise<void> {
 }
 
 async function onDelete(row: MenuNodeWithMeta): Promise<void> {
-  if (!(await confirmDelete().catch(() => false))) {
+  const confirmed = await confirmDelete()
+    .then(() => true)
+    .catch(() => false);
+  if (!confirmed) {
     return;
   }
   await apiDeleteMenu(row.id);

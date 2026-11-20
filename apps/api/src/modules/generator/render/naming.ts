@@ -1,4 +1,4 @@
-import type { GenFieldDef, GenDefinitionRequest } from '@tiangong/contracts';
+import type { GenFieldDef } from '@tiangong/contracts';
 
 /** kebab-case 模块名 → PascalCase（Prisma model 名 / 组件名 / 类型前缀）。 */
 export function pascalCase(kebab: string): string {
@@ -92,5 +92,3 @@ export interface GenRenderInput {
   displayName: string;
   fields: GenFieldDef[];
 }
-
-export type { GenDefinitionRequest };

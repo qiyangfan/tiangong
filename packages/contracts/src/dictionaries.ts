@@ -9,7 +9,7 @@ import {
 export const tagTypeSchema = z.enum(['primary', 'success', 'info', 'warning', 'danger']);
 export type TagType = z.infer<typeof tagTypeSchema>;
 
-export const dictTypeItemSchema = z.object({
+export const dictTypeItemSchema = z.strictObject({
   id: z.number().int(),
   name: z.string(),
   dictKey: z.string(),
@@ -41,7 +41,7 @@ export type CreateDictTypeRequest = z.infer<typeof createDictTypeRequestSchema>;
 export const updateDictTypeRequestSchema = createDictTypeRequestSchema.partial();
 export type UpdateDictTypeRequest = z.infer<typeof updateDictTypeRequestSchema>;
 
-export const dictItemSchema = z.object({
+export const dictItemSchema = z.strictObject({
   id: z.number().int(),
   dictKey: z.string(),
   label: z.string(),
@@ -55,7 +55,7 @@ export const dictItemSchema = z.object({
 export type DictItem = z.infer<typeof dictItemSchema>;
 
 /** 某一字典类型下的全部可用项（useDict 消费的形态）。 */
-export const dictOptionSchema = z.object({
+export const dictOptionSchema = z.strictObject({
   label: z.string(),
   value: z.string(),
   tagType: tagTypeSchema.nullable(),

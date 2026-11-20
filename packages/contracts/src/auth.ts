@@ -19,7 +19,7 @@ export const loginRequestSchema = z.object({
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 /** 登录后的当前用户信息（不含任何敏感字段）。 */
-export const currentUserSchema = z.object({
+export const currentUserSchema = z.strictObject({
   id: z.number().int(),
   username: z.string(),
   nickname: z.string(),
@@ -29,10 +29,10 @@ export const currentUserSchema = z.object({
 export type CurrentUser = z.infer<typeof currentUserSchema>;
 
 /** 当前用户权限串集合（页面刷新经 refresh 恢复会话后，前端重建权限上下文用）。 */
-export const userPermissionsSchema = z.object({ permissions: z.array(z.string()) });
+export const userPermissionsSchema = z.strictObject({ permissions: z.array(z.string()) });
 export type UserPermissions = z.infer<typeof userPermissionsSchema>;
 
-export const loginResponseSchema = z.object({
+export const loginResponseSchema = z.strictObject({
   accessToken: z.string(),
   accessExpiresIn: z.number().int(),
   /** 仅 miniapp 客户端返回；web 端经 HttpOnly Cookie 下发 */
@@ -48,7 +48,7 @@ export const refreshRequestSchema = z.object({
 });
 export type RefreshRequest = z.infer<typeof refreshRequestSchema>;
 
-export const refreshResponseSchema = z.object({
+export const refreshResponseSchema = z.strictObject({
   accessToken: z.string(),
   accessExpiresIn: z.number().int(),
   refreshToken: z.string().optional(),
@@ -74,7 +74,7 @@ export const updateProfileRequestSchema = z.object({
 });
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
 
-export const profileSchema = z.object({
+export const profileSchema = z.strictObject({
   id: z.number().int(),
   username: z.string(),
   nickname: z.string(),

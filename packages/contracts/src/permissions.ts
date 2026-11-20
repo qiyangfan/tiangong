@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { keywordSchema } from './common.js';
 
-export const permissionItemSchema = z.object({
+export const permissionItemSchema = z.strictObject({
   id: z.number().int(),
   resource: z.string(),
   action: z.string(),
@@ -16,7 +16,7 @@ export const permissionListQuerySchema = z.object({
 });
 export type PermissionListQuery = z.infer<typeof permissionListQuerySchema>;
 
-export const permissionGroupSchema = z.object({
+export const permissionGroupSchema = z.strictObject({
   resource: z.string(),
   name: z.string(),
   permissions: z.array(permissionItemSchema),

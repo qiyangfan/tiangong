@@ -8,14 +8,15 @@ import {
 } from '@tiangong/contracts';
 import { hash } from '@node-rs/argon2';
 import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { pageBounds, pageResult } from '../../common/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
 
-type UserWithRoles = User & {
-  roles: Array<{ role: { id: number; roleKey: string; name: string } }>;
-};
+type UserWithRoles = Prisma.UserGetPayload<{
+  include: { roles: { include: { role: true } } };
+}>;
 
 function withoutRoleIds(body: UpdateUserRequest): Omit<UpdateUserRequest, 'roleIds'> {
   const copy: UpdateUserRequest = { ...body };
@@ -71,7 +72,7 @@ export class UsersService {
     }
     await this.assertRolesExist(body.roleIds);
     const created = await this.prisma.user.create({
-      data: {
+      data: defined({
         username: body.username,
         nickname: body.nickname,
         email: body.email,
@@ -81,7 +82,7 @@ export class UsersService {
         remark: body.remark,
         createdBy: userId,
         roles: { create: body.roleIds.map((roleId) => ({ roleId })) },
-      },
+      }),
       include: { roles: { include: { role: true } } },
     });
     return toItem(created);
@@ -98,7 +99,7 @@ export class UsersService {
       }
       return tx.user.update({
         where: { id },
-        data: { ...withoutRoleIds(body), updatedBy: userId },
+        data: defined({ ...withoutRoleIds(body), updatedBy: userId }),
         include: { roles: { include: { role: true } } },
       });
     });
@@ -178,7 +179,9 @@ export class UsersService {
   }
 
   private async assertEmailFree(email: string, excludeId?: number): Promise<void> {
-    const exists = await this.prisma.user.findFirst({ where: { email, NOT: { id: excludeId } } });
+    const exists = await this.prisma.user.findFirst({
+      where: { email, ...(excludeId === undefined ? {} : { NOT: { id: excludeId } }) },
+    });
     if (exists) {
       throw new AppError('USER_EMAIL_TAKEN');
     }

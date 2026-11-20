@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { Hide, Operation, Refresh, Search } from '@element-plus/icons-vue';
 
-export interface ToolbarColumn {
+interface ToolbarColumn {
   key: string;
   label: string;
 }

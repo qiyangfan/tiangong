@@ -28,9 +28,13 @@ import { AuthService } from './auth.service';
 const refreshCookieOptions = {
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env['NODE_ENV'] === 'production',
   path: '/api/v1/auth',
 };
+
+/** 认证限流阈值（次/分/IP）：默认登录 10、刷新 30；e2e 大量复用会话时可经 env 放宽。 */
+const LOGIN_LIMIT = Number(process.env['AUTH_LOGIN_LIMIT'] ?? '10') || 10;
+const REFRESH_LIMIT = Number(process.env['AUTH_REFRESH_LIMIT'] ?? '30') || 30;
 
 /** Web 端 refresh 只走 HttpOnly Cookie，响应体不携带 refreshToken。 */
 function withoutRefreshToken<T extends { refreshToken?: string }>(
@@ -51,7 +55,7 @@ export class AuthController {
 
   /** 登录：Web 端 refresh 进 HttpOnly Cookie，小程序端经响应体返回。 */
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: LOGIN_LIMIT, ttl: 60_000 } })
   @Post('login')
   @HttpCode(200)
   @ApiOperation({ summary: '账号密码登录' })
@@ -72,7 +76,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @Throttle({ default: { limit: REFRESH_LIMIT, ttl: 60_000 } })
   @Post('refresh')
   @HttpCode(200)
   @ApiOperation({ summary: '刷新 access token（refresh 轮换）' })

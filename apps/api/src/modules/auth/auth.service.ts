@@ -11,6 +11,7 @@ import { hash, verify } from '@node-rs/argon2';
 import { Injectable } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LoginTracker, type LoginAttempt } from './login-tracker.service';
 import { TokenService, type IssuedTokens } from './token.service';
@@ -93,7 +94,10 @@ export class AuthService {
         throw new AppError('USER_EMAIL_TAKEN');
       }
     }
-    await this.prisma.user.update({ where: { id: userId }, data: { ...body, updatedBy: userId } });
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: defined({ ...body, updatedBy: userId }),
+    });
     return this.profile(userId);
   }
 

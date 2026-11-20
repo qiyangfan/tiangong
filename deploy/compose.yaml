@@ -14,7 +14,8 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-ptg_change_me_root']
+      # 与上方 MYSQL_ROOT_PASSWORD 同源，避免覆盖密码后健康检查永远失败
+      test: ['CMD', 'mysqladmin', 'ping', '-p${MYSQL_ROOT_PASSWORD:-tg_change_me_root}']
       interval: 5s
       timeout: 3s
       retries: 30

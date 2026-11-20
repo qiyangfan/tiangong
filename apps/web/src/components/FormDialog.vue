@@ -15,7 +15,7 @@ const props = withDefaults(
     /** 嵌套场景（如抽屉内弹窗）需置 true */
     appendToBody?: boolean;
   }>(),
-  { width: '520px', loading: false, appendToBody: false, confirmText: undefined },
+  { width: '520px', loading: false, appendToBody: false, confirmText: '' },
 );
 
 const emit = defineEmits<{
@@ -32,7 +32,7 @@ const visible = computed({
   },
 });
 
-const confirmLabel = computed(() => props.confirmText ?? t('common.submit'));
+const confirmLabel = computed(() => props.confirmText || t('common.submit'));
 </script>
 
 <template>

@@ -44,7 +44,10 @@ it('OpenAPI 文档与已提交快照一致', () => {
     writeFileSync(snapshotPath, current);
     return;
   }
-  expect(current, '对外契约变更需人工确认后执行 pnpm --filter @tiangong/api openapi:update').toBe(
-    readFileSync(snapshotPath, 'utf8'),
-  );
+  // 比较解析后的结构而非字节：快照允许被 Prettier 重排，契约差异仍然严格暴露
+  const expected: unknown = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+  expect(
+    sortKeys(createOpenApiDocument(app)),
+    '对外契约变更需人工确认后执行 pnpm --filter @tiangong/api openapi:update',
+  ).toEqual(expected);
 });

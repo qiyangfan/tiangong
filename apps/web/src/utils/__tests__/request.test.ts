@@ -11,33 +11,34 @@ vi.mock('@/locales', () => ({ i18n: { global: { t: (key: string) => key } } }));
 // 可编程假 adapter：按队列顺序吐响应。axios 的 settle（status 校验）发生在内置 adapter
 // 内部，自定义 adapter 必须自行模拟：非 2xx 以 AxiosError 附带 response 拒绝，
 // 与真实服务端行为一致地进入响应拦截器错误分支。
-const script = vi.hoisted(() => ({ queue: [] as Array<{ status: number; data: unknown }> }));
+const script = vi.hoisted(() => ({
+  queue: [] as Array<{ status: number; data: unknown; network?: boolean }>,
+}));
 vi.mock('axios', async (importOriginal) => {
   const actual = await importOriginal<typeof import('axios')>();
   const { AxiosError } = actual.default;
-  const fakeAdapter = (
-    cfg: import('axios').InternalAxiosRequestConfig,
-  ): Promise<import('axios').AxiosResponse> =>
-    new Promise((resolve, reject) => {
-      const next = script.queue.shift();
-      if (!next) {
-        reject(new Error('script exhausted'));
-        return;
-      }
-      const response: import('axios').AxiosResponse = {
-        status: next.status,
-        data: next.data as never,
-        statusText: '',
-        headers: {},
-        config: cfg,
-      };
-      const valid = cfg.validateStatus
-        ? cfg.validateStatus(next.status)
-        : next.status >= 200 && next.status < 300;
-      if (valid) {
-        resolve(response);
-      } else {
-        reject(
+
+  const fakeAdapter = (cfg: Cfg): Promise<Res> => {
+    const next = script.queue.shift();
+    if (!next) {
+      return Promise.reject(new Error('script exhausted'));
+    }
+    if (next.network) {
+      return Promise.reject(new AxiosError('Network Error', AxiosError.ERR_NETWORK, cfg));
+    }
+    const response: Res = {
+      status: next.status,
+      data: next.data as never,
+      statusText: '',
+      headers: {},
+      config: cfg,
+    };
+    const ok = cfg.validateStatus
+      ? cfg.validateStatus(next.status)
+      : next.status >= 200 && next.status < 300;
+    return ok
+      ? Promise.resolve(response)
+      : Promise.reject(
           new AxiosError(
             `Request failed with status code ${next.status}`,
             AxiosError.ERR_BAD_RESPONSE,
@@ -46,18 +47,21 @@ vi.mock('axios', async (importOriginal) => {
             response as never,
           ),
         );
-      }
-    });
+  };
+
   return {
     default: Object.assign(vi.fn(), actual.default, {
-      create: ((config?: import('axios').AxiosRequestConfig) => {
+      create(config?: import('axios').AxiosRequestConfig) {
         const instance = actual.default.create(config);
         instance.defaults.adapter = fakeAdapter;
         return instance;
-      }) satisfies typeof actual.default.create,
+      },
     }),
   };
 });
+
+type Cfg = import('axios').InternalAxiosRequestConfig;
+type Res = import('axios').AxiosResponse;
 
 import { http } from '@/utils/request';
 import { bindTokenBus } from '@/utils/token-bus';
@@ -97,6 +101,43 @@ describe('envelope 解包与业务错误', () => {
     const blob = new Blob(['payload']);
     script.queue.push({ status: 200, data: blob });
     await expect(http.get('/files/1/download', { responseType: 'blob' })).resolves.toBe(blob);
+  });
+
+  it('非 envelope 错误响应保留 HTTP 状态码；无响应网络错误回落 HTTP_0', async () => {
+    script.queue.push({ status: 500, data: undefined });
+    await expect(http.get('/users/1')).rejects.toMatchObject({ code: 'HTTP_500', status: 500 });
+
+    script.queue.push({ status: 0, data: null, network: true });
+    const err = (await http.get('/users/1').catch((e: unknown) => e)) as { code: string };
+    expect(err.code).toBe('HTTP_0');
+  });
+});
+
+describe('错误码文案与 HTTP 动词封装', () => {
+  it('已知错误码使用本地文案；未收录码回落服务端 message', async () => {
+    script.queue.push({
+      status: 403,
+      data: { code: 'AUTH_FORBIDDEN', message: 'server text', requestId: 'r-3', data: null },
+    });
+    await expect(http.get('/users/1')).rejects.toMatchObject({ code: 'AUTH_FORBIDDEN' });
+    expect(elMessageError).toHaveBeenCalledWith('error.forbidden');
+
+    script.queue.push({
+      status: 400,
+      data: { code: 'SOMETHING_NEW', message: 'server text', requestId: 'r-4', data: null },
+    });
+    await expect(http.get('/users/1')).rejects.toMatchObject({
+      code: 'SOMETHING_NEW',
+      message: 'server text',
+    });
+  });
+
+  it('put/delete 复用同一解包与错误语义', async () => {
+    script.queue.push({ status: 200, data: { code: 0, data: { ok: true } } });
+    await expect(http.put('/users/1', { nickname: 'n' })).resolves.toEqual({ ok: true });
+
+    script.queue.push({ status: 200, data: { code: 0, data: null } });
+    await expect(http.delete('/users/1')).resolves.toBeNull();
   });
 });
 

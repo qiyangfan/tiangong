@@ -21,6 +21,14 @@ export function testHttp(): TestApp['http'] {
   return state.http;
 }
 
+/** 已装配的应用实例（授权矩阵等需要读取路由元数据的套件使用）。 */
+export function testApp(): TestApp['app'] {
+  if (!state.app) {
+    throw new Error('test app 未初始化');
+  }
+  return state.app.app;
+}
+
 /** 超管授权头。 */
 export function adminAuth(): Record<string, string> {
   return bearer(state.adminToken);

@@ -112,10 +112,18 @@ onMounted(() => {
     <el-card shadow="never" class="tg-table-card">
       <div class="tg-toolbar">
         <div class="tg-toolbar__actions">
-          <el-upload v-permission="'files:upload'" :show-file-list="false" :http-request="doUpload">
-            <el-button type="primary" :icon="Plus" :loading="uploading">
+          <!-- el-upload 的 trigger 容器本身是 role=button；内层再放按钮会构成嵌套交互，
+               这里用纯文本触发器，键盘与点击由容器承担 -->
+          <el-upload
+            v-permission="'files:upload'"
+            :show-file-list="false"
+            :disabled="uploading"
+            :http-request="doUpload"
+          >
+            <span class="el-button el-button--primary" :class="{ 'is-loading': uploading }">
+              <el-icon class="el-icon--left"><Plus /></el-icon>
               {{ t('file.upload') }}
-            </el-button>
+            </span>
           </el-upload>
         </div>
         <RightToolbar v-model:show-search="showSearch" @refresh="getList" />

@@ -118,14 +118,24 @@ tiangong/
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**完成度速览**：Stage 0-6 全部收官；七个变更经 owner 验收归档（`openspec/changes/archive/2026-11-0{7,8,9}-*`）：2026-11-07 五变更——`add-e2e-test-hardening`（Playwright e2e 5 例入 CI + TEST_DATABASE_URL 修复 + 死配置清除）、`unify-terminal-401-relogin`（两端终局 401 统一：按 HTTP 状态码判定、终局清理回登录、文案区分停用/过期，identity-access 增补不变量）、`add-frontend-global-error-handling`（两端全局异常兜底 + 节流提示 + miniapp requestId 透传）、`align-miniapp-ui`（UnoCSS token 单源 + dayjs 双端时间单源，修 UTC 裸切时区 bug）、`add-miniapp-state-i18n`（pinia + vue-i18n 基线：语言切换、导航/tabBar 同步、tg_locale 持久化）；2026-11-08 `adopt-wot-design-uni`（miniapp 组件层 wot 1.14.0 uni_modules 内联 + 三页 wd-* 替换 + tgTokens 主题桥接 + tabBar 图标 + 46px 控件档，决策证据链在 ADR-0008，细节见下方「miniapp 组件层」事实与 §8 入口 2）；2026-11-09 `add-basic-metrics`（P0 基础 metrics 补口：`GET /api/v1/metrics` Prometheus 文本 = prom-client 进程默认指标 + HTTP RED 中间件，route 标签仅路由模板，`METRICS_ENABLED` 开关；「基础运行指标」并入 platform-api 基线；同轮 FUNCTION_MATRIX 补「登录人机验证」X 取舍行）。能力基线 10 个（openspec/specs/），validate 全绿。当前测试矩阵：单元 78（contracts 17 + api 13 + web 17 + miniapp 31）+ 真库集成 32 + 浏览器 e2e 5（`pnpm test:e2e` 一键跑，自动起 api:3001 + web:5174 指向 tiangong_test，globalSetup 自动 migrate+seed+复位 admin 锁定计数）。**在途变更（2026-11-19）**：`2026-11-19-add-secret-scanning`——跨仓质量门禁批次 1 / P0-1（gitleaks 机密扫描：`.gitleaks.toml` + `.pre-commit-config.yaml` + `.github/workflows/security.yml` 的 `secrets` job，`ci.yml` checkout 对齐 v7）。本地门禁与负向验收已过（证据见 DELIVERY_REPORT 验证记录 2026-11-19 条），`openspec validate --strict` 通过；**已提交推送（2026-11-19）**。GitHub 首跑：`security` 与 `CI` 两个 workflow 均在建步骤前失败，annotation = `The job was not started because your account is locked due to a billing issue`（账号欠费锁，非 workflow 缺陷）；本地以 ubuntu:24.04 容器复跑 `secrets` job 全步骤 exit 0（23 commits scanned / no leaks；x64 资产在 Rosetta 下崩溃，容器内改用 arm64 资产，规则与命令不变）。**待账单修复 → CI 实跑绿 → 分支保护将 `secrets` 设为 required（当前 main 未受保护）→ 归档**。
+**当前状态（2026-11-20）**：Stage 0-6 全部收官，10 个能力基线（`openspec/specs/`）validate 全绿。已归档变更 9 个：2026-11-07 五变更（e2e 硬化、终局 401 统一、全局错误兜底、miniapp UI 对齐、miniapp 状态/i18n）、2026-11-08 `adopt-wot-design-uni`、2026-11-09 `add-basic-metrics`、2026-11-19 `add-quality-gates-batch5`、2026-11-20 `close-gate-gaps`。
 
-**下一个任务**：批次 1 闭环后按 `../QUALITY-GATES-HANDOFF.md` §5 进入批次 2（P0-2 依赖漏洞）；本批未闭环不建下一批 change。收尾队列见 §8 入口 5（CI 实跑解锁、备份恢复演练、真机预览、生产演练；LICENSE 已入库，第三方许可声明待办）。
+**质量门禁**：工具类型已无本地可推进缺口。已落地且本地全绿：eslint（strictTypeChecked + 复杂度/体积/import 环）、prettier、stylelint、markdownlint、jscpd、knip（阻断）、dependency-cruiser、tsconfig 全严格档、vitest 覆盖率阈值、e2e + 全页 axe、e2e istanbul 覆盖率、Prisma schema 三项、OpenAPI 快照、zod 响应契约（列表 + 详情）、API 授权矩阵、env 配置契约、gitleaks（pre-commit + CI）、全量依赖审计、license（workspace 动态推导）、SBOM、hadolint、trivy、actionlint + shellcheck、构建体积预算（`size:check`）。
+
+**门禁 change 状态**：批次 1 `add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4，共 5 个 change 仍 active——代码均已提交且本地门禁全绿，但 GitHub Actions 因账号账单锁从未实跑、分支保护 required 未设置，按「外部 CI 未绿不归档」保持 active；批次 5/6 已经 owner 指令归档（2026-11-20）。
+
+**测试矩阵**：单测 + 集成 163（contracts 22 / web 28 / miniapp 34 / api 79）+ 浏览器 e2e 14（登录/守卫/系统模块 UI 全闭环/全页 a11y）；`pnpm test:e2e` 自动起 api:3001 + web:5174，globalSetup 自动 migrate + seed + 复位 admin 锁定计数。
+
+**下一步**（按序）：
+
+1. GitHub 账单解锁后实跑 `CI` 与 `security`（`gh run watch <id> --exit-status`），全绿则设 required check，并归档上述 5 个 change（命令见 DELIVERY_REPORT「NOT VERIFIED」段）。
+2. 非门禁测试深度：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 补集成/e2e 用例（行为已实现，仅缺用例）。
+3. 收尾队列（§8 入口 5）：第三方许可声明、备份/恢复演练、小程序真机预览、生产 secrets/域名演练。
 
 **环境基线**（动手前核对，勿凭记忆）：
 
-- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4 / prom-client 15.1（metrics 单源）/ vitest 3.2（contracts/web）/ @playwright/test 1.5x（apps/e2e）
-- dev 库 = `~/workspace/env` 共享栈 env-mysql 8.4（宿主 3307，账号 tiangong/tiangong_dev）；测试库 `tiangong_test` 同实例；`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
+- 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4 / prom-client 15.1（metrics 单源）/ vitest 4.1.12（api/web/contracts）与 vitest 3.2（miniapp，uni 钉 vite 5）/ @playwright/test 1.65（apps/e2e）
+- dev 库 = `~/workspace/env` 共享栈 env-mysql（宿主 3307，账号 tiangong/tiangong_dev）。**本机实测该实例已升至 MySQL 9.7.2，Prisma 6.19 集成/e2e 会报版本不兼容**；可用 8.4.13 实例为 podman 容器 `tg-prisma-shadow`（宿主 3309，库 `tiangong_test`，账号同上）：`TEST_DATABASE_URL=mysql://tiangong:tiangong_dev@127.0.0.1:3309/tiangong_test`。CI/生产口径恒为 mysql:8.4，3307 降回 8.4 后可直接改回。`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）。注意本机 3000 若有遗留 dev api 进程属正常，e2e 用 3001/5174 与其隔离互不影响
 - e2e 账号约定：admin 密码固定 `TestAdmin1pw`（globalSetup 以 env 注入 seed/服务进程）；fixture 零权限角色 `e2e_noperm_role` + 用户 `e2e_noperm`，用后即删（apps/e2e/tests/helpers.ts）
 - API 端点全集：/health/live|ready、/auth/*、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs、**/files(+/:id/download)、/samples、/gen-definitions(+/preview|:id/preview)**；swagger /docs
@@ -168,17 +178,17 @@ tiangong/
 15. **`import/no-cycle` 对 TS 文件默认静默失效**：依赖图的有效扩展名只认声明过的项，须在 `settings['import/parsers']` 声明 `.ts/.tsx`（本项目已配，勿删）；补配后曾检出 5 处真实循环，已以 `router/navigator.ts` 惰性绑定 router 断环
 16. **contracts 的 `dist` 是 typecheck/test 的解析前提**：`pnpm install` 不构建 workspace 包（实测 install 后无 dist），CI 已把 `pnpm build` 前移到 typecheck/test 之前，根脚本另有 `pretypecheck`/`pretest` 兜底；只改 contracts 源码后须重跑这两个脚本（会自动重建）
 
-## 8. 后续工作指引（质量门禁在途）
+## 8. 后续工作指引（质量门禁已收口，剩 CI 实跑与收尾）
 
-建设阶段与七个变更（2026-11-07 五变更、2026-11-08 wot 组件层、2026-11-09 add-basic-metrics）均已收官归档；当前在途 `2026-11-19-add-secret-scanning`（跨仓质量门禁批次 1 / P0-1）。后续会话按需从以下入口进入：
+建设阶段与九个变更（2026-11-07 五变更、2026-11-08 wot 组件层、2026-11-09 add-basic-metrics、2026-11-19 批次 5、2026-11-20 门禁缺口收口）均已归档；质量门禁本地项已全部落地。后续会话按需从以下入口进入：
 
-1. **质量门禁（批次 1-4）**：批次 1 `2026-11-19-add-secret-scanning` 已提交推送，本地证据与容器等价复跑均通过；结构类 `2026-11-19-add-structural-gates`（4b9265a）、批次 2（8da7e37）、批次 3（b1a3bc4）已提交；批次 4 `2026-11-19-add-quality-gates-batch4`（运行时 a11y/架构分层/i18n 一致性/OpenAPI 契约/许可+SBOM/容器加固/strictTypeChecked）本地门禁与负向验收全绿。证据见 `docs/quality/DELIVERY_REPORT.md` 2026-11-19 验证记录。剩余步骤 = 修复 GitHub 账单锁 → workflow 实跑绿 → 分支保护把 `secrets` 设为 required（按 owner 指示暂缓）→ 批次归档。归档后按 `../QUALITY-GATES-HANDOFF.md` §5 进入下一批。
+1. **质量门禁（批次 1-6）**：本地门禁类型已无缺口（清单见 §7.1「质量门禁」）。批次 1 `2026-11-19-add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4 的 change 保持 active：代码已提交、本地全绿，因 GitHub Actions 账单锁从未实跑、分支保护 required 未设置，按「外部 CI 未绿不归档」不归档。解锁后步骤：① `gh run rerun <run-id>` + `gh run watch <id> --exit-status` 确认 annotation 不再是 billing locked；② 全绿后以 `gh api -X PUT .../branches/main/protection` 设 `secrets` 为 required（先 GET 备份，PUT 整份覆盖）；③ `openspec archive <name> -y --skip-specs` 归档这 5 个 change；④ 归档后复跑本地全量门禁。批次 5/6 已于 2026-11-20 归档（证据见 DELIVERY_REPORT 2026-11-20 条）。门禁之外剩余的是测试深度：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 的集成/e2e 用例。
 2. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
 3. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
 4. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
 5. **收尾队列（上线前必办）**：① GitHub Actions 实跑解锁（远端 qiyangfan/tiangong 私有仓已建，CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常；解锁后 push 任意提交自动全链验证，也是批次 1 设置 required check 的前提）；② 第三方许可声明（Apache-2.0 LICENSE 已入库）；③ 备份/恢复演练一次并记录（CONSTITUTION C8）；④ 微信小程序真机预览（开发者工具模拟器走查已过，2026-11-08）；⑤ 生产 secrets 与域名注入演练。
 6. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；本地全量门禁（与 CI 对齐）：
-   `pnpm schema:validate && pnpm schema:format:check && pnpm schema:drift && pnpm lint && pnpm lint:arch && pnpm lint:style && pnpm lint:md && pnpm dup:check && pnpm format:check && pnpm build && pnpm typecheck && pnpm test:coverage && pnpm --filter @tiangong/e2e test:e2e:coverage && pnpm audit --prod --audit-level=high && pnpm license:check && pnpm sbom:generate && actionlint && pnpm lint:docker && pnpm scan:images`
+   `pnpm schema:validate && pnpm schema:format:check && pnpm schema:drift && pnpm lint && pnpm lint:arch && pnpm lint:style && pnpm lint:md && pnpm dup:check && pnpm lint:dead && pnpm format:check && pnpm build && pnpm size:check && pnpm typecheck && pnpm test:coverage && pnpm --filter @tiangong/e2e test:e2e:coverage && pnpm audit:deps && pnpm license:check && pnpm sbom:generate && actionlint && pnpm lint:docker && pnpm scan:images`
    （`schema:drift` 需 `SHADOW_DATABASE_URL`；集成与 e2e 需 MySQL 在跑；scan:images 需先构建镜像；
    e2e 含运行时 a11y；compose 冒烟与 `node scripts/check-headers.mjs <url>` 在有容器环境时执行）。
 7. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`；既有基线 spec 共 10 个（openspec/specs/），改动平台行为先改对应基线或走变更 delta。

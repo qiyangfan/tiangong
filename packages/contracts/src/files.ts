@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isoDateTimeSchema, keywordSchema, pageQuerySchema } from './common.js';
 
-export const fileItemSchema = z.object({
+export const fileItemSchema = z.strictObject({
   id: z.number().int(),
   originalName: z.string(),
   suffix: z.string(),
@@ -20,7 +20,7 @@ export const fileListQuerySchema = pageQuerySchema.extend({
 export type FileListQuery = z.infer<typeof fileListQuerySchema>;
 
 /** 上传成功返回。url 为授权下载端点（非直链）。 */
-export const uploadResponseSchema = z.object({
+export const uploadResponseSchema = z.strictObject({
   id: z.number().int(),
   url: z.string(),
   originalName: z.string(),

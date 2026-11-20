@@ -147,6 +147,6 @@ export function toRequest(form: GenForm, t: Translate): GenRequest | null {
     name: form.name,
     displayName: form.displayName,
     fields,
-    remark: form.remark === '' ? undefined : form.remark,
+    ...(form.remark === '' ? {} : { remark: form.remark }),
   };
 }

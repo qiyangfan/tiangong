@@ -13,6 +13,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { DictItem as DictItemRow, DictType } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { CacheService } from '../../common/cache.service';
 import { pageBounds, pageResult } from '../../common/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -47,7 +48,9 @@ export class DictionariesService {
     if (exists) {
       throw new AppError('DICT_KEY_TAKEN');
     }
-    const row = await this.prisma.dictType.create({ data: { ...body, createdBy: userId } });
+    const row = await this.prisma.dictType.create({
+      data: defined({ ...body, createdBy: userId }),
+    });
     return typeToItem(row);
   }
 
@@ -61,7 +64,7 @@ export class DictionariesService {
     }
     const row = await this.prisma.dictType.update({
       where: { id },
-      data: { ...body, updatedBy: userId },
+      data: defined({ ...body, updatedBy: userId }),
     });
     this.cache.delete(`${OPTIONS_CACHE_PREFIX}${existing.dictKey}`);
     return typeToItem(row);
@@ -118,7 +121,9 @@ export class DictionariesService {
     if (exists) {
       throw new AppError('DICT_VALUE_TAKEN');
     }
-    const row = await this.prisma.dictItem.create({ data: { ...body, createdBy: userId } });
+    const row = await this.prisma.dictItem.create({
+      data: defined({ ...body, createdBy: userId }),
+    });
     this.cache.delete(`${OPTIONS_CACHE_PREFIX}${body.dictKey}`);
     return itemToItem(row);
   }
@@ -130,7 +135,7 @@ export class DictionariesService {
     }
     const row = await this.prisma.dictItem.update({
       where: { id },
-      data: { ...body, updatedBy: userId },
+      data: defined({ ...body, updatedBy: userId }),
     });
     this.cache.delete(`${OPTIONS_CACHE_PREFIX}${existing.dictKey}`);
     return itemToItem(row);

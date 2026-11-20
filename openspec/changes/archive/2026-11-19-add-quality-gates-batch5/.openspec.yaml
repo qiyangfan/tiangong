@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-19
+goal: 补齐质量门禁批次 5：系统模块 UI e2e、按菜单遍历的运行时 a11y、API 响应契约校验、knip 收紧为阻断、dev 依赖审计、tsconfig 余量开关（exactOptionalPropertyTypes / noPropertyAccessFromIndexSignature）
+skip_specs: true

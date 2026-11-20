@@ -6,6 +6,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { Setting } from '@prisma/client';
 import { AppError } from '../../common/app-error';
+import { defined } from '../../common/defined';
 import { CacheService } from '../../common/cache.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -25,9 +26,11 @@ export class SettingsService {
 
   async list(keyword?: string): Promise<SettingItem[]> {
     const rows = await this.prisma.setting.findMany({
-      where: keyword
-        ? { OR: [{ name: { contains: keyword } }, { settingKey: { contains: keyword } }] }
-        : undefined,
+      ...(keyword
+        ? {
+            where: { OR: [{ name: { contains: keyword } }, { settingKey: { contains: keyword } }] },
+          }
+        : {}),
       orderBy: { id: 'asc' },
     });
     return rows.map(toItem);
@@ -41,7 +44,7 @@ export class SettingsService {
     if (exists) {
       throw new AppError('SETTING_KEY_TAKEN');
     }
-    const row = await this.prisma.setting.create({ data: { ...body, createdBy: userId } });
+    const row = await this.prisma.setting.create({ data: defined({ ...body, createdBy: userId }) });
     this.cache.delete(CACHE_KEY);
     return toItem(row);
   }
@@ -53,7 +56,7 @@ export class SettingsService {
     }
     const row = await this.prisma.setting.update({
       where: { id },
-      data: { ...body, updatedBy: userId },
+      data: defined({ ...body, updatedBy: userId }),
     });
     this.cache.delete(CACHE_KEY);
     return toItem(row);

@@ -43,13 +43,14 @@ import { getRequestId } from './common/request-context';
               String(req.url).startsWith('/api/v1/health') ||
               String(req.url).startsWith('/api/v1/metrics'),
           },
-          transport:
-            config.get('NODE_ENV') === 'production'
-              ? undefined
-              : {
+          ...(config.get('NODE_ENV') === 'production'
+            ? {}
+            : {
+                transport: {
                   target: 'pino-pretty',
                   options: { singleLine: true, translateTime: 'SYS:HH:MM:ss' },
                 },
+              }),
         },
       }),
     }),
@@ -57,7 +58,7 @@ import { getRequestId } from './common/request-context';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_ACCESS_SECRET'),
+        secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
         signOptions: { expiresIn: config.get<number>('ACCESS_TOKEN_TTL') ?? 900 },
       }),
     }),
