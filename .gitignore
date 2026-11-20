@@ -25,3 +25,6 @@ sbom.cdx.json
 
 # ZCode 会话产物（AI 工具状态不入库）
 .zcode/
+
+# Python 工具脚本缓存
+__pycache__/

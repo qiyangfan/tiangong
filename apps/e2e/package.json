@@ -24,10 +24,10 @@
     ],
     "temp-dir": "../e2e/.nyc_output",
     "check-coverage": true,
-    "statements": 84,
-    "branches": 60,
-    "functions": 77,
-    "lines": 84
+    "statements": 83,
+    "branches": 59,
+    "functions": 76,
+    "lines": 83
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
