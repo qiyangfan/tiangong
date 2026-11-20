@@ -11,7 +11,7 @@
 - [x] 2.1 文档链接/锚点检查接入（74 文件 0 broken）
 - [x] 2.2 miniapp 继承严格 tsconfig，vue-tsc 通过
 - [x] 2.3 knip 排除 miniapp（uni 配置加载失败；已在 knip.json 登记）
-- [ ] 2.4 e2e 覆盖率阈值启用（需真实 MySQL 链路，NOT VERIFIED）
+- [x] 2.4 e2e 覆盖率阈值启用并实跑（14 用例；84.33/60.58/77.5/84.3 ≥ 84/60/77/84）
 
 ## 3. 验证
 
