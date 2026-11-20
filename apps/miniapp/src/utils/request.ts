@@ -102,7 +102,9 @@ function rawRequest<T>({ method, url, data }: RequestInit): Promise<T> {
     uni.request({
       url: `${API_BASE}${url}`,
       method,
-      ...(data === undefined ? {} : { data: data as string | Record<string, unknown> | ArrayBuffer }),
+      ...(data === undefined
+        ? {}
+        : { data: data as string | Record<string, unknown> | ArrayBuffer }),
       timeout: 15000,
       header: {
         'Content-Type': 'application/json',

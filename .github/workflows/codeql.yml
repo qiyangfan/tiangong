@@ -7,7 +7,7 @@ on:
     branches: [main]
   schedule:
     # 每周三 10:23(UTC+8):代码不变也能发现新增规则命中。
-    - cron: "23 2 * * 3"
+    - cron: '23 2 * * 3'
 
 permissions:
   contents: read

@@ -102,6 +102,7 @@ jobs:
       - run: pnpm lint:arch
       - run: pnpm lint:style
       - run: pnpm lint:md
+      - run: pnpm docs:links
       # 重复率基线 3.62%（2026-11-19），阈值 4% 防回退
       - run: pnpm dup:check
       # 死代码/未用依赖与导出：knip 已清零，按阻断执行；miniapp 因 uni 自动导入暂排除

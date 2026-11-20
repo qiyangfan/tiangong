@@ -7,7 +7,7 @@ export const success = <T extends ContractSchema>(data: T) =>
   z.strictObject({ code: z.literal(0), data });
 
 export const page = <T extends ContractSchema>(item: T) =>
-  z.object({
+  z.strictObject({
     items: z.array(item),
     total: z.number().int().nonnegative(),
     page: z.number().int().positive(),

@@ -12,6 +12,22 @@ interface MenuNode {
   children: MenuNode[];
 }
 
+/** 拼接菜单路径：容忍首尾斜杠与空 path（目录可留空，子级相对上级解析）。 */
+function joinPath(base: string, raw: string): string {
+  const segment = raw
+    .split('/')
+    .filter((part) => part !== '')
+    .join('/');
+  if (segment === '') {
+    return base;
+  }
+  // 以 / 开头按站点绝对路径处理，与前端动态路由语义一致
+  if (raw.startsWith('/')) {
+    return `/${segment}`;
+  }
+  return base === '' || base === '/' ? `/${segment}` : `${base}/${segment}`;
+}
+
 /** 后端菜单树 → 可访问的 C 型页面绝对路径（M 目录路径参与拼接）。 */
 function collectPaths(nodes: MenuNode[], base = ''): string[] {
   const paths: string[] = [];
@@ -20,11 +36,13 @@ function collectPaths(nodes: MenuNode[], base = ''): string[] {
       continue;
     }
     const raw = node.path ?? '';
-    const full = raw.startsWith('/') ? raw : `${base}/${raw}`;
     if (node.menuType === 'C') {
-      paths.push(full);
+      // 无路由地址的菜单不可导航，跳过而不是扫一个空路径
+      if (raw !== '') {
+        paths.push(joinPath(base, raw));
+      }
     } else {
-      paths.push(...collectPaths(node.children, full));
+      paths.push(...collectPaths(node.children, joinPath(base, raw)));
     }
   }
   return paths;

@@ -120,7 +120,7 @@ tiangong/
 
 **当前状态（2026-11-20）**：Stage 0-6 全部收官，10 个能力基线（`openspec/specs/`）validate 全绿。已归档变更 9 个：2026-11-07 五变更（e2e 硬化、终局 401 统一、全局错误兜底、miniapp UI 对齐、miniapp 状态/i18n）、2026-11-08 `adopt-wot-design-uni`、2026-11-09 `add-basic-metrics`、2026-11-19 `add-quality-gates-batch5`、2026-11-20 `close-gate-gaps`。
 
-**质量门禁**：工具类型已无本地可推进缺口。已落地且本地全绿：eslint（strictTypeChecked + 复杂度/体积/import 环）、prettier、stylelint、markdownlint、jscpd、knip（阻断）、dependency-cruiser、tsconfig 全严格档、vitest 覆盖率阈值、e2e + 全页 axe、e2e istanbul 覆盖率、Prisma schema 三项、OpenAPI 快照、zod 响应契约（列表 + 详情）、API 授权矩阵、env 配置契约、gitleaks（pre-commit + CI）、全量依赖审计、license（workspace 动态推导）、SBOM、hadolint、trivy、actionlint + shellcheck、构建体积预算（`size:check`）。
+**质量门禁**：工具类型已无本地可推进缺口。已落地且本地全绿：eslint（strictTypeChecked + 复杂度/体积/import 环）、prettier、stylelint、markdownlint、jscpd、knip（阻断）、dependency-cruiser、tsconfig 全严格档、vitest 覆盖率阈值、e2e + 全页 axe、e2e istanbul 覆盖率、Prisma schema 三项、OpenAPI 快照、zod 响应契约（列表 + 详情）、API 授权矩阵、env 配置契约、gitleaks（pre-commit + CI）、全量依赖审计、license（workspace 动态推导）、SBOM、hadolint、trivy、actionlint + shellcheck、构建体积预算（`size:check`）、CodeQL（javascript-typescript，push/PR main + 周排程）。
 
 **门禁 change 状态**：批次 1 `add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4，共 5 个 change 仍 active——代码均已提交且本地门禁全绿，但 GitHub Actions 因账号账单锁从未实跑、分支保护 required 未设置，按「外部 CI 未绿不归档」保持 active；批次 5/6 已经 owner 指令归档（2026-11-20）。
 

@@ -1,8 +1,7 @@
 {
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
-    // 基座 target/lib 为 ES2023：uni-app 工具链按 ES2020 转译且模板用到的运行时 API 以此为上限，
-    // 声明面跟随会影响 vue-tsc 对 lib 的假定，故在本包覆写回 ES2020
+    // 基座 target/lib 为 ES2023；uni-app 工具链按 ES2020 转译，产物语义以它为准，故本包覆写回 ES2020
     "target": "ES2020",
     "lib": ["esnext", "dom"],
     "module": "ESNext",
@@ -15,9 +14,7 @@
       "@/*": ["./src/*"],
       "@/uni_modules/wot-design-uni/locale": ["./src/shims/wot-locale"]
     },
-    // uni-cli-shared 提供 ImportMetaEnv / ImportMeta 的类型声明：缺它时 vite/client 的索引签名
-    // 生效，noPropertyAccessFromIndexSignature 会把 import.meta.env.VITE_* 判为错误
-    "types": ["@dcloudio/types", "vite/client", "@dcloudio/uni-cli-shared"]
+    "types": ["@dcloudio/types", "vite/client"]
   },
   "include": [
     "src/**/*.ts",

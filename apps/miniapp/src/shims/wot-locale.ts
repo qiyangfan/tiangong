@@ -20,9 +20,5 @@ const Locale = {
   add: (_newMessages?: Record<string, WotMessage>): void => undefined,
 };
 
-export function useCurrentLang(): { value: string } {
-  return { value: 'zh-CN' };
-}
-
 export { Locale };
 export default Locale;

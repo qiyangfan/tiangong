@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import type { Profile } from '@tiangong/contracts';
-import { apiLogout, apiProfile } from '@/api/auth';
-import { clearSession, getStoredUser, storeSession, type StoredUser } from '@/utils/auth';
+import { apiLogout, apiProfile, type StoredUser } from '@/api/auth';
+import { clearSession, getStoredUser, storeSession } from '@/utils/auth';
 
 /**
  * 会话态单源：登录写入、身份读取、profile 拉取、登出清理。

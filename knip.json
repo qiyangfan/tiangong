@@ -1,7 +1,8 @@
 {
-  "ignoreWorkspaces": ["apps/miniapp"],
   "ignoreDependencies": ["pino-pretty"],
   "ignoreBinaries": ["hadolint", "trivy"],
+  "ignore": ["apps/miniapp/src/uni_modules/**"],
+  "ignoreWorkspaces": ["apps/miniapp"],
   "workspaces": {
     "apps/api": {
       "entry": ["src/main.ts", "scripts/gen-crud.ts", "test/**/*.ts"]

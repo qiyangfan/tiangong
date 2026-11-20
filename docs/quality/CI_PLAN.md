@@ -1,8 +1,8 @@
-# CI/CD 建设计划（待实施）
+# CI/CD 建设计划（已实施，状态见下）
 
 实现时至少包含：依赖锁定与缓存、lint、typecheck、unit、MySQL service integration、API e2e、Web build、微信小程序 build、依赖漏洞检查、迁移干净部署校验、容器 build。CI 不能记录密钥，PR 权限需最小化。生产发布需要独立环境参数、审核与回滚策略。
 
-**本规范包没有真正的 CI workflow，也不能宣称 CI 已通过。** 请由 Agent 在 M0/M4 阶段实现 `.github/workflows/ci.yml` 并在真实 CI 环境验证。
+**Actions 实跑状态以 `docs/quality/DELIVERY_REPORT.md` 的 NOT VERIFIED 段为准（当前仍受账号账单锁）。**
 
 ## 现状（2026-11-19 更新）
 
@@ -22,4 +22,6 @@
   `pnpm-workspace.yaml` 的 `auditConfig`）、
   `workflows`（shellcheck 0.11.0 + actionlint 1.7.12，run 块内联 shell 一并分析）。
 - 依赖更新：`.github/dependabot.yml`（npm + github-actions，周更；uni 工具链排除批量升级）。
-- 仍待排期：P0-3 CodeQL、P0-4 SBOM+license（需账单修复后建批次）、分支保护 required check。
+- `.github/workflows/codeql.yml`：javascript-typescript 静态扫描（push/PR main + 每周排程），
+  动作版本钉提交 SHA。
+- 仍待排期：分支保护 required check（需账单修复后设置）；CodeQL 的首次实跑同样受账单锁影响。
