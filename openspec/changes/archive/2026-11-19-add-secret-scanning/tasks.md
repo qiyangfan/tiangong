@@ -34,7 +34,8 @@
 ## 4. 分支保护 required
 
 - [ ] 4.1 GitHub 侧将 `security.yml` 的 `secrets` job 设为 main 分支保护 required check——依赖
-      owner 提交推送后执行（当前 Actions 仍 startup_failure 未解锁；本批不提交、不推送）
+      owner 提交推送后执行（当前 Actions 仍 startup_failure 未解锁）。2026-11-21 owner 指令归档，
+      本项转入 `docs/BUILD_PLAN.md` §8 收尾队列跟踪，不再阻塞本变更
 
 ## Workflow follow-up
 

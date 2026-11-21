@@ -47,4 +47,5 @@
 
 ## 5. 分支保护 required
 
-- [ ] 5.1 暂缓：owner 指示本批不处理 GitHub 分支保护 required check
+- [ ] 5.1 暂缓：owner 指示本批不处理 GitHub 分支保护 required check。2026-11-21 owner 指令归档，
+      本项转入 `docs/BUILD_PLAN.md` §8 收尾队列跟踪

@@ -2,6 +2,11 @@
 
 > 本文档是建设会话间交接的唯一权威文件。任何新会话（包括轻量模型会话）接手前必须完整阅读本文档与 `AGENTS.md`、`CONSTITUTION.md`、`docs/architecture/API_CONTRACT.md`。
 > 计划批准日期：2026-11-07。状态标记：[x] 已完成 [ ] 未完成。
+>
+> **2026-11-20 数据库修订（owner 裁决）**：MySQL 8.4 → **PostgreSQL 18**。初始 MySQL 是建仓默认值而非业务约束；
+> Prisma 抽象完整（业务代码仅健康检查一条 `SELECT 1`），切换成本集中在基线迁移、CI service、compose、连接串与文档。
+> `user.username` / `user.email` 用 `citext` 保留 MySQL 时期的大小写不敏感语义；旧 MySQL 基线归档在
+> `apps/api/prisma/migrations-mysql-archive/`。ADR-0001 已同步修订。
 
 ## 0. 项目定位与硬边界
 
@@ -14,7 +19,7 @@
 ## 1. 环境事实（2026-11-07 勘定）
 
 - Node v24.22.2、pnpm 12.18.0（由 mise 管理，`mise.toml` 需固定 node 24 / pnpm 12）
-- Docker 29.8.2（OrbStack）；本机**无** mysql/psql 客户端，一切数据库操作走容器
+- Docker 29.8.2（OrbStack）；本机**无** psql 客户端，一切数据库操作走容器
 - 参考仓库（只读，勿改）：
   - `/Users/solvela/ruoyi/RuoYi-Vue3` — 前端模式参考
   - `/Users/solvela/ruoyi-vue-plus/RuoYi-Vue-Plus` — 后端表结构蓝本（`script/sql/ry_vue.sql`）
@@ -22,7 +27,7 @@
 
 ## 2. 技术栈（ADR-0001 锁定，不得改）
 
-NestJS 11 + Prisma 6 + MySQL 8.4 LTS + Vue 3.5/Vite/Element Plus + uni-app(Vue3) + pnpm workspace；TypeScript strict；REST `/api/v1` + OpenAPI；Zod-first 契约；模块化单体。版本以实际安装兼容为准锁定进 lockfile。
+NestJS 11 + Prisma 6 + PostgreSQL 18 + Vue 3.5/Vite/Element Plus + uni-app(Vue3) + pnpm workspace；TypeScript strict；REST `/api/v1` + OpenAPI；Zod-first 契约；模块化单体。版本以实际安装兼容为准锁定进 lockfile。
 
 ## 3. 目录结构（目标）
 
@@ -43,7 +48,7 @@ tiangong/
 │   ├── contracts/    Zod schema + DTO 类型 + 错误码 + 分页类型（三端共享，API 契约唯一来源）
 │   └── config/       共享 eslint9 flat / tsconfig 基座
 ├── scripts/          （工具脚本；gen:crud CLI 在 apps/api/scripts/——pnpm 严格解析须在依赖链内）
-├── deploy/           compose.yaml（全栈）+ compose.dev.yaml（仅 dev MySQL）+ nginx/
+├── deploy/           compose.yaml（全栈）+ compose.dev.yaml（仅 dev PostgreSQL）+ nginx/
 └── docs/ adr/ openspec/ agent-prompts/ …（规范包 35 文件）
 ```
 
@@ -62,11 +67,11 @@ tiangong/
 7. **文件存储**：StorageService 接口 + LocalStorage 实现（随机 key、大小/类型白名单、授权流式下载）；file_object 存元数据。
 8. **代码生成器**：元数据 JSON 存 gen_definition（Web 管理 UI+预览）；CLI `pnpm gen:crud` 落盘生成 NestJS 模块+web 五段式页面；**已存在文件拒绝覆盖**；确定性（两次生成 diff 为空）。
 9. **管理员引导**：seed 读 `ADMIN_INITIAL_PASSWORD`，未设则随机生成只打印一次；禁止内置弱口令。
-10. **开发库**（owner 2026-11-07 指示）：本机开发统一用 `~/workspace/env` 共享栈的 **env-mysql**（**MySQL 8.4**，宿主 **3307**——宿主 3306 被 OrbStack 幽灵转发占用且指向不存在的 9.7.2，2026-11-07 已把 env 栈镜像降为 8.4 并改发布端口 3307；应用账号 `tiangong/tiangong_dev` 持 ALL ON `*.*`（migrate shadow 库需要），库 `tiangong`）；dev 连接串 `mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong`。`deploy/compose.dev.yaml`（mysql:8.4，端口 3307）降级为无共享栈环境的自包含回退。**CI 与生产口径仍为 mysql:8.4（ADR-0001）**，9.7-dev/8.4-CI 的版本偏差记入 ADR 附录，迁移兼容性以 CI 的 8.4 为准。
+10. **开发库**（2026-11-20 修订）：本机开发统一用 `~/workspace/env` 共享栈的 **env-postgres**（**PostgreSQL 18**，宿主 **5432**；应用账号 `tiangong/tiangong_dev`，持 CREATEDB 供 migrate shadow 库，库 `tiangong` / `tiangong_test`）；dev 连接串 `postgresql://tiangong:tiangong_dev@127.0.0.1:5432/tiangong`。`deploy/compose.dev.yaml`（postgres:18，宿主 5433）降级为无共享栈环境的自包含回退，使用时把 `DATABASE_URL` / `TEST_DATABASE_URL` 端口改为 5433。**CI 与生产口径为 postgres:18（ADR-0001 2026-11-20 修订）**。
 
-## 5. 表结构速查（Prisma 设计基准；类型=MySQL 语义）
+## 5. 表结构速查（Prisma 设计基准；类型=PostgreSQL 语义）
 
-以 ry_vue.sql 为蓝本，统一约定：主键 Int @id @default(autoincrement())；审计列 created_by Int? created_at DateTime @default(now()) updated_by Int? updated_at DateTime @updatedAt；状态一律 Boolean enabled（默认 true）；**无软删、无 ancestors 冗余列**；字符集 utf8mb4。
+以 ry_vue.sql 为蓝本，统一约定：主键 Int @id @default(autoincrement())；审计列 created_by Int? created_at DateTime @default(now()) updated_by Int? updated_at DateTime @updatedAt；状态一律 Boolean enabled（默认 true）；**无软删、无 ancestors 冗余列**；字符集 UTF-8；`user.username` / `user.email` 使用 `citext` 保持大小写不敏感。
 
 | 表              | 关键列（名称:类型）                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -118,24 +123,28 @@ tiangong/
 
 > 本节与 §8 在每次交接时**整体重写**，对准下一个任务；只保留接手需要的 operative 事实，变更历史看 git log。
 
-**当前状态（2026-11-20）**：Stage 0-6 全部收官，10 个能力基线（`openspec/specs/`）validate 全绿。已归档变更 9 个：2026-11-07 五变更（e2e 硬化、终局 401 统一、全局错误兜底、miniapp UI 对齐、miniapp 状态/i18n）、2026-11-08 `adopt-wot-design-uni`、2026-11-09 `add-basic-metrics`、2026-11-19 `add-quality-gates-batch5`、2026-11-20 `close-gate-gaps`。
+**Agent 入口**：仓库根 `llms.txt` 提供先读顺序、机器可读契约位置、常用命令与硬边界；与 AGENTS.md 冲突时以 AGENTS.md 为准。
 
-**质量门禁**：工具类型已无本地可推进缺口。已落地且本地全绿：eslint（strictTypeChecked + 复杂度/体积/import 环）、prettier、stylelint、markdownlint、jscpd、knip（阻断）、dependency-cruiser、tsconfig 全严格档、vitest 覆盖率阈值、e2e + 全页 axe、e2e istanbul 覆盖率、Prisma schema 三项、OpenAPI 快照、zod 响应契约（列表 + 详情）、API 授权矩阵、env 配置契约、gitleaks（pre-commit + CI）、全量依赖审计、license（workspace 动态推导）、SBOM、hadolint、trivy、actionlint + shellcheck、构建体积预算（`size:check`）、CodeQL（javascript-typescript，push/PR main + 周排程）。
+**当前状态（2026-11-21）**：Stage 0-6 全部收官；数据库已由 MySQL 8.4 切至 **PostgreSQL 18**（ADR-0001 2026-11-20 修订，2026-11-21 验证入库）。`openspec/specs/` 10 个能力基线 + 2 个提案态变更，`pnpm spec:validate` 12/12 全绿。**已归档变更 15 个**：2026-11-07 五变更（e2e 硬化、终局 401 统一、全局错误兜底、miniapp UI 对齐、miniapp 状态/i18n）、2026-11-08 `adopt-wot-design-uni`、2026-11-09 `add-basic-metrics`、2026-11-19 质量门禁批次 2/3/4/5 + `add-secret-scanning` + `add-structural-gates`、2026-11-20 `close-gate-gaps` / `close-quality-gate-gaps`。
 
-**门禁 change 状态**：批次 1 `add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4，共 5 个 change 仍 active——代码均已提交且本地门禁全绿，但 GitHub Actions 因账号账单锁从未实跑、分支保护 required 未设置，按「外部 CI 未绿不归档」保持 active；批次 5/6 已经 owner 指令归档（2026-11-20）。
+**质量门禁**：工具类型已无本地可推进缺口。已落地且本地全绿：eslint（strictTypeChecked + 复杂度/体积/import 环）、prettier、stylelint、markdownlint、jscpd、knip（阻断）、dependency-cruiser、tsconfig 全严格档、vitest 覆盖率阈值、e2e + 全页 axe、e2e istanbul 覆盖率、OpenSpec 规格校验（`spec:validate`，--all --strict）、Prisma schema 三项、OpenAPI 快照（含 `x-required-permissions` / `x-public` 授权元数据）、zod 响应契约（列表 + 详情）、API 授权矩阵（路由必须声明 @Public 或种子目录内权限点）、env 配置契约、gitleaks（pre-commit + CI）、全量依赖审计、license（workspace 动态推导）、SBOM、hadolint、trivy、actionlint + shellcheck、构建体积预算（`size:check`）、CodeQL（javascript-typescript，push/PR main + 周排程）。
 
-**测试矩阵**：单测 + 集成 163（contracts 22 / web 28 / miniapp 34 / api 79）+ 浏览器 e2e 14（登录/守卫/系统模块 UI 全闭环/全页 a11y）；`pnpm test:e2e` 自动起 api:3001 + web:5174，globalSetup 自动 migrate + seed + 复位 admin 锁定计数。
+**门禁 change 状态（2026-11-21 收口）**：批次 1 `add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4 共 5 个 change 已于 2026-11-21 按 owner 指令以 `--skip-specs` 归档；唯一外部未完成项「GitHub 分支保护 required check」转入 §8 入口 1。GitHub Actions 仍受账号账单锁，全部 workflow 未实跑。
+
+**测试矩阵**：单测 102（contracts 22 / web 28 / miniapp 34 / api 18）+ 真库集成 64（9 文件，PostgreSQL 18）+ 浏览器 e2e 14（登录/守卫/系统模块 UI 全闭环/全页 a11y）；2026-11-21 实跑全绿。`pnpm test:e2e` 自动起 api:3001 + web:5174，globalSetup 自动 migrate + seed + 复位 admin 锁定计数。
 
 **下一步**（按序）：
 
-1. GitHub 账单解锁后实跑 `CI` 与 `security`（`gh run watch <id> --exit-status`），全绿则设 required check，并归档上述 5 个 change（命令见 DELIVERY_REPORT「NOT VERIFIED」段）。
-2. 非门禁测试深度：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 补集成/e2e 用例（行为已实现，仅缺用例）。
-3. 收尾队列（§8 入口 5）：第三方许可声明、备份/恢复演练、小程序真机预览、生产 secrets/域名演练。
+1. **唯一外部阻塞**：GitHub Actions 账单解锁后实跑 `CI` 与 `security`（`gh run watch <id> --exit-status`）；全绿后设 `secrets` 为 main required check（先 GET 备份，PUT 整份覆盖），并复跑一次全量门禁。
+2. **AI 能力（提案态，未排期）**：`2026-11-21-add-platform-ai`（会话 / 工具目录 / 确认票据 / AI 面板）与 `2026-11-21-add-platform-ai-governance`（策略分级 / step-up / 多步计划 / 多端入口）尚未实施；启动时先补 ADR 与平台契约，按各自 tasks 顺序落地，默认 `AI_ENABLED=false`。
+3. **非门禁测试深度**：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 补集成/e2e 用例（行为已实现，仅缺用例）。
+4. **收尾队列**（§8 入口 6）：第三方许可声明、备份/恢复演练、小程序真机预览、生产 secrets/域名演练。
 
 **环境基线**（动手前核对，勿凭记忆）：
 
 - 已锁依赖（pnpm-lock）：NestJS 11.2 / Prisma 6.19 / zod 4.1 / nestjs-zod ^5.5 / Vue 3.5 / Vite 8（rolldown）/ Element Plus 2.14 / vue-router 5 / pinia 4 / vue-i18n 11 / axios 1.21 / vue-tsc 3.3 / Tailwind 4.3（@tailwindcss/vite，CSS-first）/ echarts 6.1（echarts/core 按需，BaseChart 单源）/ multer 2.4 / prom-client 15.1（metrics 单源）/ vitest 4.1.12（api/web/contracts）与 vitest 3.2（miniapp，uni 钉 vite 5）/ @playwright/test 1.65（apps/e2e）
-- dev 库 = `~/workspace/env` 共享栈 env-mysql（宿主 3307，账号 tiangong/tiangong_dev）。**本机实测该实例已升至 MySQL 9.7.2，Prisma 6.19 集成/e2e 会报版本不兼容**；可用 8.4.13 实例为 podman 容器 `tg-prisma-shadow`（宿主 3309，库 `tiangong_test`，账号同上）：`TEST_DATABASE_URL=mysql://tiangong:tiangong_dev@127.0.0.1:3309/tiangong_test`。CI/生产口径恒为 mysql:8.4，3307 降回 8.4 后可直接改回。`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
+- 数据库基线：Prisma `provider = "postgresql"`；基线迁移 `20261120092902_init_baseline` + `20261120110000_dict_key_citext`；旧 MySQL 基线归档 `apps/api/prisma/migrations-mysql-archive/`；`user.username/email`、`dict_type.dict_key`、`dict_item.dict_key/value` 用 `citext` 保持大小写不敏感语义，列表搜索显式 `mode: 'insensitive'`；业务代码零 raw SQL（仅健康检查 `SELECT 1`）。
+- dev 库 = `~/workspace/env` 共享栈 env-postgres（宿主 5432，账号 tiangong/tiangong_dev，库 tiangong/tiangong_test）；`deploy/compose.dev.yaml` 回退到宿主 5433。`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）。注意本机 3000 若有遗留 dev api 进程属正常，e2e 用 3001/5174 与其隔离互不影响
 - e2e 账号约定：admin 密码固定 `TestAdmin1pw`（globalSetup 以 env 注入 seed/服务进程）；fixture 零权限角色 `e2e_noperm_role` + 用户 `e2e_noperm`，用后即删（apps/e2e/tests/helpers.ts）
 - API 端点全集：/health/live|ready、/auth/*、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs、**/files(+/:id/download)、/samples、/gen-definitions(+/preview|:id/preview)**；swagger /docs
@@ -145,6 +154,7 @@ tiangong/
 
 **平台模块关键事实**：
 
+- **数据库基线（2026-11-20 切换 / 2026-11-21 入库）**：MySQL 8.4 → PostgreSQL 18；切换证据 = schema drift 0、集成与 e2e 全绿、typecheck/lint/format 绿；CI service、compose、连接串与 e2e 复位 SQL 已同步。
 - **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径；CLI `pnpm gen:crud <name>` 留在 `apps/api/scripts/`（pnpm 严格解析），仓库根用 pnpm-workspace.yaml 探测（**不可用 import.meta.url**，tsx CJS 转译下 shim 不可靠）；任一目标文件已存在整体拒绝
 - **files 模块**：`src/common/storage/` + `src/modules/files/`；上限 = min(sys.file.maxSizeMb, MAX_UPLOAD_MB)；busboy latin1 文件名 mojibake 已修复；下载非 envelope 二进制流
 - **更新动词 = PUT（跨端统一，部分合并语义）**：曾用 PATCH + `X-HTTP-Method-Override` 适配层（微信 request 不支持 PATCH），2026-11-07 owner 决策改为全线 PUT（对齐 RuoYi 约定，微信原生支持），适配层已删除；约定写明在 docs/architecture/API_CONTRACT.md；集成测试含 miniapp 原生 PUT 更新用例
@@ -163,7 +173,7 @@ tiangong/
 1. 禁用 `@typescript-eslint/consistent-type-imports`：会把 DI 构造器注入改写成 import type，擦除 NestJS 元数据
 2. vitest 必须走 unplugin-swc + reflect-metadata setup（esbuild 不支持 emitDecoratorMetadata）
 3. 直接 import 'express' 的代码必须把 express 声明为直接依赖（pnpm 严格解析）
-4. 一切 MySQL 连接走 3307：宿主 3306 是 OrbStack 幽灵转发，指向不存在的实例
+4. 一切 PostgreSQL 连接走 5432（共享栈）或 5433（compose.dev 回退）；连接串统一 `postgresql://`
 5. markdown 里写通配符（`*.*`、`*:*:*`）必须套反引号，否则 prettier 会当强调语法吞星号
 6. **vite 8 dev 的文件 watcher 在本机不生效**：改完前端源码必须重启 `pnpm dev:web`（否则浏览器跑旧代码）
 7. Element Plus 未全局注册图标：el-button 必须用 `:icon="组件"`（显式 import）
@@ -178,17 +188,18 @@ tiangong/
 15. **`import/no-cycle` 对 TS 文件默认静默失效**：依赖图的有效扩展名只认声明过的项，须在 `settings['import/parsers']` 声明 `.ts/.tsx`（本项目已配，勿删）；补配后曾检出 5 处真实循环，已以 `router/navigator.ts` 惰性绑定 router 断环
 16. **contracts 的 `dist` 是 typecheck/test 的解析前提**：`pnpm install` 不构建 workspace 包（实测 install 后无 dist），CI 已把 `pnpm build` 前移到 typecheck/test 之前，根脚本另有 `pretypecheck`/`pretest` 兜底；只改 contracts 源码后须重跑这两个脚本（会自动重建）
 
-## 8. 后续工作指引（质量门禁已收口，剩 CI 实跑与收尾）
+## 8. 后续工作指引（本地门禁已收口，剩 CI 实跑与外部配置）
 
-建设阶段与九个变更（2026-11-07 五变更、2026-11-08 wot 组件层、2026-11-09 add-basic-metrics、2026-11-19 批次 5、2026-11-20 门禁缺口收口）均已归档；质量门禁本地项已全部落地。后续会话按需从以下入口进入：
+建设阶段与 15 个变更均已归档，质量门禁本地项全部落地，数据库已切 PostgreSQL 18。后续会话按需从以下入口进入：
 
-1. **质量门禁（批次 1-6）**：本地门禁类型已无缺口（清单见 §7.1「质量门禁」）。批次 1 `2026-11-19-add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4 的 change 保持 active：代码已提交、本地全绿，因 GitHub Actions 账单锁从未实跑、分支保护 required 未设置，按「外部 CI 未绿不归档」不归档。解锁后步骤：① `gh run rerun <run-id>` + `gh run watch <id> --exit-status` 确认 annotation 不再是 billing locked；② 全绿后以 `gh api -X PUT .../branches/main/protection` 设 `secrets` 为 required（先 GET 备份，PUT 整份覆盖）；③ `openspec archive <name> -y --skip-specs` 归档这 5 个 change；④ 归档后复跑本地全量门禁。批次 5/6 已于 2026-11-20 归档（证据见 DELIVERY_REPORT 2026-11-20 条）。门禁之外剩余的是测试深度：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 的集成/e2e 用例。
-2. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
-3. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
-4. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
-5. **收尾队列（上线前必办）**：① GitHub Actions 实跑解锁（远端 qiyangfan/tiangong 私有仓已建，CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常；解锁后 push 任意提交自动全链验证，也是批次 1 设置 required check 的前提）；② 第三方许可声明（Apache-2.0 LICENSE 已入库）；③ 备份/恢复演练一次并记录（CONSTITUTION C8）；④ 微信小程序真机预览（开发者工具模拟器走查已过，2026-11-08）；⑤ 生产 secrets 与域名注入演练。
-6. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；本地全量门禁（与 CI 对齐）：
-   `pnpm schema:validate && pnpm schema:format:check && pnpm schema:drift && pnpm lint && pnpm lint:arch && pnpm lint:style && pnpm lint:md && pnpm dup:check && pnpm lint:dead && pnpm format:check && pnpm build && pnpm size:check && pnpm typecheck && pnpm test:coverage && pnpm --filter @tiangong/e2e test:e2e:coverage && pnpm audit:deps && pnpm license:check && pnpm sbom:generate && actionlint && pnpm lint:docker && pnpm scan:images`
-   （`schema:drift` 需 `SHADOW_DATABASE_URL`；集成与 e2e 需 MySQL 在跑；scan:images 需先构建镜像；
+1. **GitHub Actions 实跑与分支保护（唯一外部阻塞）**：远端私有仓 CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常。解锁后步骤：① push 任意提交或 `gh run rerun <run-id>` 触发 `CI` 与 `security`；② `gh run watch <id> --exit-status` 确认 annotation 不再是 billing locked；③ 全绿后以 `gh api -X PUT .../branches/main/protection` 设 `secrets` 为 required（先 GET 备份，PUT 整份覆盖）；④ 复跑一次本地全量门禁。5 个门禁 change 已于 2026-11-21 归档，无需再归档（证据见 DELIVERY_REPORT 2026-11-21 条）。门禁之外剩余的是测试深度：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 的集成/e2e 用例。
+2. **AI 能力（提案态，未实施）**：`openspec/changes/2026-11-21-add-platform-ai/` 与 `...-governance/` 只有 proposal/design/tasks/specs，无代码；启动时先补 ADR 与平台契约，默认 `AI_ENABLED=false`，按 tasks 顺序实现并接入现有门禁。
+3. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
+4. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
+5. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。
+6. **收尾队列（上线前必办）**：① GitHub Actions 实跑解锁（远端 qiyangfan/tiangong 私有仓已建，CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常；解锁后 push 任意提交自动全链验证，也是设置 required check 的前提）；② 第三方许可声明（Apache-2.0 LICENSE 已入库）；③ 备份/恢复演练一次并记录（CONSTITUTION C8，PostgreSQL 口径）；④ 微信小程序真机预览（开发者工具模拟器走查已过，2026-11-08）；⑤ 生产 secrets 与域名注入演练。
+7. 任何改动遵守 AGENTS.md 工作契约与 UI_STYLEGUIDE；本地全量门禁（与 CI 对齐）：
+   `pnpm spec:validate && pnpm schema:validate && pnpm schema:format:check && pnpm schema:drift && pnpm lint && pnpm lint:arch && pnpm lint:style && pnpm lint:md && pnpm dup:check && pnpm lint:dead && pnpm format:check && pnpm build && pnpm size:check && pnpm typecheck && pnpm test:coverage && pnpm --filter @tiangong/e2e test:e2e:coverage && pnpm audit:deps && pnpm license:check && pnpm sbom:generate && actionlint && pnpm lint:docker && pnpm scan:images`
+   （`schema:drift` 需 `SHADOW_DATABASE_URL`；集成与 e2e 需 PostgreSQL 在跑；scan:images 需先构建镜像；
    e2e 含运行时 a11y；compose 冒烟与 `node scripts/check-headers.mjs <url>` 在有容器环境时执行）。
-7. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`；既有基线 spec 共 10 个（openspec/specs/），改动平台行为先改对应基线或走变更 delta。
+8. 验收证据与遗留项见 `docs/quality/DELIVERY_REPORT.md`；既有基线 spec 共 10 个（openspec/specs/），改动平台行为先改对应基线或走变更 delta。

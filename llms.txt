@@ -1,0 +1,35 @@
+# 天工 (tiangong)
+
+> 业务无关的全栈管理后台脚手架：NestJS + Prisma + PostgreSQL、Vue 3 + Element Plus、uni-app 小程序，
+> 共享 Zod 契约。面向人类与 Coding Agent 同一套事实源。
+
+## 先读（按序）
+
+- AGENTS.md — 工作契约、门禁纪律、前端与 Git 约定（最高优先级入口）
+- CONSTITUTION.md — 不可违反的原则
+- docs/BUILD_PLAN.md §7.1 — 当前状态、环境基线、平台事实、已知坑
+- docs/requirements/FUNCTION_MATRIX.md、ACCEPTANCE.md — 能力清单与验收
+- docs/adr/ — 架构决策；docs/architecture/UI_STYLEGUIDE.md — UI 规范
+- openspec/specs/ — 已验收能力；openspec/changes/ — 在途变更（改行为先改规格）
+
+## 机器可读单源
+
+- apps/api/openapi.snapshot.json — 全部 61 条路由，含 `x-required-permissions` / `x-public`；
+  与代码生成结果结构比对，漂移即失败（`pnpm --filter @tiangong/api openapi:update` 才会更新）
+- packages/contracts/src/ — Zod 请求/响应契约（响应类为 strictObject，多余字段即失败）
+- apps/api/prisma/schema.prisma — 数据模型；apps/api/prisma/seed-data.ts — 权限/菜单/字典种子
+- apps/api/src/security/ — JwtGuard / PermissionsGuard / @RequirePermissions / @Public
+
+## 常跑命令
+
+- `pnpm lint && pnpm typecheck && pnpm test && pnpm build` — 最小门禁
+- `pnpm spec:validate` — OpenSpec 规格与变更校验（--all --strict）
+- 全量门禁命令见 docs/BUILD_PLAN.md §8 第 6 条；CI 为最终执法点
+- `pnpm gen:crud <name>` — 生成 CRUD 纵向骨架（七件产物，已存在即整体拒绝）
+
+## 硬边界
+
+- 不出现具体业务实体；不引入微服务/MQ/K8s/多租户等预设能力
+- 不硬编码密钥/口令；令牌与敏感个人信息不进日志
+- API 权限由后端强制；新增路由必须声明 `@Public` 或已登记的权限点（授权矩阵测试会拦截）
+- 生成器产物与 OpenAPI 快照不手改，重新生成
