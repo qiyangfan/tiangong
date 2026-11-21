@@ -121,7 +121,7 @@ jobs:
       - run: pnpm --filter @tiangong/e2e test:e2e:coverage
       - name: 上传 e2e 失败报告
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |

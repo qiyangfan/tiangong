@@ -49,7 +49,7 @@ jobs:
       - name: SBOM 生成
         run: pnpm sbom:generate
       - name: 上传 SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-cyclonedx
           path: sbom.cdx.json
