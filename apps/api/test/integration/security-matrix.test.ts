@@ -2,6 +2,7 @@ import { RequestMethod } from '@nestjs/common';
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { MetadataScanner, ModulesContainer } from '@nestjs/core';
 import { describe, expect, it } from 'vitest';
+import { PERMISSIONS } from '../../prisma/seed-data';
 import { PERMISSIONS_METADATA } from '../../src/security/require-permissions.decorator';
 import { IS_PUBLIC_METADATA } from '../../src/security/public.decorator';
 import { testApp } from './context';
@@ -12,6 +13,11 @@ interface RouteEntry {
   permissions: string[] | undefined;
   isPublic: boolean;
 }
+
+/** 种子权限目录：路由权限点必须在此登记，防止拼错或自造权限点后被静默放行。 */
+const PERMISSION_CATALOG = new Set(
+  PERMISSIONS.map(([resource, action]) => `${resource}:${action}`),
+);
 
 /** 自助端点：登录后仅需身份即可访问，不设权限点；新增项必须在此写明理由。 */
 const SELF_SERVICE = new Set([
@@ -81,6 +87,20 @@ function collectRoutes(): RouteEntry[] {
   return routes;
 }
 
+function permissionViolation(key: string, permissions: string[]): string | undefined {
+  if (permissions.length === 0) {
+    return `${key}: 权限点为空`;
+  }
+  const invalid = permissions.filter((permission) => !PERMISSION_PATTERN.test(permission));
+  if (invalid.length > 0) {
+    return `${key}: 权限点格式非法（${invalid.join(', ')}）`;
+  }
+  const unregistered = permissions.filter((permission) => !PERMISSION_CATALOG.has(permission));
+  return unregistered.length === 0
+    ? undefined
+    : `${key}: 权限点未在种子目录登记（${unregistered.join(', ')}）`;
+}
+
 function routeViolation(route: RouteEntry): string | undefined {
   const key = `${route.method} ${route.path}`;
   if (route.isPublic) {
@@ -89,11 +109,7 @@ function routeViolation(route: RouteEntry): string | undefined {
   if (route.permissions === undefined) {
     return SELF_SERVICE.has(key) ? undefined : `${key}: 未声明权限点且不在自助白名单`;
   }
-  if (route.permissions.length === 0) {
-    return `${key}: 权限点为空`;
-  }
-  const invalid = route.permissions.filter((permission) => !PERMISSION_PATTERN.test(permission));
-  return invalid.length === 0 ? undefined : `${key}: 权限点格式非法（${invalid.join(', ')}）`;
+  return permissionViolation(key, route.permissions);
 }
 
 function permissionViolations(routes: RouteEntry[]): string[] {

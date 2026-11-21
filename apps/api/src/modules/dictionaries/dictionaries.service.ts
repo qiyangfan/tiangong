@@ -12,6 +12,7 @@ import {
 } from '@tiangong/contracts';
 import { Injectable } from '@nestjs/common';
 import { DictItem as DictItemRow, DictType } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { AppError } from '../../common/app-error';
 import { defined } from '../../common/defined';
 import { CacheService } from '../../common/cache.service';
@@ -30,9 +31,14 @@ export class DictionariesService {
   ) {}
 
   async listTypes(query: DictTypeListQuery): Promise<PageResult<DictTypeItem>> {
-    const where = {
+    const where: Prisma.DictTypeWhereInput = {
       ...(query.keyword
-        ? { OR: [{ name: { contains: query.keyword } }, { dictKey: { contains: query.keyword } }] }
+        ? {
+            OR: [
+              { name: { contains: query.keyword, mode: 'insensitive' } },
+              { dictKey: { contains: query.keyword, mode: 'insensitive' } },
+            ],
+          }
         : {}),
       ...(query.enabled === undefined ? {} : { enabled: query.enabled }),
     };

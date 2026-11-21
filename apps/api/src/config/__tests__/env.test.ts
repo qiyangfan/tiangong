@@ -4,7 +4,7 @@ import { validateEnv } from '../env';
 const JWT_SECRET = 'valid_secret_at_least_32_characters!!';
 
 function baseConfig(): Record<string, unknown> {
-  return { DATABASE_URL: 'mysql://localhost/tiangong', JWT_ACCESS_SECRET: JWT_SECRET };
+  return { DATABASE_URL: 'postgresql://localhost/tiangong', JWT_ACCESS_SECRET: JWT_SECRET };
 }
 
 /** 捕获 fail-fast：mock exit 改为抛错，便于断言退出码与提示。 */

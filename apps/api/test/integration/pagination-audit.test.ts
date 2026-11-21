@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { OperLogItem, PageResult } from '@tiangong/contracts';
 import { ADMIN_USER, AUDIT_ROLE_KEY } from '../setup/fixtures';
-import { adminAuth, testHttp } from './context';
+import { adminAuth, prisma, testHttp } from './context';
 
 const codeOf = (body: unknown): string => (body as { code: string }).code;
 
@@ -24,6 +24,25 @@ describe('分页与唯一性契约', () => {
     expect(data.page).toBe(1);
     expect(data.pageSize).toBe(10);
     expect(typeof data.total).toBe('number');
+  });
+
+  it('用户列表 keyword 大小写不敏感（保留 MySQL 语义）', async () => {
+    const res = await testHttp().get('/api/v1/users?keyword=ADMIN').set(adminAuth());
+    expect(res.status).toBe(200);
+    const data = dataOf<PageResult<{ username: string }>>(res.body);
+    expect(data.items.map((item) => item.username)).toContain(ADMIN_USER);
+  });
+
+  it('字典键大小写不敏感唯一（citext）', async () => {
+    const key = `CaseProbe${Date.now()}`;
+    try {
+      await prisma.dictType.create({ data: { name: '大小写探针', dictKey: key } });
+      await expect(
+        prisma.dictType.create({ data: { name: '大小写探针 2', dictKey: key.toLowerCase() } }),
+      ).rejects.toMatchObject({ code: 'P2002' });
+    } finally {
+      await prisma.dictType.deleteMany({ where: { dictKey: key } });
+    }
   });
 
   it('重复 roleKey 返回 409 ROLE_KEY_TAKEN', async () => {

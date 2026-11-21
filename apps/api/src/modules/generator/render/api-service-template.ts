@@ -59,7 +59,7 @@ function whereLines(def: GenRenderInput): string {
     return '    const where: Prisma.' + pascalCase(def.name) + 'WhereInput = {};';
   }
   const orLines = search
-    .map((f) => `              { ${f.name}: { contains: query.keyword } },`)
+    .map((f) => `              { ${f.name}: { contains: query.keyword, mode: 'insensitive' } },`)
     .join('\n');
   return `    const where: Prisma.${pascalCase(def.name)}WhereInput = {
       ...(query.keyword

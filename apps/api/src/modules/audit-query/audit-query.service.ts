@@ -17,14 +17,14 @@ export class AuditQueryService {
 
   async operLogs(query: OperLogQuery): Promise<PageResult<OperLogItem>> {
     const where: Prisma.OperLogWhereInput = {
-      ...(query.username ? { username: query.username } : {}),
+      ...(query.username ? { username: { equals: query.username, mode: 'insensitive' } } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.businessType ? { businessType: query.businessType } : {}),
       ...(query.keyword
         ? {
             OR: [
-              { title: { contains: query.keyword } },
-              { requestPath: { contains: query.keyword } },
+              { title: { contains: query.keyword, mode: 'insensitive' } },
+              { requestPath: { contains: query.keyword, mode: 'insensitive' } },
             ],
           }
         : {}),
@@ -42,10 +42,15 @@ export class AuditQueryService {
 
   async loginLogs(query: LoginLogQuery): Promise<PageResult<LoginLogItem>> {
     const where: Prisma.LoginLogWhereInput = {
-      ...(query.username ? { username: query.username } : {}),
+      ...(query.username ? { username: { equals: query.username, mode: 'insensitive' } } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.keyword
-        ? { OR: [{ username: { contains: query.keyword } }, { ip: { contains: query.keyword } }] }
+        ? {
+            OR: [
+              { username: { contains: query.keyword, mode: 'insensitive' } },
+              { ip: { contains: query.keyword, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
     const [rows, total] = await this.prisma.$transaction([

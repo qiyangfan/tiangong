@@ -11,7 +11,7 @@ export const STORAGE_DIR = path.join(tmpdir(), 'tiangong-it-storage');
 function prepareEnv(): void {
   process.env['DATABASE_URL'] =
     process.env['TEST_DATABASE_URL'] ??
-    'mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong_test';
+    'postgresql://tiangong:tiangong_dev@127.0.0.1:5432/tiangong_test';
   process.env['ADMIN_INITIAL_PASSWORD'] = ADMIN_PASSWORD;
   process.env['JWT_ACCESS_SECRET'] ??= 'test_access_secret_at_least_32_chars_long!!';
   process.env['NODE_ENV'] = 'test';

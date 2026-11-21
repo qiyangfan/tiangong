@@ -58,26 +58,25 @@ jobs:
     # 26.04 标签在当前账号不可用（启动期 startup_failure，0 jobs 物化）；钉 24.04 LTS 确定可用
     runs-on: ubuntu-24.04
     services:
-      mysql:
-        image: mysql:8.4
+      postgres:
+        image: postgres:18
         env:
-          MYSQL_ROOT_PASSWORD: ci_root_pw
-          MYSQL_DATABASE: tiangong_test
-          MYSQL_USER: ci
-          MYSQL_PASSWORD: ci_pw
+          POSTGRES_DB: tiangong_test
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci_pw
         ports:
-          - '3306:3306'
+          - '5432:5432'
         options: >-
-          --health-cmd="mysqladmin ping -proot -h localhost"
+          --health-cmd="pg_isready -U ci -d tiangong_test"
           --health-interval=5s
           --health-timeout=3s
           --health-retries=30
     env:
-      # 集成与 e2e 统一经 TEST_DATABASE_URL 指向 mysql service（两套套件内部约定同名字段）
-      TEST_DATABASE_URL: mysql://ci:ci_pw@localhost:3306/tiangong_test
-      DATABASE_URL: mysql://ci:ci_pw@localhost:3306/tiangong_test
-      # schema 与迁移目录漂移检查用的空库（下方步骤创建并授权）
-      SHADOW_DATABASE_URL: mysql://ci:ci_pw@localhost:3306/tiangong_shadow
+      # 集成与 e2e 统一经 TEST_DATABASE_URL 指向 postgres service（两套套件内部约定同名字段）
+      TEST_DATABASE_URL: postgresql://ci:ci_pw@localhost:5432/tiangong_test
+      DATABASE_URL: postgresql://ci:ci_pw@localhost:5432/tiangong_test
+      # schema 与迁移目录漂移检查用的空库（下方步骤创建）
+      SHADOW_DATABASE_URL: postgresql://ci:ci_pw@localhost:5432/tiangong_shadow
       JWT_ACCESS_SECRET: ci_access_secret_at_least_32_chars_long
     steps:
       - uses: actions/checkout@v7
@@ -88,14 +87,16 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # spec 层是 agent 改动的输入：规格/变更 delta 结构错误在这里阻断
+      - name: OpenSpec 规格校验
+        run: pnpm spec:validate
       - name: Prisma schema 校验
         run: pnpm schema:validate
       - run: pnpm schema:format:check
       - name: 创建迁移影子库
         run: >-
-          docker exec ${{ job.services.mysql.id }} mysql -uroot -pci_root_pw -e
-          "CREATE DATABASE IF NOT EXISTS tiangong_shadow;
-          GRANT ALL ON tiangong_shadow.* TO 'ci'@'%';"
+          docker exec ${{ job.services.postgres.id }} psql -U ci -d postgres -c
+          "CREATE DATABASE tiangong_shadow;"
       - name: schema 与迁移漂移检查
         run: pnpm schema:drift
       - run: pnpm lint

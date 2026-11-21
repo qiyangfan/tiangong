@@ -34,8 +34,8 @@ export class UsersService {
       ...(query.keyword
         ? {
             OR: [
-              { username: { contains: query.keyword } },
-              { nickname: { contains: query.keyword } },
+              { username: { contains: query.keyword, mode: 'insensitive' } },
+              { nickname: { contains: query.keyword, mode: 'insensitive' } },
             ],
           }
         : {}),

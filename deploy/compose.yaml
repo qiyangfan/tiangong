@@ -1,21 +1,20 @@
-# 天工全栈部署（MySQL 8.4 + api + web nginx 反代）
+# 天工全栈部署（PostgreSQL 18 + api + web nginx 反代）
 # 生产/CI 侧覆盖敏感值：JWT_ACCESS_SECRET、ADMIN_INITIAL_PASSWORD、CORS_ORIGINS 用 .env 或编排层注入；
 # 本文件内的默认值仅为本地演示哑值，禁止用于真实环境。
 name: tiangong
 
 services:
-  mysql:
-    image: mysql:8.4
+  postgres:
+    image: postgres:18
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-tg_change_me_root}
-      MYSQL_DATABASE: tiangong
-      MYSQL_USER: tiangong
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tg_change_me_app}
+      POSTGRES_DB: tiangong
+      POSTGRES_USER: tiangong
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tg_change_me_app}
     volumes:
-      - mysql-data:/var/lib/mysql
+      # pg18 官方镜像约定：挂载父目录，数据实际落在 /var/lib/postgresql/18/docker
+      - pg-data:/var/lib/postgresql
     healthcheck:
-      # 与上方 MYSQL_ROOT_PASSWORD 同源，避免覆盖密码后健康检查永远失败
-      test: ['CMD', 'mysqladmin', 'ping', '-p${MYSQL_ROOT_PASSWORD:-tg_change_me_root}']
+      test: ['CMD-SHELL', 'pg_isready -U tiangong -d tiangong']
       interval: 5s
       timeout: 3s
       retries: 30
@@ -25,7 +24,7 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
     environment:
-      DATABASE_URL: mysql://tiangong:${MYSQL_PASSWORD:-tg_change_me_app}@mysql:3306/tiangong
+      DATABASE_URL: postgresql://tiangong:${POSTGRES_PASSWORD:-tg_change_me_app}@postgres:5432/tiangong
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET must be provided (>=32 chars)}
       ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
@@ -39,7 +38,7 @@ services:
     cap_drop: ['ALL']
     security_opt: ['no-new-privileges:true']
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/v1/health/live']
@@ -70,5 +69,5 @@ services:
       retries: 10
 
 volumes:
-  mysql-data:
+  pg-data:
   api-storage:

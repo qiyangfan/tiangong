@@ -21,9 +21,9 @@ export class PermissionsService {
         ? {
             where: {
               OR: [
-                { resource: { contains: keyword } },
-                { action: { contains: keyword } },
-                { name: { contains: keyword } },
+                { resource: { contains: keyword, mode: 'insensitive' } },
+                { action: { contains: keyword, mode: 'insensitive' } },
+                { name: { contains: keyword, mode: 'insensitive' } },
               ],
             },
           }

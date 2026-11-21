@@ -14,7 +14,8 @@ export const API_BASE = `${API_URL}/api/v1`;
 
 /** e2e 数据源：与集成测试同一约定（TEST_DATABASE_URL 覆盖，默认本地共享栈 tiangong_test）。 */
 export const TEST_DB_URL =
-  process.env['TEST_DATABASE_URL'] ?? 'mysql://tiangong:tiangong_dev@127.0.0.1:3307/tiangong_test';
+  process.env['TEST_DATABASE_URL'] ??
+  'postgresql://tiangong:tiangong_dev@127.0.0.1:5432/tiangong_test';
 
 export const E2E_ADMIN = { username: 'admin', password: 'TestAdmin1pw' } as const;
 

@@ -2,7 +2,7 @@
 schema: spec-driven
 context: |
   A business-agnostic, RuoYi-inspired TS admin platform. Modular monolith.
-  NestJS + Prisma + MySQL, Vue3 web, uni-app miniapp, shared DTO contracts.
+  NestJS + Prisma + PostgreSQL, Vue3 web, uni-app miniapp, shared DTO contracts.
   Refer to CONSTITUTION.md and docs/requirements/FUNCTION_MATRIX.md.
 rules:
   proposal:

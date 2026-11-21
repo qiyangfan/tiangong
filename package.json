@@ -43,7 +43,8 @@
     "db:migrate": "pnpm --filter @tiangong/api prisma:migrate",
     "db:seed": "pnpm --filter @tiangong/api prisma:seed",
     "gen:crud": "pnpm --filter @tiangong/api exec tsx --env-file-if-exists=.env scripts/gen-crud.ts",
-    "docs:links": "python3 scripts/check_md_links.py"
+    "docs:links": "python3 scripts/check_md_links.py",
+    "spec:validate": "npx --yes @fission-ai/openspec@2.1.0 validate --all --strict"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

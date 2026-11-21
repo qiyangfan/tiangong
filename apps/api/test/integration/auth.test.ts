@@ -69,6 +69,15 @@ describe('认证契约：登录与会话', () => {
     expectRefreshCookie(res.headers['set-cookie']);
   });
 
+  it('用户名大小写不敏感（citext 保留 MySQL 语义）', async () => {
+    const res = await loginWeb({
+      ...ADMIN_CREDENTIALS,
+      username: ADMIN_CREDENTIALS.username.toUpperCase(),
+    });
+    expect(res.status).toBe(200);
+    expect((res.body as LoginEnvelope).data.user.username).toBe(ADMIN_CREDENTIALS.username);
+  });
+
   it('miniapp refresh 轮换：旧 refresh 复用被拒', async () => {
     const login = await loginMiniapp(ADMIN_CREDENTIALS);
     const firstRefresh = (login.body as LoginEnvelope).data.refreshToken ?? '';

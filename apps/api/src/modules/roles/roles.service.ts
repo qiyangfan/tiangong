@@ -27,7 +27,12 @@ export class RolesService {
   async list(query: RoleListQuery): Promise<PageResult<RoleItem>> {
     const where: Prisma.RoleWhereInput = {
       ...(query.keyword
-        ? { OR: [{ name: { contains: query.keyword } }, { roleKey: { contains: query.keyword } }] }
+        ? {
+            OR: [
+              { name: { contains: query.keyword, mode: 'insensitive' } },
+              { roleKey: { contains: query.keyword, mode: 'insensitive' } },
+            ],
+          }
         : {}),
       ...(query.enabled === undefined ? {} : { enabled: query.enabled }),
     };

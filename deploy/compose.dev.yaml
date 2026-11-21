@@ -1,22 +1,23 @@
-# 开发用 MySQL 8.4（仅本地开发；生产用 deploy/compose.yaml，密钥走环境变量）
+# 开发用 PostgreSQL 18（仅本地开发；生产用 deploy/compose.yaml，密钥走环境变量）
+# 默认使用共享栈 ~/workspace/env 的 env-postgres(5432)；本文件是无共享栈环境的回退，宿主端口 5433。
 services:
-  mysql:
-    image: mysql:8.4
-    container_name: tiangong-mysql-dev
+  postgres:
+    image: postgres:18
+    container_name: tiangong-postgres-dev
     environment:
-      MYSQL_ROOT_PASSWORD: tiangong_dev_root
-      MYSQL_DATABASE: tiangong
-      MYSQL_USER: tiangong
-      MYSQL_PASSWORD: tiangong_dev
+      POSTGRES_DB: tiangong
+      POSTGRES_USER: tiangong
+      POSTGRES_PASSWORD: tiangong_dev
     ports:
-      - '3307:3306' # 避让宿主机已有 env-mysql(3306)
+      - '5433:5432' # 避让共享栈 env-postgres(5432)
     volumes:
-      - tiangong_mysql_dev:/var/lib/mysql
+      # pg18 官方镜像约定：挂载父目录，数据实际落在 /var/lib/postgresql/18/docker
+      - tiangong_pg_dev:/var/lib/postgresql
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-ptiangong_dev_root']
+      test: ['CMD-SHELL', 'pg_isready -U tiangong -d tiangong']
       interval: 5s
       timeout: 3s
       retries: 30
 
 volumes:
-  tiangong_mysql_dev:
+  tiangong_pg_dev:

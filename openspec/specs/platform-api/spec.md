@@ -24,7 +24,7 @@
 
 #### Scenario: 可用性探针验收
 
-- **GIVEN** MySQL 不可达
+- **GIVEN** PostgreSQL 不可达
 - **WHEN** 请求 ready
 - **THEN** 健康探针失败而 live 可独立反映进程状态。
 

@@ -2,7 +2,7 @@
   "name": "@tiangong/e2e",
   "version": "0.1.0",
   "private": true,
-  "description": "天工端到端验收（Playwright 驱动真实 api + web + MySQL）",
+  "description": "天工端到端验收（Playwright 驱动真实 api + web + PostgreSQL）",
   "type": "module",
   "scripts": {
     "test:e2e": "playwright test",

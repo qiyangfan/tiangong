@@ -24,8 +24,8 @@ export class GeneratorService {
         ? {
             where: {
               OR: [
-                { name: { contains: query.keyword } },
-                { displayName: { contains: query.keyword } },
+                { name: { contains: query.keyword, mode: 'insensitive' } },
+                { displayName: { contains: query.keyword, mode: 'insensitive' } },
               ],
             },
           }

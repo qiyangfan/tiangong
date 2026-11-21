@@ -40,7 +40,7 @@ e2e SHALL 至少覆盖：认证流（错误密码不进入、成功登录、登�
 ### Requirement: CI 执法 e2e
 
 CI SHALL 在单元、集成、构建之后执行 e2e，失败时上传 Playwright 报告；集成与 e2e 在 CI 环境
-SHALL 经 `TEST_DATABASE_URL` 指向 mysql service。
+SHALL 经 `TEST_DATABASE_URL` 指向 postgres service。
 
 #### Scenario: CI e2e 步骤
 

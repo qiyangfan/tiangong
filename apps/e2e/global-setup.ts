@@ -40,7 +40,7 @@ export default function globalSetup(): void {
     {
       cwd: apiDir,
       env,
-      input: "UPDATE `user` SET failed_attempts = 0, lock_until = NULL WHERE username = 'admin';",
+      input: 'UPDATE "user" SET failed_attempts = 0, lock_until = NULL WHERE username = \'admin\';',
     },
   );
 }

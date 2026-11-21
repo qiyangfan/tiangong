@@ -1,6 +1,6 @@
 # 天工 (tiangong)
 
-以 RuoYi 能力为基准的**通用 TS 全栈后台脚手架**（业务无关）：NestJS 11 + Prisma 6 + MySQL 8.4 + Vue 3.5 / Element Plus + uni-app 微信小程序，pnpm workspace 单仓三端。不包含任何行业/客户业务模块，不复制 RuoYi 源码（重写其模式，不拷贝实现）。
+以 RuoYi 能力为基准的**通用 TS 全栈后台脚手架**（业务无关）：NestJS 11 + Prisma 6 + PostgreSQL 18 + Vue 3.5 / Element Plus + uni-app 微信小程序，pnpm workspace 单仓三端。不包含任何行业/客户业务模块，不复制 RuoYi 源码（重写其模式，不拷贝实现）。
 
 ## 能力总览（P0）
 
@@ -14,11 +14,11 @@
 
 ## 快速开始
 
-环境要求：Node ≥ 24（mise 锚定）、pnpm 12、Docker（MySQL 8.4）。
+环境要求：Node ≥ 24（mise 锚定）、pnpm 12、Docker（PostgreSQL 18）。
 
 ```bash
-# 1. 起开发库（共享栈 env-mysql，宿主 3307；或回退 deploy/compose.dev.yaml）
-cd ~/workspace/env && docker compose --profile mysql up -d mysql
+# 1. 起开发库（共享栈 env-postgres，宿主 5432；或回退 deploy/compose.dev.yaml，宿主 5433）
+cd ~/workspace/env && docker compose --profile pg up -d postgres
 
 # 2. 安装 + 迁移 + 种子（幂等；admin 密码读 ADMIN_INITIAL_PASSWORD）
 pnpm install --frozen-lockfile
@@ -38,7 +38,7 @@ pnpm dev:web   # 另开终端
 | ------------------------------------------------- | ------------------------------------------------------------- |
 | `pnpm lint` / `pnpm typecheck`                    | 全仓 lint（eslint9 flat）/ 类型检查（TS strict）              |
 | `pnpm test`                                       | 单元测试（vitest；api 单测走 unplugin-swc）                   |
-| `pnpm --filter @tiangong/api test:integration`    | 真库集成 26 例（自动对 tiangong_test migrate + seed）         |
+| `pnpm --filter @tiangong/api test:integration`    | 真库集成（自动对 tiangong_test migrate + seed）               |
 | `pnpm test:e2e`                                   | 浏览器端到端（Playwright 自动起 api+web，指向 tiangong_test） |
 | `pnpm build`                                      | 全仓构建（contracts → api/web）                               |
 | `pnpm --filter @tiangong/miniapp build:mp-weixin` | 小程序产物（dist/build/mp-weixin）                            |

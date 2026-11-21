@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,9 +15,10 @@ datasource db {
 
 model User {
   id             Int       @id @default(autoincrement())
-  username       String    @unique @db.VarChar(30)
+  // citext：保留 MySQL 时期用户名/邮箱大小写不敏感的唯一性与登录语义；长度由 contracts 校验
+  username       String    @unique @db.Citext
   nickname       String    @db.VarChar(30)
-  email          String?   @unique @db.VarChar(100)
+  email          String?   @unique @db.Citext
   phone          String?   @db.VarChar(20)
   passwordHash   String    @map("password_hash") @db.VarChar(255)
   avatarFileId   Int?      @map("avatar_file_id")
@@ -124,7 +125,7 @@ model RolePermission {
 model DictType {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
-  dictKey   String   @unique @map("dict_key") @db.VarChar(100)
+  dictKey   String   @unique @map("dict_key") @db.Citext
   enabled   Boolean  @default(true)
   remark    String?  @db.VarChar(500)
   createdBy Int?     @map("created_by")
@@ -137,9 +138,9 @@ model DictType {
 
 model DictItem {
   id        Int      @id @default(autoincrement())
-  dictKey   String   @map("dict_key") @db.VarChar(100)
+  dictKey   String   @map("dict_key") @db.Citext
   label     String   @db.VarChar(100)
-  value     String   @db.VarChar(100)
+  value     String   @db.Citext
   tagType   String?  @map("tag_type") @db.VarChar(20)
   sort      Int      @default(0)
   isDefault Boolean  @default(false) @map("is_default")

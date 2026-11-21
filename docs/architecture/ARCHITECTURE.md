@@ -2,7 +2,7 @@
 
 ```text
 apps/web (Vue 3 + Element Plus) ----+
-                                     +--> HTTPS /api/v1 --> apps/api (NestJS modular monolith) --> Prisma --> MySQL
+                                     +--> HTTPS /api/v1 --> apps/api (NestJS modular monolith) --> Prisma --> PostgreSQL 18
 apps/miniapp (uni-app Vue 3) -------+
                        |                        |
                        +-- packages/contracts --+  [公共 API DTO、业务无关枚举与 schema]

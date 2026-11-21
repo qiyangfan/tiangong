@@ -91,7 +91,7 @@ export class FilesService {
 
   async list(query: FileListQuery): Promise<PageResult<FileItem>> {
     const where: Prisma.FileObjectWhereInput = {
-      ...(query.keyword ? { originalName: { contains: query.keyword } } : {}),
+      ...(query.keyword ? { originalName: { contains: query.keyword, mode: 'insensitive' } } : {}),
       ...(query.suffix ? { suffix: query.suffix.toLowerCase() } : {}),
     };
     const [rows, total] = await this.prisma.$transaction([

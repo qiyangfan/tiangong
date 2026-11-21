@@ -28,7 +28,12 @@ export class SettingsService {
     const rows = await this.prisma.setting.findMany({
       ...(keyword
         ? {
-            where: { OR: [{ name: { contains: keyword } }, { settingKey: { contains: keyword } }] },
+            where: {
+              OR: [
+                { name: { contains: keyword, mode: 'insensitive' } },
+                { settingKey: { contains: keyword, mode: 'insensitive' } },
+              ],
+            },
           }
         : {}),
       orderBy: { id: 'asc' },

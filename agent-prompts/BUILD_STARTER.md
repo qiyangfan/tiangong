@@ -12,7 +12,7 @@
 
 ## 栈与工程边界
 
-Node.js 适用稳定 LTS + TypeScript strict + NestJS + Prisma + MySQL 8.4 LTS + Vue3/Vite/Element Plus + uni-app(Vue3/TS) + pnpm workspace + REST/OpenAPI + Docker Compose。单体模块化。先核实实际版本及兼容矩阵，锁定依赖、提交 lockfile。不得自行改 React/Taro、RuoYi、微服务、多租户。
+Node.js 适用稳定 LTS + TypeScript strict + NestJS + Prisma + PostgreSQL 18 + Vue3/Vite/Element Plus + uni-app(Vue3/TS) + pnpm workspace + REST/OpenAPI + Docker Compose。单体模块化。先核实实际版本及兼容矩阵，锁定依赖、提交 lockfile。不得自行改 React/Taro、RuoYi、微服务、多租户。
 
 ## 做事方法
 

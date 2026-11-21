@@ -45,7 +45,8 @@
           }
         },
         "summary": "账号密码登录",
-        "tags": ["auth"]
+        "tags": ["auth"],
+        "x-public": true
       }
     },
     "/auth/logout": {
@@ -141,7 +142,8 @@
           }
         },
         "summary": "刷新 access token（refresh 轮换）",
-        "tags": ["auth"]
+        "tags": ["auth"],
+        "x-public": true
       }
     },
     "/dict-items": {
@@ -159,7 +161,8 @@
           }
         ],
         "summary": "新增字典项",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:create"]
       }
     },
     "/dict-items/{id}": {
@@ -177,7 +180,8 @@
           }
         ],
         "summary": "删除字典项",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:delete"]
       },
       "put": {
         "operationId": "DictionariesController_updateItem",
@@ -193,7 +197,8 @@
           }
         ],
         "summary": "修改字典项",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:update"]
       }
     },
     "/dict-types": {
@@ -211,7 +216,8 @@
           }
         ],
         "summary": "字典类型分页列表",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:list"]
       },
       "post": {
         "operationId": "DictionariesController_createType",
@@ -227,7 +233,8 @@
           }
         ],
         "summary": "新增字典类型",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:create"]
       }
     },
     "/dict-types/{id}": {
@@ -245,7 +252,8 @@
           }
         ],
         "summary": "删除字典类型（连带其项）",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:delete"]
       },
       "put": {
         "operationId": "DictionariesController_updateType",
@@ -261,7 +269,8 @@
           }
         ],
         "summary": "修改字典类型",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:update"]
       }
     },
     "/dict-types/{key}/items": {
@@ -288,7 +297,8 @@
           }
         ],
         "summary": "某类型下字典项列表",
-        "tags": ["dictionaries"]
+        "tags": ["dictionaries"],
+        "x-required-permissions": ["system:dict:list"]
       }
     },
     "/dicts/{dictKey}/options": {
@@ -336,7 +346,8 @@
           }
         ],
         "summary": "附件分页列表",
-        "tags": ["files"]
+        "tags": ["files"],
+        "x-required-permissions": ["files:list"]
       },
       "post": {
         "operationId": "FilesController_upload",
@@ -352,7 +363,8 @@
           }
         ],
         "summary": "上传附件（multipart，字段名 file）",
-        "tags": ["files"]
+        "tags": ["files"],
+        "x-required-permissions": ["files:upload"]
       }
     },
     "/files/{id}": {
@@ -370,7 +382,8 @@
           }
         ],
         "summary": "删除附件（元数据 + 物理文件）",
-        "tags": ["files"]
+        "tags": ["files"],
+        "x-required-permissions": ["files:delete"]
       }
     },
     "/files/{id}/download": {
@@ -388,7 +401,8 @@
           }
         ],
         "summary": "授权下载附件（二进制流，非 envelope）",
-        "tags": ["files"]
+        "tags": ["files"],
+        "x-required-permissions": ["files:list"]
       }
     },
     "/gen-definitions": {
@@ -406,7 +420,8 @@
           }
         ],
         "summary": "生成定义列表（全量，定义数量少不分页）",
-        "tags": ["gen-definitions"]
+        "tags": ["gen-definitions"],
+        "x-required-permissions": ["gen:list"]
       },
       "post": {
         "operationId": "GenDefinitionController_create",
@@ -422,7 +437,8 @@
           }
         ],
         "summary": "新增生成定义",
-        "tags": ["gen-definitions"]
+        "tags": ["gen-definitions"],
+        "x-required-permissions": ["gen:create"]
       }
     },
     "/gen-definitions/{id}": {
@@ -440,7 +456,8 @@
           }
         ],
         "summary": "删除生成定义",
-        "tags": ["gen-definitions"]
+        "tags": ["gen-definitions"],
+        "x-required-permissions": ["gen:delete"]
       },
       "put": {
         "operationId": "GenDefinitionController_update",
@@ -456,7 +473,8 @@
           }
         ],
         "summary": "修改生成定义（模块名不可变）",
-        "tags": ["gen-definitions"]
+        "tags": ["gen-definitions"],
+        "x-required-permissions": ["gen:update"]
       }
     },
     "/gen-definitions/{id}/preview": {
@@ -474,7 +492,8 @@
           }
         ],
         "summary": "已保存定义预览（与 CLI 落盘一致）",
-        "tags": ["gen-definitions"]
+        "tags": ["gen-definitions"],
+        "x-required-permissions": ["gen:preview"]
       }
     },
     "/gen-definitions/preview": {
@@ -492,7 +511,8 @@
           }
         ],
         "summary": "草稿预览（不落库）",
-        "tags": ["gen-definitions"]
+        "tags": ["gen-definitions"],
+        "x-required-permissions": ["gen:preview"]
       }
     },
     "/health/live": {
@@ -505,7 +525,8 @@
           }
         },
         "summary": "存活探针（进程是否在运行）",
-        "tags": ["health"]
+        "tags": ["health"],
+        "x-public": true
       }
     },
     "/health/ready": {
@@ -518,7 +539,8 @@
           }
         },
         "summary": "就绪探针（数据库连通）",
-        "tags": ["health"]
+        "tags": ["health"],
+        "x-public": true
       }
     },
     "/login-logs": {
@@ -536,7 +558,8 @@
           }
         ],
         "summary": "登录日志检索",
-        "tags": ["audit"]
+        "tags": ["audit"],
+        "x-required-permissions": ["audit:login:list"]
       }
     },
     "/menus": {
@@ -554,7 +577,8 @@
           }
         ],
         "summary": "全量菜单树（管理）",
-        "tags": ["menus"]
+        "tags": ["menus"],
+        "x-required-permissions": ["system:menu:list"]
       },
       "post": {
         "operationId": "MenusController_create",
@@ -570,7 +594,8 @@
           }
         ],
         "summary": "新增菜单",
-        "tags": ["menus"]
+        "tags": ["menus"],
+        "x-required-permissions": ["system:menu:create"]
       }
     },
     "/menus/{id}": {
@@ -588,7 +613,8 @@
           }
         ],
         "summary": "删除菜单（须无子节点）",
-        "tags": ["menus"]
+        "tags": ["menus"],
+        "x-required-permissions": ["system:menu:delete"]
       },
       "put": {
         "operationId": "MenusController_update",
@@ -604,7 +630,8 @@
           }
         ],
         "summary": "修改菜单",
-        "tags": ["menus"]
+        "tags": ["menus"],
+        "x-required-permissions": ["system:menu:update"]
       }
     },
     "/metrics": {
@@ -617,7 +644,8 @@
           }
         },
         "summary": "Prometheus 文本指标（Node 进程 + HTTP RED）",
-        "tags": ["metrics"]
+        "tags": ["metrics"],
+        "x-public": true
       }
     },
     "/oper-logs": {
@@ -635,7 +663,8 @@
           }
         ],
         "summary": "操作日志检索",
-        "tags": ["audit"]
+        "tags": ["audit"],
+        "x-required-permissions": ["audit:oper:list"]
       }
     },
     "/permissions": {
@@ -653,7 +682,8 @@
           }
         ],
         "summary": "权限点分组列表",
-        "tags": ["permissions"]
+        "tags": ["permissions"],
+        "x-required-permissions": ["system:permission:list"]
       },
       "post": {
         "operationId": "PermissionsController_create",
@@ -669,7 +699,8 @@
           }
         ],
         "summary": "新增权限点",
-        "tags": ["permissions"]
+        "tags": ["permissions"],
+        "x-required-permissions": ["system:permission:create"]
       }
     },
     "/permissions/{id}": {
@@ -687,7 +718,8 @@
           }
         ],
         "summary": "删除权限点",
-        "tags": ["permissions"]
+        "tags": ["permissions"],
+        "x-required-permissions": ["system:permission:delete"]
       },
       "put": {
         "operationId": "PermissionsController_update",
@@ -703,7 +735,8 @@
           }
         ],
         "summary": "修改权限点",
-        "tags": ["permissions"]
+        "tags": ["permissions"],
+        "x-required-permissions": ["system:permission:update"]
       }
     },
     "/roles": {
@@ -721,7 +754,8 @@
           }
         ],
         "summary": "角色分页列表",
-        "tags": ["roles"]
+        "tags": ["roles"],
+        "x-required-permissions": ["system:role:list"]
       },
       "post": {
         "operationId": "RolesController_create",
@@ -737,7 +771,8 @@
           }
         ],
         "summary": "新增角色",
-        "tags": ["roles"]
+        "tags": ["roles"],
+        "x-required-permissions": ["system:role:create"]
       }
     },
     "/roles/{id}": {
@@ -755,7 +790,8 @@
           }
         ],
         "summary": "删除角色",
-        "tags": ["roles"]
+        "tags": ["roles"],
+        "x-required-permissions": ["system:role:delete"]
       },
       "get": {
         "operationId": "RolesController_detail",
@@ -771,7 +807,8 @@
           }
         ],
         "summary": "角色详情（含权限点）",
-        "tags": ["roles"]
+        "tags": ["roles"],
+        "x-required-permissions": ["system:role:detail"]
       },
       "put": {
         "operationId": "RolesController_update",
@@ -787,7 +824,8 @@
           }
         ],
         "summary": "修改角色（含权限绑定）",
-        "tags": ["roles"]
+        "tags": ["roles"],
+        "x-required-permissions": ["system:role:update"]
       }
     },
     "/samples": {
@@ -805,7 +843,8 @@
           }
         ],
         "summary": "示例数据分页列表",
-        "tags": ["samples"]
+        "tags": ["samples"],
+        "x-required-permissions": ["sample:list"]
       },
       "post": {
         "operationId": "SampleController_create",
@@ -821,7 +860,8 @@
           }
         ],
         "summary": "新增示例数据",
-        "tags": ["samples"]
+        "tags": ["samples"],
+        "x-required-permissions": ["sample:create"]
       }
     },
     "/samples/{id}": {
@@ -839,7 +879,8 @@
           }
         ],
         "summary": "删除示例数据",
-        "tags": ["samples"]
+        "tags": ["samples"],
+        "x-required-permissions": ["sample:delete"]
       },
       "get": {
         "operationId": "SampleController_detail",
@@ -855,7 +896,8 @@
           }
         ],
         "summary": "示例数据详情",
-        "tags": ["samples"]
+        "tags": ["samples"],
+        "x-required-permissions": ["sample:detail"]
       },
       "put": {
         "operationId": "SampleController_update",
@@ -871,7 +913,8 @@
           }
         ],
         "summary": "修改示例数据",
-        "tags": ["samples"]
+        "tags": ["samples"],
+        "x-required-permissions": ["sample:update"]
       }
     },
     "/settings": {
@@ -889,7 +932,8 @@
           }
         ],
         "summary": "系统参数列表（非机密）",
-        "tags": ["settings"]
+        "tags": ["settings"],
+        "x-required-permissions": ["system:setting:list"]
       },
       "post": {
         "operationId": "SettingsController_create",
@@ -905,7 +949,8 @@
           }
         ],
         "summary": "新增参数",
-        "tags": ["settings"]
+        "tags": ["settings"],
+        "x-required-permissions": ["system:setting:create"]
       }
     },
     "/settings/{id}": {
@@ -923,7 +968,8 @@
           }
         ],
         "summary": "删除参数（内置参数拒绝）",
-        "tags": ["settings"]
+        "tags": ["settings"],
+        "x-required-permissions": ["system:setting:delete"]
       },
       "put": {
         "operationId": "SettingsController_update",
@@ -939,7 +985,8 @@
           }
         ],
         "summary": "修改参数值",
-        "tags": ["settings"]
+        "tags": ["settings"],
+        "x-required-permissions": ["system:setting:update"]
       }
     },
     "/users": {
@@ -957,7 +1004,8 @@
           }
         ],
         "summary": "用户分页列表",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:list"]
       },
       "post": {
         "operationId": "UsersController_create",
@@ -973,7 +1021,8 @@
           }
         ],
         "summary": "新增用户",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:create"]
       }
     },
     "/users/{id}": {
@@ -991,7 +1040,8 @@
           }
         ],
         "summary": "删除用户",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:delete"]
       },
       "get": {
         "operationId": "UsersController_detail",
@@ -1007,7 +1057,8 @@
           }
         ],
         "summary": "用户详情",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:detail"]
       },
       "put": {
         "operationId": "UsersController_update",
@@ -1023,7 +1074,8 @@
           }
         ],
         "summary": "修改用户（含角色分配）",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:update"]
       }
     },
     "/users/{id}/enabled": {
@@ -1041,7 +1093,8 @@
           }
         ],
         "summary": "启停用户",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:enable"]
       }
     },
     "/users/{id}/reset-password": {
@@ -1059,7 +1112,8 @@
           }
         ],
         "summary": "重置用户密码（吊销其全部会话）",
-        "tags": ["users"]
+        "tags": ["users"],
+        "x-required-permissions": ["system:user:reset-password"]
       }
     }
   },

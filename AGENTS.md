@@ -63,9 +63,9 @@
 
 ### 工程习惯
 
-- 本地基础环境（MySQL 等）统一用 `~/workspace/env` 共享栈（env-mysql 8.4，宿主 **3307**（3306 被宿主幽灵转发占用），
-  应用账号 `tiangong/tiangong_dev`，库 `tiangong`，dev 账号持有 ALL ON `*.*` 供 migrate shadow 库）；`deploy/compose.dev.yaml` 仅作无共享栈环境的回退；
-  CI/生产口径恒为 mysql:8.4。
+- 本地基础环境（PostgreSQL 等）统一用 `~/workspace/env` 共享栈（env-postgres 18，宿主 **5432**，
+  应用账号 `tiangong/tiangong_dev`，库 `tiangong` / `tiangong_test`，dev 账号持 CREATEDB 供 migrate shadow 库）；
+  `deploy/compose.dev.yaml`（宿主 5433）仅作无共享栈环境的回退；CI/生产口径恒为 PostgreSQL 18。
 - 最小可验证改动；复用既有模式与组件；不为「未来可能需要」新增抽象。
 - **封装红线（Jeecg 反例，owner 明令）**：不搞「必须依赖文档才能看懂」的深度定制组件。验收标准 =
   熟悉底层库（Element Plus / axios / echarts / Prisma）的人**不看任何文档就能用**；props/参数语义与

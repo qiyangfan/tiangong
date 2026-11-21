@@ -19,8 +19,8 @@ export class SampleService {
 
   async list(query: SampleRecordQuery): Promise<PageResult<SampleRecordItem>> {
     const where: Prisma.SampleRecordWhereInput = {
-      ...(query.keyword ? { name: { contains: query.keyword } } : {}),
-      ...(query.category ? { category: query.category } : {}),
+      ...(query.keyword ? { name: { contains: query.keyword, mode: 'insensitive' } } : {}),
+      ...(query.category ? { category: { equals: query.category, mode: 'insensitive' } } : {}),
       ...(query.enabled === undefined ? {} : { enabled: query.enabled }),
     };
     const [rows, total] = await this.prisma.$transaction([
