@@ -125,18 +125,18 @@ tiangong/
 
 **Agent 入口**：仓库根 `llms.txt` 提供先读顺序、机器可读契约位置、常用命令与硬边界；与 AGENTS.md 冲突时以 AGENTS.md 为准。
 
-**当前状态（2026-11-21）**：Stage 0-6 全部收官；数据库已由 MySQL 8.4 切至 **PostgreSQL 18**（ADR-0001 2026-11-20 修订，2026-11-21 验证入库）。`openspec/specs/` 10 个能力基线 + 2 个提案态变更，`pnpm spec:validate` 12/12 全绿。**已归档变更 15 个**：2026-11-07 五变更（e2e 硬化、终局 401 统一、全局错误兜底、miniapp UI 对齐、miniapp 状态/i18n）、2026-11-08 `adopt-wot-design-uni`、2026-11-09 `add-basic-metrics`、2026-11-19 质量门禁批次 2/3/4/5 + `add-secret-scanning` + `add-structural-gates`、2026-11-20 `close-gate-gaps` / `close-quality-gate-gaps`。
+**当前状态（2026-11-23）**：Stage 0-6 全部收官；数据库已由 MySQL 8.4 切至 **PostgreSQL 18**（ADR-0001 2026-11-20 修订，2026-11-21 验证入库）。`openspec/specs/` 11 个能力基线，`pnpm spec:validate` 11/11 全绿。**已归档变更 16 个**：2026-11-07 五变更（e2e 硬化、终局 401 统一、全局错误兜底、miniapp UI 对齐、miniapp 状态/i18n）、2026-11-08 `adopt-wot-design-uni`、2026-11-09 `add-basic-metrics`、2026-11-19 质量门禁批次 2/3/4/5 + `add-secret-scanning` + `add-structural-gates`、2026-11-20 `close-gate-gaps` / `close-quality-gate-gaps`、2026-11-23 `add-platform-ai`。
 
 **质量门禁**：工具类型已无本地可推进缺口。已落地且本地全绿：eslint（strictTypeChecked + 复杂度/体积/import 环）、prettier、stylelint、markdownlint、jscpd、knip（阻断）、dependency-cruiser、tsconfig 全严格档、vitest 覆盖率阈值、e2e + 全页 axe、e2e istanbul 覆盖率、OpenSpec 规格校验（`spec:validate`，--all --strict）、Prisma schema 三项、OpenAPI 快照（含 `x-required-permissions` / `x-public` 授权元数据）、zod 响应契约（列表 + 详情）、API 授权矩阵（路由必须声明 @Public 或种子目录内权限点）、env 配置契约、gitleaks（pre-commit + CI）、全量依赖审计、license（workspace 动态推导）、SBOM、hadolint、trivy、actionlint + shellcheck、构建体积预算（`size:check`）、CodeQL（javascript-typescript，push/PR main + 周排程）。
 
 **门禁 change 状态（2026-11-21 收口）**：批次 1 `add-secret-scanning`、结构类 `add-structural-gates`、批次 2/3/4 共 5 个 change 已于 2026-11-21 按 owner 指令以 `--skip-specs` 归档；唯一外部未完成项「GitHub 分支保护 required check」转入 §8 入口 1。GitHub Actions 仍受账号账单锁，全部 workflow 未实跑。
 
-**测试矩阵**：单测 102（contracts 22 / web 28 / miniapp 34 / api 18）+ 真库集成 64（9 文件，PostgreSQL 18）+ 浏览器 e2e 14（登录/守卫/系统模块 UI 全闭环/全页 a11y）；2026-11-21 实跑全绿。`pnpm test:e2e` 自动起 api:3001 + web:5174，globalSetup 自动 migrate + seed + 复位 admin 锁定计数。
+**测试矩阵**：单测 132（contracts 22 / web 41 / miniapp 34 / api 35）+ 真库集成 79（11 文件，PostgreSQL 18）+ 浏览器 e2e 19（登录/守卫/系统模块 UI 全闭环/全页 a11y/AI 面板闭环）；2026-11-23 实跑全绿。`pnpm test:e2e` 自动起 api:3001 + web:5174，globalSetup 自动 migrate + seed + 复位 admin 锁定计数。
 
 **下一步**（按序）：
 
 1. **唯一外部阻塞**：GitHub Actions 账单解锁后实跑 `CI` 与 `security`（`gh run watch <id> --exit-status`）；全绿后设 `secrets` 为 main required check（先 GET 备份，PUT 整份覆盖），并复跑一次全量门禁。
-2. **AI 能力（提案态，未排期）**：`2026-11-21-add-platform-ai`（会话 / 工具目录 / 确认票据 / AI 面板）与 `2026-11-21-add-platform-ai-governance`（策略分级 / step-up / 多步计划 / 多端入口）尚未实施；启动时先补 ADR 与平台契约，按各自 tasks 顺序落地，默认 `AI_ENABLED=false`。
+2. **AI 入口 P1（已实施并归档 2026-11-23）**：`2026-11-21-add-platform-ai` 代码与测试已落地，按 tasks 顺序完成；默认 `AI_ENABLED=false`，dev/e2e 用 fake provider，真实 provider 指向 muniu `/v1` 或任意 OpenAI-compatible 端点；生产启用（尤其写操作）仍需另行评估。P2（策略分级 / step-up / 多步计划 / 多端入口）已于 2026-11-23 撤销，不排期。
 3. **非门禁测试深度**：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 补集成/e2e 用例（行为已实现，仅缺用例）。
 4. **收尾队列**（§8 入口 6）：第三方许可声明、备份/恢复演练、小程序真机预览、生产 secrets/域名演练。
 
@@ -147,7 +147,7 @@ tiangong/
 - dev 库 = `~/workspace/env` 共享栈 env-postgres（宿主 5432，账号 tiangong/tiangong_dev，库 tiangong/tiangong_test）；`deploy/compose.dev.yaml` 回退到宿主 5433。`apps/api/.env` 已配好（随机 JWT secret；ADMIN_INITIAL_PASSWORD=Tgdev3e3b3e5036da25f0；STORAGE_DIR=./storage/uploads；MAX_UPLOAD_MB=20）
 - dev 联调：`pnpm dev:api`（:3000）+ `pnpm dev:web`（:5173，vite 代理 /api → 3000，HttpOnly refresh Cookie `tg_refresh` 同源自动携带）；登录账号 admin（密码见 .env）。注意本机 3000 若有遗留 dev api 进程属正常，e2e 用 3001/5174 与其隔离互不影响
 - e2e 账号约定：admin 密码固定 `TestAdmin1pw`（globalSetup 以 env 注入 seed/服务进程）；fixture 零权限角色 `e2e_noperm_role` + 用户 `e2e_noperm`，用后即删（apps/e2e/tests/helpers.ts）
-- API 端点全集：/health/live|ready、/auth/*、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs、**/files(+/:id/download)、/samples、/gen-definitions(+/preview|:id/preview)**；swagger /docs
+- API 端点全集：/health/live|ready、/auth/*、/users、/roles、/permissions、/menus、/dict-types|/dict-items|/dicts/:key/options、/settings、/oper-logs、/login-logs、**/files(+/:id/download)、/samples、/gen-definitions(+/preview|:id/preview)**、**/ai/status、/ai/conversations(+/:id[/messages])、/ai/actions/:id/confirm|cancel（消息端点为 POST SSE）**；swagger /docs
 - 前端锚点：五段式页模板看 `views/system/user/index.vue`（带字典的看 `views/dev/sample/index.vue`）；request 层 `src/utils/request.ts`；公共件 FormDialog/SearchForm/Pagination/RightToolbar/DictTag/MenuIcon + useDict/usePermission + confirmDelete/confirmBox（选用表见 UI_STYLEGUIDE）
 - 样式与 UI 规矩：见 ADR-0006 + `docs/architecture/UI_STYLEGUIDE.md`（token 单源 `apps/web/src/styles/index.css`；EP 管控件、Tailwind 管布局；preflight 禁用；禁魔法值/emoji 图标/AI 味套路）
 - 响应契约（已测试锁定）：成功 `{code:0,data}`；错误 `{code,message,data:null,requestId}` + 正确 HTTP 状态码
@@ -158,7 +158,7 @@ tiangong/
 - **生成器渲染单源**：`apps/api/src/modules/generator/render/`（服务端预览与 CLI 共用）；产物 7 件定版路径；CLI `pnpm gen:crud <name>` 留在 `apps/api/scripts/`（pnpm 严格解析），仓库根用 pnpm-workspace.yaml 探测（**不可用 import.meta.url**，tsx CJS 转译下 shim 不可靠）；任一目标文件已存在整体拒绝
 - **files 模块**：`src/common/storage/` + `src/modules/files/`；上限 = min(sys.file.maxSizeMb, MAX_UPLOAD_MB)；busboy latin1 文件名 mojibake 已修复；下载非 envelope 二进制流
 - **更新动词 = PUT（跨端统一，部分合并语义）**：曾用 PATCH + `X-HTTP-Method-Override` 适配层（微信 request 不支持 PATCH），2026-11-07 owner 决策改为全线 PUT（对齐 RuoYi 约定，微信原生支持），适配层已删除；约定写明在 docs/architecture/API_CONTRACT.md；集成测试含 miniapp 原生 PUT 更新用例
-- **miniapp**：`apps/miniapp`（uni preset vite-ts；vite 5.2.8 为 uni 插件约束勿升；typescript 已升 5.9 + 自写 tsconfig——模板 extends 的 @vue/tsconfig@0.1.3 含 TS5.9 移除项）；API 基地址 `VITE_API_BASE_URL`（.env，真机需 https+域名白名单）；模板 eslint 由根 flat config 覆盖
+- **miniapp**：`apps/miniapp`（uni preset vite-ts；vite 5.2.8 为 uni 插件约束勿升；typescript 已升 5.9 + 自写 tsconfig——模板 extends 的 @vue/tsconfig@0.1.3 含 TS5.9 移除项）；API 基地址 `VITE_API_BASE_URL`（.env，真机需 https+域名白名单）；模板 eslint 由根 flat config 覆盖；`@dcloudio/uni-components` 作为直接依赖钉同版本（uni-cli 从 app 目录 resolve，pnpm 严格布局下传递依赖不可见）
 - **miniapp 状态与文案基线（add-miniapp-state-i18n）**：pinia 4 + vue-i18n 11（版本对齐 web 已锁线）；凭据存储单源仍是 `utils/auth.ts`，auth store 只做其上的响应式会话态（401 终局路径不经 store，防模块环）；语言偏好 `tg_locale` 持久化（非法值回落 zh-CN），导航标题/tabBar 由 app store `syncChrome` 运行时同步（pages.json 中文仅首帧默认）；终局 401 提示分类 `sessionExpiredCategory`（expired/disabled）为可测枚举，测试锁分类与次数、不锁文案
 - **e2e 工程**：`apps/e2e`（单 worker 顺序执行保确定性；reuseExistingServer 本地 true/CI false；CI 失败上传 playwright-report artifact）；web/miniapp 单测纯逻辑走 node 环境（miniapp 用 uni 全局桩），组件行为统一由 e2e 覆盖，不在单测层 mount
 - **miniapp 组件层（adopt-wot-design-uni，2026-11-08 实施）**：wot-design-uni 1.14.0 以官方 tarball 内联 `src/uni_modules/wot-design-uni/`（npm 直装被 uni mp 编译器 chunkFileNames 阻断，阶梯实证见 ADR-0008）；`sass@1.78.0` 精确锁版（v1 硬约束）；组件库纪律见 UI_STYLEGUIDE「miniapp 参照执行」组件层节（theme-vars 桥接单点 `src/theme.ts`、46px 控件档、反馈层不替换）。**typecheck 隔离三件**：tsconfig `exclude: ["src/uni_modules"]` + locale 深路径 type-only 导入（禁从包根导入，会拉全量组件源）+ `src/shims/wot-locale.ts` 垫片（.ts 形态，.d.ts 会触发 vue-tsc Debug Failure）；eslint/prettier 同步 ignore 库目录。tabBar 图标 = EP 同源字形 PNG，`scripts/gen-tab-icons.mjs` 生成（playwright chromium 取自 apps/e2e）
@@ -167,6 +167,8 @@ tiangong/
 - **错误文案国际化分层（ADR-0007）**：`code` 为对外契约，服务端 message（英文）为日志/回落文本，用户可见文案归客户端 locale 层——web 走 vue-i18n 键，miniapp 走 `locales/` vue-i18n 资源的 `errors` 组映射（未收录码回落英文）。后端 i18n 不预建；触发条件 = 服务端主动用户文本能力（通知/邮件/短信）立项时随该能力 ADR 重开
 - **安全门禁（跨仓 P0 批次 1，2026-11-19 已推送、CI 待解锁）**：`.github/workflows/security.yml` 的 `secrets` job 独立于 `ci.yml`（无路径过滤、`fetch-depth: 0` 全量历史、gitleaks 8.30.1）；提交前钩子 `.pre-commit-config.yaml`（同版本，`pre-commit install` 启用）；`.gitleaks.toml` 仅路径级 allowlist（`tests?/fixtures`、docs 的 md/png/jpg），禁止规则级豁免，误报先改假值。三个实测坑：① `gitleaks detect` 只扫 git 历史，**未跟踪文件不会命中**（负向验收须用提交或 `--staged` 钩子命令）；② handoff 模板探针 `AKIAIOSFODNN7EXAMPLE` 被 gitleaks 8.30 默认规则忽略，负向探针须用 base32 合规合成 key（`AKIA` + 16 位大写字母/2-7 数字）；③ 本机 x64 容器复跑需 Rosetta，gitleaks x64 资产在 Rosetta 下 Go runtime fatal，容器验证改用 arm64 资产（规则与命令不变，检测结果与 arch 无关）
 - **miniapp vite 配置为 ESM（vite.config.mts，勿改回 .ts）**：`unocss/vite` 为 ESM-only 而 `@dcloudio/*` 为 CJS-only 且缺类型声明——.mts 下 uni 插件须取 `.default`（unocss#3776 维护者方案）；uni 插件硬编码 `resolve.preserveSymlinks: true`，pnpm 虚拟仓库中的传递依赖（pinia 的 `nostics`、vue-i18n 的 `@intlify/*`）沿符号链接路径解析必炸，配置内以置于 uni 之后的定制 Plugin 的 config 钩子翻回 `false`（config 钩子按插件顺序合并、后者覆盖标量；与 web 裸 vite 语义一致）
+
+- **AI 入口 P1（2026-11-23 实施）**：API 模块 `apps/api/src/modules/ai/`（settings / conversation / chat / chat-tool / action / confirmation / provider / tools / SSE）；执行层以调用者 token 自调用 `/api/v1/*`，同权同审计；工具目录在启动时由 `createOpenApiDocument(app)` 生成一次，并用路由上的 Zod 输入 schema 富化 parameters/requestBody，按 `x-required-permissions` 过滤，wire name 为 OpenAI 兼容的 `method_path`；GET 直接执行，所有非 GET 走 `awaiting_confirmation` + 哈希票据（TTL 300s、单次、绑定用户/动作/参数摘要）；消息端点为 POST SSE（`@SkipEnvelope`，`done` 最后）；4 张表 `ai_conversation/ai_message/ai_action/ai_confirmation` 全级联；`AI_ENABLED` 默认 false，`AI_PROVIDER=fake` 仅非生产，真实 provider 可指向 muniu `http://127.0.0.1:8787/v1` 或 DashScope compatible；Web 面板懒加载 chunk 13.75 kB（gzip 5.17 kB），真实 provider 冒烟（DashScope qwen-plus）复跑通过。提示词资产随构建复制到 `dist/src/modules/ai/prompts/system.md`（生产入口 `dist/src/main.js`，勿改回 `dist` 根）。
 
 **已知坑**（违反必返工）：
 
@@ -190,10 +192,10 @@ tiangong/
 
 ## 8. 后续工作指引（本地门禁已收口，剩 CI 实跑与外部配置）
 
-建设阶段与 15 个变更均已归档，质量门禁本地项全部落地，数据库已切 PostgreSQL 18。后续会话按需从以下入口进入：
+建设阶段与 16 个变更均已归档，质量门禁本地项全部落地，数据库已切 PostgreSQL 18。后续会话按需从以下入口进入：
 
 1. **GitHub Actions 实跑与分支保护（唯一外部阻塞）**：远端私有仓 CI 连续 startup_failure = 账号级 Actions 配额/绑卡问题而非 workflow 缺陷，判别实验 public 仓同款正常。解锁后步骤：① push 任意提交或 `gh run rerun <run-id>` 触发 `CI` 与 `security`；② `gh run watch <id> --exit-status` 确认 annotation 不再是 billing locked；③ 全绿后以 `gh api -X PUT .../branches/main/protection` 设 `secrets` 为 required（先 GET 备份，PUT 整份覆盖）；④ 复跑一次本地全量门禁。5 个门禁 change 已于 2026-11-21 归档，无需再归档（证据见 DELIVERY_REPORT 2026-11-21 条）。门禁之外剩余的是测试深度：`POST /users/:id/reset-password`、`PUT /users/:id/enabled`、权限点 CRUD 的集成/e2e 用例。
-2. **AI 能力（提案态，未实施）**：`openspec/changes/2026-11-21-add-platform-ai/` 与 `...-governance/` 只有 proposal/design/tasks/specs，无代码；启动时先补 ADR 与平台契约，默认 `AI_ENABLED=false`，按 tasks 顺序实现并接入现有门禁。
+2. **AI 入口 P1（已实施并归档 2026-11-23）**：代码、迁移、种子、测试与文档已落地；默认关闭，dev/e2e 用 fake provider；真实 provider 指向 muniu `/v1` 或 DashScope compatible（密钥只走环境）。演示/预发启用，生产写操作放行另行评估。P2 已于 2026-11-23 撤销，不排期。
 3. **miniapp 组件层（已收官归档 2026-11-08）**：`adopt-wot-design-uni` tasks ①-⑨ 全部完成并加验 owner 反馈两项（tabBar 图标、46px 控件档）——三页 wd-* 替换 + 主题桥接 + sass 1.78 锁版 + vue-tsc 隔离三件 + 双端构建/门禁全绿 + 双端走查（mp 截图与 H5 playwright 交互环，console.error=0）；决策与安装路线见 `docs/adr/0008-adopt-wot-design-uni.md`（v1 冻结 ≠ 断更的证据链已补入）；组件库纪律沉淀在 UI_STYLEGUIDE「miniapp 参照执行」节。后续如需启用 picker/日历/上传类组件或升级 v2，先读该 ADR 的升级触发条件。
 4. **按需启用 P1 能力**（FUNCTION_MATRIX：通知公告/在线会话/定时任务/部门组织/岗位/数据权限/导入导出）：走 OpenSpec 变更流程（proposal→tasks→实现→验收→archive），先读 `docs/requirements/FUNCTION_MATRIX.md` 的「最低交付要求」。
 5. **业务项目接入**：业务模块以插件式变更加入，不修改平台模块承载业务规则（CONSTITUTION 约束）；可用 `pnpm gen:crud` 生成纵向骨架后人工补齐业务语义。

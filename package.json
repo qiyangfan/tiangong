@@ -18,7 +18,7 @@
     "scan:images": "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tiangong-api:latest && trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tiangong-web:latest",
     "lint:dead": "knip",
     "audit:deps": "pnpm audit --audit-level=high",
-    "dup:check": "jscpd apps packages --ignore \"**/node_modules/**,**/dist/**,**/unpackage/**,**/uni_modules/**,**/__tests__/**,apps/api/test/**\" --reporters console --silent --threshold 4",
+    "dup:check": "jscpd apps packages --ignore \"**/node_modules/**,**/dist/**,**/unpackage/**,**/uni_modules/**,**/__tests__/**,apps/api/test/**,apps/api/openapi.snapshot.json\" --reporters console --silent --threshold 4",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "schema:validate": "pnpm --filter @tiangong/api exec prisma validate",
