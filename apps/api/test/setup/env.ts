@@ -16,6 +16,8 @@ function prepareEnv(): void {
   process.env['JWT_ACCESS_SECRET'] ??= 'test_access_secret_at_least_32_chars_long!!';
   process.env['NODE_ENV'] = 'test';
   process.env['STORAGE_DIR'] = STORAGE_DIR;
+  process.env['AI_ENABLED'] = 'true';
+  process.env['AI_PROVIDER'] = 'fake';
 }
 
 prepareEnv();

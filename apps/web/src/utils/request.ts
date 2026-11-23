@@ -7,7 +7,7 @@ import axios, {
 import { SUCCESS_CODE, type ApiError, type ApiSuccess } from '@tiangong/contracts';
 import { ElMessage } from 'element-plus';
 import { i18n } from '@/locales';
-import { tokenBus } from './token-bus';
+import { refreshSession, tokenBus } from './token-bus';
 
 /** GET 查询参数允许的形态（undefined 项由 axios 自动省略）。 */
 export type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -120,17 +120,6 @@ service.interceptors.request.use((config) => {
   return config;
 });
 
-// 401 单飞刷新：并发请求共享同一次 refresh，成功后各自重放一次（RuoYi 防抖语义）
-let refreshing: Promise<boolean> | null = null;
-
-/** 合并并发 401 到同一次 tokenBus.refresh()。 */
-function shareRefresh(): Promise<boolean> {
-  refreshing ??= tokenBus.refresh().finally(() => {
-    refreshing = null;
-  });
-  return refreshing;
-}
-
 /** 响应拦截成功侧：envelope 解包 {code:0,data} → data；非 envelope 响应透传。 */
 function unwrapEnvelope(response: AxiosResponse): AxiosResponse {
   const body: unknown = response.data;
@@ -168,7 +157,7 @@ function settleTerminal(
 
 /** 会话级 401 且尚未重放过时，刷新成功后带重放标记重新发起原请求；不可重放返回 null。 */
 async function replayAfterRefresh(config: TgRequestConfig): Promise<AxiosResponse | null> {
-  if (config.__retried || !(await shareRefresh())) {
+  if (config.__retried || !(await refreshSession())) {
     return null;
   }
   // __retried 只在本层标记重放，避免刷新成功后再次进入刷新分支

@@ -1,4 +1,5 @@
 import type zhCN from './zh-CN';
+import ai from './ai.en';
 
 /** en 为骨架翻译；键结构必须与 zh-CN 完全一致（类型约束）。 */
 const en: typeof zhCN = {
@@ -35,6 +36,7 @@ const en: typeof zhCN = {
     opSuccess: 'Operation succeeded',
     pleaseInput: 'Please enter {field}',
     pleaseSelect: 'Please select {field}',
+    close: 'Close',
   },
   error: {
     notFoundTitle: '404',
@@ -226,6 +228,7 @@ const en: typeof zhCN = {
     size: 'Size',
     download: 'Download',
   },
+  ai,
   dev: {
     sample: {
       title: 'Sample Records',

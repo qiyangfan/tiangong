@@ -1,4 +1,6 @@
 /** zh-CN 为默认语言；en 键结构须与本文件一致（类型约束在 en.ts）。 */
+import ai from './ai.zh-CN';
+
 const zhCN = {
   common: {
     search: '搜索',
@@ -33,6 +35,7 @@ const zhCN = {
     opSuccess: '操作成功',
     pleaseInput: '请输入{field}',
     pleaseSelect: '请选择{field}',
+    close: '关闭',
   },
   error: {
     notFoundTitle: '404',
@@ -224,6 +227,7 @@ const zhCN = {
     size: '大小',
     download: '下载',
   },
+  ai,
   dev: {
     sample: {
       title: '示例数据',

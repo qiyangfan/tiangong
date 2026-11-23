@@ -1,18 +1,34 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
-import { Fold, Expand, Moon, Sunny, User, ArrowDown } from '@element-plus/icons-vue';
+import { ArrowDown, ChatDotRound, Expand, Fold, Moon, Sunny, User } from '@element-plus/icons-vue';
+import { apiAiStatus } from '@/api/ai';
 import { useAppStore } from '@/stores/app';
+import { useAuthStore } from '@/stores/auth';
 import { confirmBox } from '@/utils/confirm';
 import Breadcrumb from './Breadcrumb.vue';
 
 defineProps<{ displayName: string }>();
-const emit = defineEmits<{ logout: [] }>();
+const emit = defineEmits<{ logout: []; openAi: [] }>();
 
 const router = useRouter();
 const { t } = useI18n();
 const appStore = useAppStore();
+const auth = useAuthStore();
+const aiAvailable = ref(false);
+
+onMounted(async () => {
+  if (!auth.hasPermi('ai:chat')) {
+    return;
+  }
+  try {
+    aiAvailable.value = (await apiAiStatus()).enabled;
+  } catch {
+    aiAvailable.value = false;
+  }
+});
 
 async function onLogout(): Promise<void> {
   try {
@@ -47,6 +63,11 @@ function onToggleLocale(): void {
       <Breadcrumb />
     </div>
     <div class="flex items-center gap-3">
+      <el-tooltip v-if="aiAvailable" :content="t('ai.open')" placement="bottom">
+        <el-button text circle :aria-label="t('ai.open')" @click="emit('openAi')">
+          <el-icon :size="18"><ChatDotRound /></el-icon>
+        </el-button>
+      </el-tooltip>
       <el-tooltip
         :content="appStore.theme === 'dark' ? t('layout.light') : t('layout.dark')"
         placement="bottom"

@@ -64,3 +64,62 @@ describe('validateEnv', () => {
     expect(exit).toHaveBeenCalledWith(1);
   });
 });
+
+describe('AI 配置校验', () => {
+  it('AI 默认关闭且不要求 provider 配置', () => {
+    const env = validateEnv(baseConfig());
+    expect(env).toMatchObject({
+      AI_ENABLED: false,
+      AI_PROVIDER: 'openai-compatible',
+      AI_MAX_TOKENS: 2048,
+      AI_PROVIDER_TIMEOUT_MS: 60_000,
+      AI_TOOL_TIMEOUT_MS: 15_000,
+    });
+  });
+
+  it('AI 开启但缺 provider 配置时启动失败', () => {
+    const { exit, errors } = spyExit();
+    expect(() => validateEnv({ ...baseConfig(), AI_ENABLED: 'true' })).toThrow('process.exit(1)');
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(errors[0]).toContain('AI_PROVIDER_BASE_URL');
+  });
+
+  it('AI 开启且 provider 配置完整时通过', () => {
+    const env = validateEnv({
+      ...baseConfig(),
+      AI_ENABLED: 'true',
+      AI_PROVIDER_BASE_URL: 'http://127.0.0.1:8787/v1',
+      AI_PROVIDER_API_KEY: 'test-key',
+      AI_MODEL: 'test-model',
+    });
+    expect(env.AI_ENABLED).toBe(true);
+  });
+
+  it('fake provider 仅允许非生产环境', () => {
+    const fakeConfig = {
+      ...baseConfig(),
+      AI_ENABLED: 'true',
+      AI_PROVIDER: 'fake',
+    };
+    expect(validateEnv({ ...fakeConfig, NODE_ENV: 'test' }).AI_PROVIDER).toBe('fake');
+    const { exit } = spyExit();
+    expect(() => validateEnv({ ...fakeConfig, NODE_ENV: 'production' })).toThrow('process.exit(1)');
+    expect(exit).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('AI 生产环境 provider 校验', () => {
+  it('AI 关闭时仍拒绝 fake provider', () => {
+    const { exit, errors } = spyExit();
+    expect(() =>
+      validateEnv({
+        ...baseConfig(),
+        AI_ENABLED: 'false',
+        AI_PROVIDER: 'fake',
+        NODE_ENV: 'production',
+      }),
+    ).toThrow('process.exit(1)');
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(errors[0]).toContain('AI_PROVIDER');
+  });
+});

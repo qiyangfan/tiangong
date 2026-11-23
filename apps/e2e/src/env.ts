@@ -42,6 +42,7 @@ export function apiServerEnv(): Record<string, string> {
   }
   return {
     ...inherited,
+    NODE_ENV: 'test',
     PORT: String(API_PORT),
     DATABASE_URL: TEST_DB_URL,
     ADMIN_INITIAL_PASSWORD: E2E_ADMIN.password,
@@ -50,5 +51,9 @@ export function apiServerEnv(): Record<string, string> {
     // 套件内多次登录（UI + fixture）会撞上默认 10 次/分限流，仅 e2e 进程放宽
     AUTH_LOGIN_LIMIT: '1000',
     AUTH_REFRESH_LIMIT: '1000',
+    AI_ENABLED: 'true',
+    AI_PROVIDER: 'fake',
+    // 不继承开发者 shell 的 dev 地址，AI 工具自调用必须命中本套件 api 进程
+    API_SELF_BASE_URL: `http://127.0.0.1:${API_PORT}`,
   };
 }

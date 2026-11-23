@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { bindTokenBus, tokenBus } from '../token-bus';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { bindTokenBus, refreshSession, tokenBus } from '../token-bus';
 
 const DEFAULTS = {
   getToken: () => null,
@@ -33,5 +33,23 @@ describe('tokenBus', () => {
     await expect(tokenBus.refresh()).resolves.toBe(true);
     tokenBus.onSessionExpired('AUTH_TOKEN_INVALID');
     expect(expired).toBe('AUTH_TOKEN_INVALID');
+  });
+
+  it('refreshSession 并发共享同一次刷新', async () => {
+    let resolveRefresh!: (value: boolean) => void;
+    const refresh = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+    bindTokenBus({ getToken: () => 'access-token', refresh, onSessionExpired: () => {} });
+
+    const first = refreshSession();
+    const second = refreshSession();
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    resolveRefresh(true);
+    await expect(Promise.all([first, second])).resolves.toEqual([true, true]);
   });
 });

@@ -49,15 +49,28 @@ async function createNestApp(): Promise<INestApplication> {
   const { AppModule } = await import('../../src/app.module');
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleRef.createNestApplication();
+  await applyTestHttp(app);
+  // 显式监听：supertest 对未监听的传入 server 会在每次请求结束后自动 close，
+  // 连续请求会撞上 address() 为 null 的竞态
+  await app.listen(0, '127.0.0.1');
+  await wireTestRuntime(app);
+  return app;
+}
+
+async function applyTestHttp(app: INestApplication): Promise<void> {
   app.use(helmet());
   app.use(cookieParser());
   const { requestIdMiddleware } = await import('../../src/common/request-id.middleware');
   app.use(requestIdMiddleware);
   app.setGlobalPrefix('api/v1');
-  // 显式监听：supertest 对未监听的传入 server 会在每次请求结束后自动 close，
-  // 连续请求会撞上 address() 为 null 的竞态
-  await app.listen(0, '127.0.0.1');
-  return app;
+}
+
+async function wireTestRuntime(app: INestApplication): Promise<void> {
+  const { ConfigService } = await import('@nestjs/config');
+  app.get(ConfigService).set('API_SELF_BASE_URL', await app.getUrl());
+  const { ToolCatalogService } = await import('../../src/modules/ai/tools/tool-catalog.service');
+  const { createOpenApiDocument } = await import('../../src/openapi');
+  app.get(ToolCatalogService).initialize(createOpenApiDocument(app));
 }
 
 /** 复刻 main.ts 的全局中间件与路由前缀，使测试请求与真实进程行为一致。 */

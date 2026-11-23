@@ -46,6 +46,8 @@ export const PERMISSIONS: Array<[string, string, string]> = [
   ['gen', 'update', '修改生成器定义'],
   ['gen', 'delete', '删除生成器定义'],
   ['gen', 'preview', '生成器预览'],
+  ['ai', 'chat', 'AI 对话'],
+  ['ai', 'confirm', 'AI 动作确认'],
 ];
 
 export interface MenuSeed {

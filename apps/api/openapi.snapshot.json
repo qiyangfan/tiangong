@@ -17,10 +17,268 @@
   },
   "openapi": "3.0.0",
   "paths": {
+    "/ai/actions/{id}/cancel": {
+      "post": {
+        "operationId": "AiController_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "取消 AI 动作草案",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:chat"]
+      }
+    },
+    "/ai/actions/{id}/confirm": {
+      "post": {
+        "operationId": "AiController_confirm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "ticket": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "凭一次性票据确认并执行非 GET 动作",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:confirm"]
+      }
+    },
+    "/ai/conversations": {
+      "post": {
+        "operationId": "AiController_createConversation",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "title": {
+                    "maxLength": 100,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "创建 AI 会话",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:chat"]
+      }
+    },
+    "/ai/conversations/{id}": {
+      "delete": {
+        "operationId": "AiController_removeConversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "删除自己的 AI 会话及关联数据",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:chat"]
+      },
+      "get": {
+        "operationId": "AiController_getConversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "读取 AI 会话、消息与动作状态",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:chat"]
+      }
+    },
+    "/ai/conversations/{id}/messages": {
+      "post": {
+        "operationId": "AiController_sendMessage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "content": {
+                    "maxLength": 8000,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["content"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "发送消息，SSE 返回文本增量与动作草案",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:chat"]
+      }
+    },
+    "/ai/status": {
+      "get": {
+        "operationId": "AiController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "AI 入口开关状态",
+        "tags": ["ai"],
+        "x-required-permissions": ["ai:chat"]
+      }
+    },
     "/auth/change-password": {
       "post": {
         "operationId": "AuthController_changePassword",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "newPassword": {
+                    "maxLength": 72,
+                    "minLength": 8,
+                    "type": "string"
+                  },
+                  "oldPassword": {
+                    "maxLength": 72,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["oldPassword", "newPassword"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -39,6 +297,33 @@
       "post": {
         "operationId": "AuthController_login",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client": {
+                    "enum": ["web", "miniapp"],
+                    "type": "string"
+                  },
+                  "password": {
+                    "maxLength": 72,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "username": {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["username", "password", "client"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -118,6 +403,29 @@
       "put": {
         "operationId": "AuthController_updateProfile",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 100,
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -136,6 +444,26 @@
       "post": {
         "operationId": "AuthController_refresh",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "client": {
+                    "enum": ["web", "miniapp"],
+                    "type": "string"
+                  },
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                },
+                "required": ["client"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -150,6 +478,64 @@
       "post": {
         "operationId": "DictionariesController_createItem",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dictKey": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "isDefault": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "label": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "tagType": {
+                    "anyOf": [
+                      {
+                        "enum": ["primary", "success", "info", "warning", "danger"],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "value": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["dictKey", "label", "value"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -168,7 +554,18 @@
     "/dict-items/{id}": {
       "delete": {
         "operationId": "DictionariesController_removeItem",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -185,7 +582,75 @@
       },
       "put": {
         "operationId": "DictionariesController_updateItem",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dictKey": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "isDefault": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "label": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "tagType": {
+                    "anyOf": [
+                      {
+                        "enum": ["primary", "success", "info", "warning", "danger"],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "value": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -204,7 +669,47 @@
     "/dict-types": {
       "get": {
         "operationId": "DictionariesController_listTypes",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enabled",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -222,6 +727,38 @@
       "post": {
         "operationId": "DictionariesController_createType",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dictKey": {
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "dictKey"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -240,7 +777,18 @@
     "/dict-types/{id}": {
       "delete": {
         "operationId": "DictionariesController_removeType",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -257,7 +805,49 @@
       },
       "put": {
         "operationId": "DictionariesController_updateType",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "dictKey": {
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -334,7 +924,48 @@
     "/files": {
       "get": {
         "operationId": "FilesController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "suffix",
+            "required": false,
+            "schema": {
+              "maxLength": 10,
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -370,7 +1001,18 @@
     "/files/{id}": {
       "delete": {
         "operationId": "FilesController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -389,7 +1031,18 @@
     "/files/{id}/download": {
       "get": {
         "operationId": "FilesController_download",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -408,7 +1061,17 @@
     "/gen-definitions": {
       "get": {
         "operationId": "GenDefinitionController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -426,6 +1089,92 @@
       "post": {
         "operationId": "GenDefinitionController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "displayName": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "fields": {
+                    "items": {
+                      "properties": {
+                        "enumOptions": {
+                          "default": [],
+                          "items": {
+                            "maxLength": 50,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "inForm": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "inList": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "label": {
+                          "maxLength": 50,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 50,
+                          "minLength": 2,
+                          "pattern": "^[a-z][a-zA-Z0-9]*$",
+                          "type": "string"
+                        },
+                        "required": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "searchable": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "type": {
+                          "enum": [
+                            "string",
+                            "text",
+                            "integer",
+                            "decimal",
+                            "boolean",
+                            "enum",
+                            "datetime"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["name", "label", "type"],
+                      "type": "object"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "name": {
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9-]*$",
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "displayName", "fields"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -444,7 +1193,18 @@
     "/gen-definitions/{id}": {
       "delete": {
         "operationId": "GenDefinitionController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -461,7 +1221,103 @@
       },
       "put": {
         "operationId": "GenDefinitionController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "displayName": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "fields": {
+                    "items": {
+                      "properties": {
+                        "enumOptions": {
+                          "default": [],
+                          "items": {
+                            "maxLength": 50,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "inForm": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "inList": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "label": {
+                          "maxLength": 50,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 50,
+                          "minLength": 2,
+                          "pattern": "^[a-z][a-zA-Z0-9]*$",
+                          "type": "string"
+                        },
+                        "required": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "searchable": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "type": {
+                          "enum": [
+                            "string",
+                            "text",
+                            "integer",
+                            "decimal",
+                            "boolean",
+                            "enum",
+                            "datetime"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["name", "label", "type"],
+                      "type": "object"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "name": {
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9-]*$",
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -480,7 +1336,18 @@
     "/gen-definitions/{id}/preview": {
       "get": {
         "operationId": "GenDefinitionController_previewById",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -500,6 +1367,92 @@
       "post": {
         "operationId": "GenDefinitionController_previewDraft",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "displayName": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "fields": {
+                    "items": {
+                      "properties": {
+                        "enumOptions": {
+                          "default": [],
+                          "items": {
+                            "maxLength": 50,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "inForm": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "inList": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "label": {
+                          "maxLength": 50,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "name": {
+                          "maxLength": 50,
+                          "minLength": 2,
+                          "pattern": "^[a-z][a-zA-Z0-9]*$",
+                          "type": "string"
+                        },
+                        "required": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "searchable": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "type": {
+                          "enum": [
+                            "string",
+                            "text",
+                            "integer",
+                            "decimal",
+                            "boolean",
+                            "enum",
+                            "datetime"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["name", "label", "type"],
+                      "type": "object"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "name": {
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9-]*$",
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "displayName", "fields"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -546,7 +1499,57 @@
     "/login-logs": {
       "get": {
         "operationId": "AuditQueryController_loginLogs",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "username",
+            "required": false,
+            "schema": {
+              "maxLength": 50,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": ["ok", "error"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -583,6 +1586,68 @@
       "post": {
         "operationId": "MenusController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "component": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "icon": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "menuType": {
+                    "enum": ["M", "C", "F"],
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "parentId": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "path": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "perms": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "visible": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "required": ["name", "menuType"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -601,7 +1666,18 @@
     "/menus/{id}": {
       "delete": {
         "operationId": "MenusController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -618,7 +1694,79 @@
       },
       "put": {
         "operationId": "MenusController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "component": {
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "icon": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "menuType": {
+                    "enum": ["M", "C", "F"],
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "parentId": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "path": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "perms": {
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "sort": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "visible": {
+                    "default": true,
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -651,7 +1799,66 @@
     "/oper-logs": {
       "get": {
         "operationId": "AuditQueryController_operLogs",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "username",
+            "required": false,
+            "schema": {
+              "maxLength": 50,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": ["ok", "error"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "businessType",
+            "required": false,
+            "schema": {
+              "enum": ["insert", "update", "delete", "grant", "export", "import", "other"],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -670,7 +1877,17 @@
     "/permissions": {
       "get": {
         "operationId": "PermissionsController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -688,6 +1905,40 @@
       "post": {
         "operationId": "PermissionsController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "action": {
+                    "maxLength": 32,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9-]*$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "resource": {
+                    "maxLength": 64,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9-]*$",
+                    "type": "string"
+                  }
+                },
+                "required": ["resource", "action", "name"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -706,7 +1957,18 @@
     "/permissions/{id}": {
       "delete": {
         "operationId": "PermissionsController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -723,7 +1985,46 @@
       },
       "put": {
         "operationId": "PermissionsController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -742,7 +2043,47 @@
     "/roles": {
       "get": {
         "operationId": "RolesController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enabled",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -760,6 +2101,53 @@
       "post": {
         "operationId": "RolesController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "permissionIds": {
+                    "default": [],
+                    "items": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "roleKey": {
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  },
+                  "sort": {
+                    "default": 0,
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": ["name", "roleKey"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -778,7 +2166,18 @@
     "/roles/{id}": {
       "delete": {
         "operationId": "RolesController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -795,7 +2194,18 @@
       },
       "get": {
         "operationId": "RolesController_detail",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -812,7 +2222,66 @@
       },
       "put": {
         "operationId": "RolesController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "permissionIds": {
+                    "items": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  },
+                  "remark": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "roleKey": {
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  },
+                  "sort": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -831,7 +2300,56 @@
     "/samples": {
       "get": {
         "operationId": "SampleController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "maxLength": 50,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enabled",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -849,6 +2367,40 @@
       "post": {
         "operationId": "SampleController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "amount": {
+                    "pattern": "^\\d+(\\.\\d{1,2})?$",
+                    "type": "string"
+                  },
+                  "category": {
+                    "maxLength": 50,
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "required": ["name"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -867,7 +2419,18 @@
     "/samples/{id}": {
       "delete": {
         "operationId": "SampleController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -884,7 +2447,18 @@
       },
       "get": {
         "operationId": "SampleController_detail",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -901,7 +2475,51 @@
       },
       "put": {
         "operationId": "SampleController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "amount": {
+                    "pattern": "^\\d+(\\.\\d{1,2})?$",
+                    "type": "string"
+                  },
+                  "category": {
+                    "maxLength": 50,
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -920,7 +2538,17 @@
     "/settings": {
       "get": {
         "operationId": "SettingsController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -938,6 +2566,39 @@
       "post": {
         "operationId": "SettingsController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "settingKey": {
+                    "maxLength": 100,
+                    "minLength": 2,
+                    "pattern": "^[a-z][a-z0-9._-]*$",
+                    "type": "string"
+                  },
+                  "value": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "settingKey", "value"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -956,7 +2617,18 @@
     "/settings/{id}": {
       "delete": {
         "operationId": "SettingsController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -973,7 +2645,51 @@
       },
       "put": {
         "operationId": "SettingsController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "value": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -992,7 +2708,57 @@
     "/users": {
       "get": {
         "operationId": "UsersController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enabled",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "roleId",
+            "required": false,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1010,6 +2776,62 @@
       "post": {
         "operationId": "UsersController_create",
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 100,
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "nickname": {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "password": {
+                    "maxLength": 72,
+                    "minLength": 8,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "remark": {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "roleIds": {
+                    "default": [],
+                    "items": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  },
+                  "username": {
+                    "maxLength": 30,
+                    "minLength": 3,
+                    "pattern": "^\\w+$",
+                    "type": "string"
+                  }
+                },
+                "required": ["username", "nickname", "password"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""
@@ -1028,7 +2850,18 @@
     "/users/{id}": {
       "delete": {
         "operationId": "UsersController_remove",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1045,7 +2878,18 @@
       },
       "get": {
         "operationId": "UsersController_detail",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1062,7 +2906,81 @@
       },
       "put": {
         "operationId": "UsersController_update",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "anyOf": [
+                      {
+                        "format": "email",
+                        "maxLength": 100,
+                        "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "nickname": {
+                    "maxLength": 30,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "phone": {
+                    "anyOf": [
+                      {
+                        "maxLength": 20,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "remark": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "roleIds": {
+                    "items": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1081,7 +2999,18 @@
     "/users/{id}/enabled": {
       "put": {
         "operationId": "UsersController_setEnabled",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1100,7 +3029,36 @@
     "/users/{id}/reset-password": {
       "post": {
         "operationId": "UsersController_resetPassword",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "newPassword": {
+                    "maxLength": 72,
+                    "minLength": 8,
+                    "type": "string"
+                  }
+                },
+                "required": ["newPassword"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": ""

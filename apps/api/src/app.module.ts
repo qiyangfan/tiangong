@@ -27,6 +27,7 @@ import { FilesModule } from './modules/files/files.module';
 import { ExamplesModule } from './modules/examples/examples.module';
 import { GeneratorModule } from './modules/generator/generator.module';
 import { AuditQueryModule } from './modules/audit-query/audit-query.module';
+import { AiModule } from './modules/ai/ai.module';
 import { getRequestId } from './common/request-context';
 
 @Module({
@@ -78,6 +79,7 @@ import { getRequestId } from './common/request-context';
     FilesModule,
     ExamplesModule,
     GeneratorModule,
+    AiModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

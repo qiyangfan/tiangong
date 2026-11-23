@@ -33,9 +33,10 @@ model User {
   updatedBy      Int?      @map("updated_by")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  roles         UserRole[]
-  refreshTokens RefreshToken[]
-  operLogs      OperLog[]
+  roles           UserRole[]
+  refreshTokens   RefreshToken[]
+  operLogs        OperLog[]
+  aiConversations AiConversation[]
 
   @@index([enabled])
   @@map("user")
@@ -284,4 +285,72 @@ model GenDefinition {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("gen_definition")
+}
+
+// ============ AI 入口 ============
+
+/// AI 会话：仅归属创建者；不引入会话列表之外的共享/租户语义
+model AiConversation {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+  actions  AiAction[]
+
+  @@index([userId, createdAt])
+  @@map("ai_conversation")
+}
+
+/// 会话消息：content 按 16000 字符截断；工具结果正文不写日志
+model AiMessage {
+  id             Int      @id @default(autoincrement())
+  conversationId Int      @map("conversation_id")
+  role           String   @db.VarChar(16)
+  content        String   @db.VarChar(16000)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_message")
+}
+
+/// 动作状态机：draft / awaiting_confirmation / executing / executed / failed / cancelled
+model AiAction {
+  id             Int      @id @default(autoincrement())
+  conversationId Int      @map("conversation_id")
+  toolName       String   @map("tool_name") @db.VarChar(255)
+  method         String   @db.VarChar(10)
+  path           String   @db.VarChar(255)
+  payload        Json
+  status         String   @db.VarChar(24)
+  requestId      String?  @map("request_id") @db.VarChar(36)
+  errorCode      String?  @map("error_code") @db.VarChar(64)
+  result         Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  conversation AiConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  confirmation AiConfirmation?
+
+  @@index([conversationId, createdAt])
+  @@map("ai_action")
+}
+
+/// 一次性确认票据：只存哈希；票据本身仅在 action.proposed 事件中下发
+model AiConfirmation {
+  id         Int       @id @default(autoincrement())
+  actionId   Int       @unique @map("action_id")
+  ticketHash String    @map("ticket_hash") @db.VarChar(64)
+  expiresAt  DateTime  @map("expires_at")
+  usedAt     DateTime? @map("used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  action AiAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@map("ai_confirmation")
 }

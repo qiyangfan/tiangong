@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import { defineAsyncComponent, ref } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
 import Sidebar from './components/Sidebar.vue';
 import Navbar from './components/Navbar.vue';
 
+const AiPanel = defineAsyncComponent(() => import('@/components/AiPanel.vue'));
+
 const appStore = useAppStore();
 const auth = useAuthStore();
+const aiOpen = ref(false);
+const aiMounted = ref(false);
+
+function openAi(): void {
+  aiMounted.value = true;
+  aiOpen.value = true;
+}
 
 function onLogout(): void {
   void auth.logout();
@@ -33,10 +43,11 @@ function onLogout(): void {
       <Sidebar :menus="auth.menus" />
     </aside>
     <div class="flex min-w-0 flex-1 flex-col">
-      <Navbar :display-name="auth.displayName" @logout="onLogout" />
+      <Navbar :display-name="auth.displayName" @logout="onLogout" @open-ai="openAi" />
       <main class="flex-1 overflow-auto bg-[var(--el-bg-color-page)]">
         <router-view />
       </main>
     </div>
+    <AiPanel v-if="aiMounted" v-model="aiOpen" />
   </div>
 </template>

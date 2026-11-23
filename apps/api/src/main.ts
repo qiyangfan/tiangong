@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { requestIdMiddleware } from './common/request-id.middleware';
+import { ToolCatalogService } from './modules/ai/tools/tool-catalog.service';
 import { createOpenApiDocument } from './openapi';
 
 function parseOrigins(raw: string): string[] {
@@ -36,6 +37,8 @@ function configureApp(app: NestExpressApplication): number {
   const config = app.get(ConfigService);
   configureHttp(app, config);
   setupSwagger(app);
+  // 与 /docs 同源生成一次，工具目录不引入第二份注册表
+  app.get(ToolCatalogService).initialize(createOpenApiDocument(app));
   return config.get<number>('PORT') ?? 3000;
 }
 

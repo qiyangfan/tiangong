@@ -1,0 +1,40 @@
+import type aiZhCN from './ai.zh-CN';
+
+const aiEn: typeof aiZhCN = {
+  open: 'AI Assistant',
+  title: 'AI Assistant',
+  empty: 'Describe what you want to do',
+  placeholder: 'Type a message; Enter to send, Shift+Enter for a new line',
+  enterHint: 'Every write action requires your confirmation',
+  send: 'Send',
+  thinking: 'Thinking…',
+  deleteConversation: 'Delete conversation',
+  deleteConfirm: 'Delete this conversation? Its messages and actions will be removed.',
+  riskRead: 'Read',
+  riskWrite: 'Confirm',
+  statusAwaiting: 'Awaiting confirmation',
+  statusExecuting: 'Executing',
+  statusExecuted: 'Executed',
+  statusFailed: 'Failed',
+  statusCancelled: 'Cancelled',
+  confirm: 'Confirm',
+  cancel: 'Cancel action',
+  disabled: 'AI is currently disabled',
+  noPermission: 'You cannot confirm this action',
+  error: {
+    disabled: 'AI is currently disabled',
+    provider: 'Model service is unavailable, please retry later',
+    confirmationRequired: 'This action requires confirmation',
+    confirmationExpired: 'Confirmation expired, please start again',
+    conflict: 'Action state changed, please refresh and retry',
+    loopLimit: 'Too many steps in this request, stopped',
+    sessionNotFound: 'Conversation not found or deleted',
+    actionNotFound: 'Action not found or deleted',
+    forbidden: 'You do not have permission for this action',
+    rateLimited: 'Too many requests, please retry later',
+    validation: 'Invalid parameters, please adjust and retry',
+    generic: 'AI request failed, please retry later',
+  },
+};
+
+export default aiEn;

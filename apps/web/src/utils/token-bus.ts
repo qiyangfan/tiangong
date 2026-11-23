@@ -19,6 +19,16 @@ export const tokenBus: TokenBus = {
   onSessionExpired: () => {},
 };
 
+let refreshInFlight: Promise<boolean> | null = null;
+
+/** 共享单飞刷新：axios 重放与原生 fetch SSE 共用，避免 refresh 轮换并发互相作废。 */
+export function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= tokenBus.refresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
 export function bindTokenBus(impl: TokenBus): void {
   Object.assign(tokenBus, impl);
 }

@@ -11,3 +11,4 @@ export * from './audit.js';
 export * from './files.js';
 export * from './examples.js';
 export * from './generator.js';
+export * from './ai.js';

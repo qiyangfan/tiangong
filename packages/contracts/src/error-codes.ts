@@ -68,6 +68,19 @@ export const ERROR_CODES = {
   GEN_NAME_TAKEN: { status: 409, message: 'Generator definition name already exists' },
   GEN_NAME_INVALID: { status: 400, message: 'Module name must be kebab-case' },
   GEN_FIELD_INVALID: { status: 400, message: 'Field definition is invalid' },
+
+  // AI 入口
+  AI_DISABLED: { status: 503, message: 'AI is disabled' },
+  AI_PROVIDER_ERROR: { status: 502, message: 'AI provider request failed' },
+  AI_CONFIRMATION_REQUIRED: { status: 409, message: 'Confirmation ticket is required' },
+  AI_CONFIRMATION_EXPIRED: {
+    status: 410,
+    message: 'Confirmation ticket is expired or already used',
+  },
+  AI_ACTION_CONFLICT: { status: 409, message: 'AI action state does not allow this operation' },
+  AI_TOOL_LOOP_LIMIT: { status: 409, message: 'AI tool loop limit exceeded' },
+  AI_SESSION_NOT_FOUND: { status: 404, message: 'AI conversation not found' },
+  AI_ACTION_NOT_FOUND: { status: 404, message: 'AI action not found' },
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;
